@@ -40,7 +40,7 @@ import os,sys,random
 def draw_world():
     global counter, killed_animal
 #    print 'draw_world called.'
-    print '(width, height) = (%d, %d), update= %d, #animals = %d (%d killed), #plants %d' % (width, height, counter, len(animals), killed_animal, len(plants))
+    print '(width, height) = (%d, %d), update= %d, #animals = %d (%d killed), #plants = %d' % (width, height, counter, len(animals), killed_animal, len(plants))
 
 #    print 'width = %d, height = %d' % (width, height)
     aa = []
@@ -88,20 +88,16 @@ def move(animal):
             return 0
 
     animal['x'] = (x + movex(dir)) % width
-    animal['y'] = (x + movey(dir)) % height
-    animal['energy'] = animal['energy'] - 1
-#    animal['energy'].dec()
+# oops... here was a critical bug. the below 'y' was 'x'...orz
+    animal['y'] = (y + movey(dir)) % height
+    animal['energy'] -= 1
     return
 
 def turn(animal):
 #    print 'turn called.'
-#    x = animal['genes'][random.randint(0, 7)] + 1
-    sum = 0
-    for i in animal['genes']:
-        sum = sum + i
-    x = random.randint(0, sum)
+    global debug
+    x = random.randint(0, sum(animal['genes']))
 #    print 'DEBUG1: ', x
-    # temp
     def angle(genes, x):
 #        print 'angle(sub function) called.'
         if len(genes) == 0:
@@ -121,64 +117,52 @@ def turn(animal):
 
 def eat(animal):
 #    print 'eat called.'
-    pos = {'x':animal['x'], 'y': animal['y']}
-#    if [animal['x'], animal['y'] ] exist in plants:
+    pos = {'x': animal['x'], 'y': animal['y']}
     if pos in plants:
-        animal['energy'] = animal['energy'] + plant_energy
+        animal['energy'] += plant_energy
 #        print '  eat: removing...: ', pos
         plants.remove(pos)
-        #debug
-#        sys.exit(1)
-
-#    print 'plants= ', plants
     return
 
 def reproduce(animal):
 #    print 'reproduce called.'
-
     e = animal['energy']
     if e >= reproduce_energy:
         animal['energy'] = (e - 1) / 2
         animal_new = animal.copy()
-        # last [:] is important for copying the entire list
+        # last [:] is important for copying the entire list. or deepcopy()?
         genes = list(animal_new['genes'])[:]
         mutation = random.randint(0, 7)
 #        print 'before', genes, mutation, genes[mutation]
-        # original
-#        genes[mutation] = max(1, genes[mutation] + random.randint(1, 3) - 1)
-        g = random.randint(1, 10)
-        if genes[mutation] == g:
-            genes[mutation] = 1
+        original = True
+        if original:
+            genes[mutation] = max(1, genes[mutation] + random.randint(0, 2) - 1)
         else:
-            genes[mutation] = g           
+            g = random.randint(1, 10)
+            if genes[mutation] == g:
+                genes[mutation] = 1
+            else:
+                genes[mutation] = g           
 #        print 'after ', genes, mutation, genes[mutation]
         animal_new['genes'] = genes
         animals.append(animal_new)
     return
 
-#def random_plant(left, top, width, height):
 def random_plant(pos):
 #    print 'random_plants called.'
-#    left = pos[0]
-#    top = pos[1]
-#    width = pos[2]
-#    height = pos[3]
     (left, top, width, height) = pos
-    
-#    pos = [left + random.randint(1, width), top + random.randint(1, height)]
-    x = (left + random.randint(1, width)) 
-    y = (top + random.randint(1, height)) 
+#   Precisely speaking, here must be some roundup.
+    x = (left + random.randint(0, width - 1))
+    y = (top + random.randint(0, height - 1))
     if not {'x': x, 'y': y} in plants:
         plants.append({'x': x, 'y': y})
-    #debug
-#    for p in plants:
-#        print p
     return
 
 def add_plants():
 #    print 'add_plants called.'
+    global width, height, jungle
     random_plant(jungle)
-    random_plant((0, 0, width, height))
+    random_plant([0, 0, width, height])
     return
 
 
@@ -187,7 +171,6 @@ def update_world():
     global counter, killed_animal
     counter += 1
     for animal in animals:
-#        print '  energy= ', animal['energy']
         if animal['energy'] <= 0:
             animals.remove(animal)
             killed_animal += 1
@@ -230,7 +213,7 @@ def evolution():
 
 if __name__ == '__main__':
 
-    debug=1
+    debug=0
     width = 100
     height = 30
 
