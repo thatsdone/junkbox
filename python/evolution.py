@@ -1,8 +1,8 @@
 #
 # evolution.py
 # 
-# A simple(/stupid) and straight forward port of:
-# a example from 'Land of Lisp'  http://landoflisp.com/evolution.lisp
+# A simple(/stupid) and straight forward port of an example
+# from 'Land of Lisp'  http://landoflisp.com/evolution.lisp
 #
 # Note1:
 #   Still buggy and ugly... :o
@@ -229,7 +229,7 @@ if __name__ == '__main__':
               'y': int((height - 1) / 2),
               'energy':1000,
               'dir': 0, 
-              'genes':   [random.randint(1, 10) for r in range(8)]
+              'genes':   [random.randint(0, 9) for r in range(8)]
               }]
 
     add_plants()
