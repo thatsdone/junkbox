@@ -35,10 +35,12 @@
 #
 # Author: Masanori Itoh <masanori.itoh@gmail.com>
 #
-import os,sys,random
+import os,sys
+import random
+import readline
 
 def draw_world():
-    global counter, killed_animal
+    global counter, killed_animal, sym_space, sym_animal, sym_plant
 #    print 'draw_world called.'
     print '(width, height) = (%d, %d), update= %d, #animals = %d (%d killed), #plants = %d' % (width, height, counter, len(animals), killed_animal, len(plants))
 
@@ -52,11 +54,11 @@ def draw_world():
         str = ''
         for x in range(0, width):
             if [x, y] in aa:
-                str = str + 'A'
+                str = str + sym_animal
             elif {'x': x, 'y': y} in plants:
-                str = str + 'T'
+                str = str + sym_plant
             else:
-                str = str + '-'
+                str = str + sym_space
         print '%s%s%s' % ('|', str, '|')
 
     return
@@ -185,10 +187,13 @@ def update_world():
 
 def evolution():
 #    print 'evolution'
+    global prompt
     draw_world()
-    line = sys.stdin.readline()
-    while line:
-        x = line[:-1]
+#    line = sys.stdin.readline()
+#    while line:
+    while True:
+        x = raw_input(prompt)
+#        x = line[:-1]
 #        print 'read: "%s"' % x
         if x == 'quit':
             print 'quitting...'
@@ -202,21 +207,26 @@ def evolution():
             for p in plants:
                 print p
         elif x.isdigit():
-            x = int(line)
+            x = int(x)
         else:
             x = int(1)
 
         for i in range(0, x):
             update_world()
+
         evolution()
 
 
 if __name__ == '__main__':
 
     debug=0
+    prompt = 'evolution: '
+    sym_space = '-'
+    sym_animal = 'A'
+    sym_plant = 'T'
+
     width = 100
     height = 30
-
     counter = 0
     killed_animal = 0
 
