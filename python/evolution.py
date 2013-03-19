@@ -120,6 +120,7 @@ def eat(animal):
 
 def reproduce(animal):
 #    print 'reproduce called.'
+    global animals_added
     e = animal['energy']
     if e >= reproduce_energy:
         animal['energy'] = (e - 1) / 2
@@ -137,7 +138,7 @@ def reproduce(animal):
             else:
                 genes[mutation] = g           
         animal_new['genes'] = genes
-        animals.append(animal_new)
+        animals_added.append(animal_new)
     return
 
 def random_plant(pos):
@@ -160,17 +161,19 @@ def add_plants():
 
 def update_world():
 #    print 'update_world called.'
-    global counter, killed_animal
+    global counter, killed_animal, animals_added
     counter += 1
     for animal in animals:
         if animal['energy'] <= 0:
             animals.remove(animal)
             killed_animal += 1
+    animals_added = []
     for animal in animals:
         turn(animal)
         move(animal)
         eat(animal)
         reproduce(animal)
+    animals.extend(animals_added)
     add_plants()
     return
 
@@ -240,6 +243,7 @@ if __name__ == '__main__':
               'dir': 0, 
               'genes':   [random.randint(0, 9) for r in range(8)]
               }]
+    animals_added = []
 
     add_plants()
     evolution()
