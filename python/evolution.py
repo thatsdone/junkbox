@@ -44,11 +44,9 @@ def draw_world():
 #    print 'draw_world called.'
     print '(width, height) = (%d, %d), update= %d, #animals = %d (%d killed), #plants = %d' % (width, height, counter, len(animals), killed_animal, len(plants))
 
-#    print 'width = %d, height = %d' % (width, height)
     aa = []
     for a in animals:
         aa.append([a['x'], a['y']])
-#    print aa
 
     for y in range(0, height):
         str = ''
@@ -90,7 +88,7 @@ def move(animal):
             return 0
 
     animal['x'] = (x + movex(dir)) % width
-# oops... here was a critical bug. the below 'y' was 'x'...orz
+    # oops... here was a critical bug. the below 'y' was 'x'...orz
     animal['y'] = (y + movey(dir)) % height
     animal['energy'] -= 1
     return
@@ -99,22 +97,17 @@ def turn(animal):
 #    print 'turn called.'
     global debug
     x = random.randint(0, sum(animal['genes']))
-#    print 'DEBUG1: ', x
     def angle(genes, x):
-#        print 'angle(sub function) called.'
         if len(genes) == 0:
             return 0
         xnu = x - genes[0]
-#        print 'DEBUG2: ', genes, xnu
         if xnu < 0:
             return 0
         else:
             return angle(genes[1:], xnu) + 1
 
     a = angle(animal['genes'], x)
-#    print '  turn: dir = %d, x = %d,  angle = %d' % (animal['dir'], x, a)
     animal['dir'] = (animal['dir'] + a) % 8
-#    animal['dir'] = (animal['dir'] + angle(animal['genes'], x)) % 8
     return
 
 def eat(animal):
@@ -122,7 +115,6 @@ def eat(animal):
     pos = {'x': animal['x'], 'y': animal['y']}
     if pos in plants:
         animal['energy'] += plant_energy
-#        print '  eat: removing...: ', pos
         plants.remove(pos)
     return
 
@@ -135,7 +127,6 @@ def reproduce(animal):
         # last [:] is important for copying the entire list. or deepcopy()?
         genes = list(animal_new['genes'])[:]
         mutation = random.randint(0, 7)
-#        print 'before', genes, mutation, genes[mutation]
         original = True
         if original:
             genes[mutation] = max(1, genes[mutation] + random.randint(0, 2) - 1)
@@ -145,7 +136,6 @@ def reproduce(animal):
                 genes[mutation] = 1
             else:
                 genes[mutation] = g           
-#        print 'after ', genes, mutation, genes[mutation]
         animal_new['genes'] = genes
         animals.append(animal_new)
     return
@@ -153,7 +143,7 @@ def reproduce(animal):
 def random_plant(pos):
 #    print 'random_plants called.'
     (left, top, width, height) = pos
-#   Precisely speaking, here must be some roundup.
+    #   Precisely speaking, here must be some roundup.
     x = (left + random.randint(0, width - 1))
     y = (top + random.randint(0, height - 1))
     if not {'x': x, 'y': y} in plants:
@@ -189,12 +179,9 @@ def evolution():
 #    print 'evolution'
     global prompt
     draw_world()
-#    line = sys.stdin.readline()
-#    while line:
+
     while True:
         x = raw_input(prompt)
-#        x = line[:-1]
-#        print 'read: "%s"' % x
         if x == 'quit':
             print 'quitting...'
             sys.exit(0)
