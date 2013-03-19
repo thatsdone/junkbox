@@ -178,11 +178,13 @@ def update_world():
 def evolution():
 #    print 'evolution'
     global prompt
+
     draw_world()
 
     while True:
         try:
             x = raw_input(prompt)
+
         except EOFError:
             print 'quitting...'
             sys.exit(0)
@@ -190,24 +192,29 @@ def evolution():
         if x == 'quit':
             print 'quitting...'
             sys.exit(0)
+
         elif x == 'dump':
             x = int(0)
             for a in animals:
                 print a
+            continue
+
         elif x == 'dumpplant':
             x = int(0)
             for p in plants:
                 print p
+            continue
+
         elif x.isdigit():
             x = int(x)
+
         else:
             x = int(1)
 
         for i in range(0, x):
             update_world()
-
-        evolution()
-
+            
+        draw_world()
 
 if __name__ == '__main__':
 
