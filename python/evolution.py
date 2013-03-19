@@ -181,7 +181,12 @@ def evolution():
     draw_world()
 
     while True:
-        x = raw_input(prompt)
+        try:
+            x = raw_input(prompt)
+        except EOFError:
+            print 'quitting...'
+            sys.exit(0)
+
         if x == 'quit':
             print 'quitting...'
             sys.exit(0)
