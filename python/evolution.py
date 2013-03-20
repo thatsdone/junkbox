@@ -35,7 +35,7 @@
 #
 # Author: Masanori Itoh <masanori.itoh@gmail.com>
 #
-import os,sys
+import sys
 import random
 import readline
 
@@ -49,16 +49,15 @@ def draw_world():
         aa.append([a['x'], a['y']])
 
     for y in range(0, height):
-        str = ''
+        msg = ''
         for x in range(0, width):
             if [x, y] in aa:
-                str = str + sym_animal
+                msg = msg + sym_animal
             elif {'x': x, 'y': y} in plants:
-                str = str + sym_plant
+                msg = msg + sym_plant
             else:
-                str = str + sym_space
-        print '%s%s%s' % ('|', str, '|')
-
+                msg = msg + sym_space
+        print '%s%s%s' % ('|', msg, '|')
     return
 
 def fresh_line():
@@ -67,29 +66,29 @@ def fresh_line():
 
 def move(animal):
 #    print 'move called.'
-    dir = animal['dir']
+    direction = animal['dir']
     x = animal['x']
     y = animal['y']
 
-    def movex(dir):
-        if (dir >= 2 and dir <= 4):
+    def movex(direction):
+        if (direction >= 2 and direction <= 4):
             return 1
-        elif (dir == 1 or dir == 5):
+        elif (direction == 1 or direction == 5):
             return 0
         else:
             return -1
 
-    def movey(dir):
-        if (dir >= 0 and dir <= 2):
+    def movey(direction):
+        if (direction >= 0 and direction <= 2):
             return -1
-        elif (dir >= 4 and dir <= 6):
+        elif (direction >= 4 and direction <= 6):
             return 1
         else:
             return 0
 
-    animal['x'] = (x + movex(dir)) % width
+    animal['x'] = (x + movex(direction)) % width
     # oops... here was a critical bug. the below 'y' was 'x'...orz
-    animal['y'] = (y + movey(dir)) % height
+    animal['y'] = (y + movey(direction)) % height
     animal['energy'] -= 1
     return
 
@@ -186,33 +185,34 @@ def evolution():
 
     while True:
         try:
-            x = raw_input(prompt)
+            x = 0
+            line = raw_input(prompt)
 
         except EOFError:
             print 'quitting...'
             sys.exit(0)
 
-        if x == 'quit':
+        if line == 'quit':
             print 'quitting...'
             sys.exit(0)
 
-        elif x == 'dump':
-            x = int(0)
+        elif line == 'dump':
+            x = 0
             for a in animals:
                 print a
             continue
 
-        elif x == 'dumpplant':
-            x = int(0)
+        elif line == 'dumpplant':
+            x = 0
             for p in plants:
                 print p
             continue
 
-        elif x.isdigit():
-            x = int(x)
+        elif line.isdigit():
+            x = int(line)
 
         else:
-            x = int(1)
+            x = 1
 
         for i in range(0, x):
             update_world()
@@ -238,11 +238,11 @@ if __name__ == '__main__':
     plants = []
     jungle = [45, 10, 10, 10]
     animals = [{'x': int((width - 1) / 2),
-              'y': int((height - 1) / 2),
-              'energy':1000,
-              'dir': 0, 
-              'genes':   [random.randint(0, 9) for r in range(8)]
-              }]
+                'y': int((height - 1) / 2),
+                'energy':1000,
+                'dir': 0, 
+                'genes':   [random.randint(0, 9) for r in range(8)]
+                }]
     animals_added = []
 
     add_plants()
