@@ -127,7 +127,7 @@ def reproduce(animal):
         # last [:] is important for copying the entire list. or deepcopy()?
         genes = list(animal_new['genes'])[:]
         mutation = random.randint(0, 7)
-        original = False
+        original = True
         if original:
             genes[mutation] = max(1, genes[mutation] + random.randint(0, 2) - 1)
         else:
