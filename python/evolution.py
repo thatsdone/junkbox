@@ -119,7 +119,7 @@ def eat(animal):
 
 def reproduce(animal):
 #    print 'reproduce called.'
-    global animals_added
+    global animals_added,animal_id,counter
     e = animal['energy']
     if e >= reproduce_energy:
         animal['energy'] = (e - 1) / 2
@@ -127,7 +127,7 @@ def reproduce(animal):
         # last [:] is important for copying the entire list. or deepcopy()?
         genes = list(animal_new['genes'])[:]
         mutation = random.randint(0, 7)
-        original = True
+        original = False
         if original:
             genes[mutation] = max(1, genes[mutation] + random.randint(0, 2) - 1)
         else:
@@ -137,6 +137,10 @@ def reproduce(animal):
             else:
                 genes[mutation] = g           
         animal_new['genes'] = genes
+        animal_id += 1
+        animal_new['id'] = animal_id
+        animal_new['birth'] = counter
+        animal_new['parent'] = animal['id']
         animals_added.append(animal_new)
     return
 
@@ -160,11 +164,13 @@ def add_plants():
 
 def update_world():
 #    print 'update_world called.'
-    global counter, killed_animal, animals_added
+    global counter, killed_animal, animals_added, animals_dead
     counter += 1
     for animal in animals:
         if animal['energy'] <= 0:
             animals.remove(animal)
+            animals_dead.append(animal)
+            animal['death'] = counter
             killed_animal += 1
     animals_added = []
     for animal in animals:
@@ -176,6 +182,17 @@ def update_world():
     add_plants()
     return
 
+def print_animal(animal):
+    print 'id: %6d p: %6d x: %3d y: %3d dir: %d e: %3d b:%6d d: %6d g: %s' % (
+        animal['id'],
+        animal['parent'],
+        animal['x'],
+        animal['y'],
+        animal['dir'],
+        animal['energy'],
+        animal['birth'],
+        animal['death'],
+        animal['genes'])
 
 def evolution():
 #    print 'evolution'
@@ -198,8 +215,16 @@ def evolution():
 
         elif line == 'dump':
             x = 0
+            print 'Alive animals'
             for a in animals:
-                print a
+                print_animal(a)
+            continue
+
+        elif line == 'dumpd':
+            x = 0
+            print 'Dead animals'
+            for a in animals_dead:
+                print_animal(a)
             continue
 
         elif line == 'dumpplant':
@@ -240,10 +265,16 @@ if __name__ == '__main__':
     animals = [{'x': int((width - 1) / 2),
                 'y': int((height - 1) / 2),
                 'energy':1000,
-                'dir': 0, 
+                'dir': 0,
+                'id': 0,
+                'birth': 0,
+                'death': 0,
+                'parent': 0,
                 'genes':   [random.randint(0, 9) for r in range(8)]
                 }]
     animals_added = []
+    animals_dead = []
+    animal_id = 0
 
     add_plants()
     evolution()
