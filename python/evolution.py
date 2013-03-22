@@ -42,11 +42,17 @@ import readline
 def draw_world():
     global counter, killed_animal, sym_space, sym_animal, sym_plant
 #    print 'draw_world called.'
-    print '(width, height) = (%d, %d), update= %d, #animals = %d (%d killed), #plants = %d' % (width, height, counter, len(animals), killed_animal, len(plants))
+
+    num_alive = 0
+    age_total = 0
 
     aa = []
     for a in animals:
         aa.append([a['x'], a['y']])
+        age_total += (counter - a['birth'])
+        num_alive += 1 
+
+    print 'w: %d h: %d update: %d #animals: %d #killed: %d #plants: %d  avg.life: %.1f' % (width, height, counter, len(animals), killed_animal, len(plants), age_total / num_alive)
 
     for y in range(0, height):
         msg = ''
