@@ -15,7 +15,7 @@ class App:
     def __init__(self):
         # python-daemon DaemonRunner requires the below.
         self.stdin_path = '/dev/null'
-        self.stdout_path = '/dev/null' 
+        self.stdout_path = '/dev/null'
         self.stderr_path = '/dev/null'
         # For debug, you can use '/dev/tty' for stdout/stderr instead.
         #self.stdout_path = '/dev/tty'
@@ -24,13 +24,12 @@ class App:
         self.pidfile_timeout = 5
         # The above 5 attributes are mandatory.
         #
-        # The below are this App specific. (conf file is not implemented now)
-        self.log_file = '/tmp/foobar.log'
-        self.conf_file = '/etc/pdaemon.conf'
+        # The below are this App specific.
         self.foreground = False
+        self.log_file = '/tmp/foobar.log'
 
     def run(self):
-        # Here is your mainn logic.
+        # Here is your main logic.
         # Initializing code.
         if not self.foreground:
             logging.basicConfig(level=logging.DEBUG,
