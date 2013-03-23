@@ -38,9 +38,10 @@
 import sys
 import random
 import readline
+import getopt
 
 def draw_world():
-    global counter, killed_animal, sym_space, sym_animal, sym_plant
+    global counter, killed_animal, sym_space, sym_animal, sym_plant, quiet
 #    print 'draw_world called.'
 
     num_alive = 0
@@ -52,7 +53,10 @@ def draw_world():
         age_total += (counter - a['birth'])
         num_alive += 1 
 
-    print 'w: %d h: %d update: %d #animals: %d #killed: %d #plants: %d  avg.life: %.1f' % (width, height, counter, len(animals), killed_animal, len(plants), age_total / num_alive)
+    print 'w: %d h: %d update: %d #animals: %d #killed: %d #plants: %d  avg.life: %.1f' % (width, height, counter, len(animals), killed_animal, len(plants), float(age_total) / num_alive)
+
+    if quiet:
+        return
 
     for y in range(0, height):
         msg = ''
@@ -170,12 +174,13 @@ def add_plants():
 
 def update_world():
 #    print 'update_world called.'
-    global counter, killed_animal, animals_added, animals_dead
+    global counter, killed_animal, animals_added, animals_dead, track_animals
     counter += 1
     for animal in animals:
         if animal['energy'] <= 0:
             animals.remove(animal)
-            animals_dead.append(animal)
+            if track_animals:
+                animals_dead.append(animal)
             animal['death'] = counter
             killed_animal += 1
     animals_added = []
@@ -282,5 +287,39 @@ if __name__ == '__main__':
     animals_dead = []
     animal_id = 0
 
+    batch = 0
+    quiet = 0
+    interval = 1
+    total = 1000
+    track_animals = 0
+    try:
+        opts, args = getopt.getopt(sys.argv[1:],
+                                   'i:t:bqT',
+                                   [ 'interval=', 'total=', 'batch', 'quiet'])
+    except getopt.GetoptError:
+        print sys.exc_info()
+        print 'getopt error...'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ('-b' or '--batch'):
+            batch = 1
+        elif opt in ('-q' or '--quiet'):
+            quiet = 1
+        elif opt in ('-i' or '--interval'):
+            interval = int(arg)
+        elif opt in ('-t' or '--total'):
+            total = int(arg)
+        elif opt in ('-T' or '--track-animals'):
+            track_animals = 1
+        else:
+            sys.exit(1)
+
     add_plants()
-    evolution()
+    if batch:
+        for x in range(0, total):
+            update_world()
+            if counter % interval == 0:
+                draw_world()
+    else:
+        evolution()
+        
