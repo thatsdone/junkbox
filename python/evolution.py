@@ -46,14 +46,16 @@ def draw_world():
 
     num_alive = 0
     age_total = 0
+    energy_total = 0
 
     aa = []
     for a in animals:
         aa.append([a['x'], a['y']])
         age_total += (counter - a['birth'])
+        energy_total += a['energy']
         num_alive += 1 
 
-    print 'w: %d h: %d update: %d #animals: %d #killed: %d #plants: %d  avg.life: %.1f' % (width, height, counter, len(animals), killed_animal, len(plants), float(age_total) / num_alive)
+    print 'w: %d h: %d update: %d #animals: %d #killed: %d #plants: %d avg.age: %.1f avg.energy %.1f' % (width, height, counter, len(animals), killed_animal, len(plants), float(age_total) / num_alive, float(energy_total) / num_alive)
 
     if quiet:
         return
