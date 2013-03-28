@@ -42,6 +42,8 @@ mysqlbench
 import sys
 import getopt
 import _mysql as mysql
+import threading
+import time
 
 class MySQLBench(object):
     nbranches = 1
@@ -63,7 +65,7 @@ class MySQLBench(object):
     password = ''
     engine = 'innodb'
     #
-    dbname = 'bgbench'
+    dbname = 'pgbench'
 
     def usage(self):
         print 'Usage...'
@@ -95,7 +97,7 @@ class MySQLBench(object):
                 self.ttype = 1
             elif opt in ('-c'):
                 self.nclients = int(arg)
-#                elif opt in ('-C'):
+#            elif opt in ('-C'):
             elif opt in ('-s'):
                 self.tps = int(arg)
             elif opt in ('-t'):
@@ -109,13 +111,25 @@ class MySQLBench(object):
                 self.password= arg
             elif opt in ('-E'):
                 self.engine = arg
+            elif opt in ('-D'):
+                self.dbname = arg
             else:
                 usage()
                 sys.exit(1)
 
-
     def doOne(self):
+        print 'doOne called. %d' % threading.currentThread().ident
         return
+
+    def doClose(self):
+        try:
+            self.conn.close()
+
+        except:
+            print sys.exc_info()[0]
+            print sys.exc_info()[1]
+            sys.exit(0)
+            
 
     def doConnect(self):
         try:
@@ -126,15 +140,9 @@ class MySQLBench(object):
             return self.conn
 
         except:
-#        except mysql.MySQLError:
-#            print 'MySQLError'
             print sys.exc_info()[0]
             print sys.exc_info()[1]
             sys.exit(0)
-#        except:
-#            print 'Exception' 
-#            print sys.exc_info()[0]
-#            print sys.exc_info()[1]
 
 
 
@@ -165,37 +173,57 @@ class MySQLBench(object):
             self.conn.query(sql);
 
         for i in range(0, self.ntellers * self.tps):
-            sql = 'INSERT INTO tellers (tid, bid, tbalance, filler) VALUES (%d, %d, 0, REPEAT(\'t\',84))' % (i + 1, i / ntellers + 1)
+            sql = 'INSERT INTO tellers (tid, bid, tbalance, filler) VALUES (%d, %d, 0, REPEAT(\'t\',84))' % (i + 1, i / self.ntellers + 1)
             self.conn.query(sql);
 
-        print 'Flling tables...'
+        print 'Filling tables...'
         for i in range(0, self.naccounts * self.tps):
             j = i + 1
-            sql = 'INSERT INTO accounts (aid, bid, abalance, filler) VALUES (%d, %d, %d, REPEAT(\'c\',84))' % (j, j / naccounts, 0)
+            sql = 'INSERT INTO accounts (aid, bid, abalance, filler) VALUES (%d, %d, %d, REPEAT(\'c\',84))' % (j, j / self.naccounts, 0)
             self.conn.query(sql);
 
         self.conn.query("COMMIT");
         self.conn.query('OPTIMIZE TABLE branches, tellers, accounts, history')
+        #
+        self.doClose()
         print 'done.'
 
     def run(self):
         print 'MySQLBench::run called.'
 
+        self.conn = self.doConnect()
+
+        # scaling factor should be the same as count(bid) from branches.
         self.conn.query("SELECT count(bid) FROM branches");
-        rows = self.conn.store_result.fetch_row(max_rows=0, how=1)
-        for r in rows:
-            self.tps = int(r[0])
-            print r
-            
-        if not is_no_vaccum:
+        rows = self.conn.store_result().fetch_row(maxrows=1, how=1)
+        self.tps = int(rows[0]['count(bid)'])
+
+        if self.is_no_vacuum is not 0:
             print 'starting vacuum...'
             self.conn.query("OPTIMIZE TABLE branches");
             self.conn.query("OPTIMIZE TABLE tellers");
             self.conn.query("OPTIMIZE TABLE history");
             self.conn.query("OPTIMIZE TABLE branches");
-        # close
 
-        # create thread
+        if self.is_full_vacuum is not 0:
+            self.conn.query("OPTIMIZE TABLE accounts");
+        # close
+        self.doClose()
+
+        #create threads
+        for i in range(0, self.nclients):
+            print 'i = %d' % i
+            t=threading.Thread(target=self.doOne, name='threadb-%d' % i)
+            #t.start()
+
+        #set random seed
+        #get startup time
+        #check connections
+        print 'go...'
+        # start all threads
+        time.sleep(3)
+        # wait for all threads end up.
+        
 
 
 if __name__ == '__main__':
