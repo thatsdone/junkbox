@@ -45,6 +45,7 @@ import _mysql as mysql
 import threading
 import time
 
+
 class MySQLBench(object):
     nbranches = 1
     ntellers = 10
@@ -64,17 +65,19 @@ class MySQLBench(object):
     login = ''
     password = ''
     engine = 'innodb'
-    #
     dbname = 'pgbench'
+    #
+    threads = []
 
     def usage(self):
         print 'Usage...'
 
     def parse_arg(self, argv):
+        print 'MySQLBench::parse_arg called.'
 
         try:
             opts, args = getopt.getopt(argv[1:],
-                                   'ih:nvp:dc:t:s:U:P:CSE:', [])
+                                   'ih:nvp:dc:t:s:U:P:CSE:D:', [])
         except getopt.GetoptError:
             print sys.exc_info()
             print 'getopt error...'
@@ -117,13 +120,14 @@ class MySQLBench(object):
                 usage()
                 sys.exit(1)
 
-    def doOne(self):
-        print 'doOne called. %d' % threading.currentThread().ident
+    def doOne(self, id):
+        print 'doOne called. ident: %d id: %d' % (threading.currentThread().ident, id)
         return
 
-    def doClose(self):
+    def doClose(self, conn):
+        print 'MySQLBench::doClose called.'
         try:
-            self.conn.close()
+            conn.close()
 
         except:
             print sys.exc_info()[0]
@@ -132,12 +136,13 @@ class MySQLBench(object):
             
 
     def doConnect(self):
+        print 'MySQLBench::doConnect called.'
         try:
-            self.conn=mysql.connect(host=self.mysqlhost,
+            conn=mysql.connect(host=self.mysqlhost,
                              db=self.dbname,
                              user=self.login,
                              passwd=self.password)
-            return self.conn
+            return conn
 
         except:
             print sys.exc_info()[0]
@@ -145,9 +150,9 @@ class MySQLBench(object):
             sys.exit(0)
 
 
-
     def initialize(self):
-        print 'initialize called.'
+        print 'MySQLBench::initialize called.'
+
         DDLs = [
             "DROP TABLE IF EXISTS branches",
             "CREATE TABLE branches (bid int PRIMARY KEY, bbalance int, filler char(88))",
@@ -185,8 +190,9 @@ class MySQLBench(object):
         self.conn.query("COMMIT");
         self.conn.query('OPTIMIZE TABLE branches, tellers, accounts, history')
         #
-        self.doClose()
+        self.doClose(self.conn)
         print 'done.'
+
 
     def run(self):
         print 'MySQLBench::run called.'
@@ -208,13 +214,14 @@ class MySQLBench(object):
         if self.is_full_vacuum is not 0:
             self.conn.query("OPTIMIZE TABLE accounts");
         # close
-        self.doClose()
+        self.doClose(self.conn)
 
         #create threads
         for i in range(0, self.nclients):
-            print 'i = %d' % i
-            t=threading.Thread(target=self.doOne, name='threadb-%d' % i)
-            #t.start()
+            # print 'i = %d' % i
+            t=threading.Thread(target=self.doOne, name='threadb-%d' % i, args=(i,))
+            self.threads.append({'id': i, 'state': 'INIT' , 'thread': t, 'conn': None })
+            t.start()
 
         #set random seed
         #get startup time
@@ -222,9 +229,14 @@ class MySQLBench(object):
         print 'go...'
         # start all threads
         time.sleep(3)
-        # wait for all threads end up.
-        
 
+#        print self.threads
+        for i in range(0, self.nclients):
+            print i, self.threads[i]
+        for t in self.threads:
+            t['thread'].join()
+        print 'all threads completed'
+        # wait for all threads end up.
 
 if __name__ == '__main__':
     mb = MySQLBench()
