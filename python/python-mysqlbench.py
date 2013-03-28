@@ -44,7 +44,8 @@ import getopt
 import _mysql as mysql
 import threading
 import time
-
+from datetime import datetime, timedelta
+import random
 
 class MySQLBench(object):
     nbranches = 1
@@ -57,7 +58,7 @@ class MySQLBench(object):
     is_no_vacuum = 0
     is_full_vacuum = 0
     mysqlport = 3306
-    debug = 0
+    debug = 1
     ttype = 0
     nclients = 1
     tps = 1
@@ -162,39 +163,47 @@ class MySQLBench(object):
             "DROP TABLE IF EXISTS history",
             "CREATE TABLE history (tid int, bid int, aid int, delta int, mtime timestamp, filler char(22))"
             ]
-        self.conn = self.doConnect()
+        conn = self.doConnect()
         for stmt in DDLs:
             if stmt.startswith('CREATE'):
                 sql ='%s ENGINE=%s' % (stmt, self.engine)
             else:
                 sql = '%s' % stmt
-            self.conn.query(sql)
+            conn.query(sql)
 
-        self.conn.query("BEGIN");
+        conn.query("BEGIN");
 
         for i in range(0, self.nbranches * self.tps):
             sql = 'INSERT INTO branches (bid, bbalance, filler) VALUES (%d, 0, REPEAT(\'b\',88))' %  (i + 1)
-            self.conn.query(sql);
+            conn.query(sql);
 
         for i in range(0, self.ntellers * self.tps):
             sql = 'INSERT INTO tellers (tid, bid, tbalance, filler) VALUES (%d, %d, 0, REPEAT(\'t\',84))' % (i + 1, i / self.ntellers + 1)
-            self.conn.query(sql);
+            conn.query(sql);
 
         print 'Filling tables...'
         for i in range(0, self.naccounts * self.tps):
             j = i + 1
             sql = 'INSERT INTO accounts (aid, bid, abalance, filler) VALUES (%d, %d, %d, REPEAT(\'c\',84))' % (j, j / self.naccounts, 0)
-            self.conn.query(sql);
+            conn.query(sql);
 
-        self.conn.query("COMMIT");
-        self.conn.query('OPTIMIZE TABLE branches, tellers, accounts, history')
+        conn.query("COMMIT");
+        conn.query('OPTIMIZE TABLE branches, tellers, accounts, history')
         #
-        self.doClose(self.conn)
+        self.doClose(conn)
         print 'done.'
 
 
     def doOne(self, id):
         print 'doOne called. ident: %d id: %d' % (threading.currentThread().ident, id)
+        #
+        conn = self.doConnect()
+
+        # test
+        if self.debug:
+            conn.query("SELECT connection_id()");
+            print 'id: %d con_id: %s' % (id, conn.store_result().fetch_row(maxrows=1, how=1))
+
 
         # establish a connection
         self.lock.acquire()
@@ -208,8 +217,57 @@ class MySQLBench(object):
         self.cv.release()
 
         # generate workload
-        print 'DEBUG: doOne here we go... id: %d' % (id)
-
+        print 'DEBUG: doOne here we go... id: %d / %s' % (id, datetime.now())
+        #
+        cnt = 0
+        ecnt = 0
+        print 'DEBUG: before loop'
+        for n in range(0, self.nxacts):
+            print 'DEBUG: %d' % n
+            #
+            # In random.randint(begin, end), begin and end are inclusive.
+            aid = random.randint(1, self.naccounts * self.tps)
+            bid = random.randint(1, self.nbranches * self.tps)
+            tid = random.randint(1, self.ntellers * self.tps)
+            print 'tx: %d aid: %d bid: %d tid: %d' % (n, aid, bid, tid)
+            delta = random.randint(1, 1000)
+            # Q0
+            sql = 'BEGIN'
+            conn.query(sql)
+            #
+            # Q1
+            sql = 'UPDATE accounts SET abalance = abalance + %d WHERE aid = %d'% (delta, aid)
+            conn.query(sql)
+            #rows = conn.store_result()
+            #print 'DEBUG Q1: ', rows
+            #print conn.store_result().fetch_row(maxrows=1, how=1)
+            # Q2
+            sql = 'SELECT abalance FROM accounts WHERE aid = %d' % (aid)
+            conn.query(sql)
+            # memo. have to do this fetch_fow for Q3 and later execution...
+            print conn.store_result().fetch_row(maxrows=1, how=1)
+            # Q3
+            sql = ' UPDATE tellers SET tbalance = tbalance + %d WHERE tid = %d' % (delta, tid)
+            conn.query(sql)
+            #rows = conn.store_result()
+            #print 'DEBUG Q3: ', rows
+            # Q4
+            sql = 'UPDATE branches SET bbalance = bbalance + %d WHERE bid = %d' % (delta, bid)
+            conn.query(sql)
+            #rows = conn.store_result()
+            #print 'DEBUG Q4: ', rows
+            # Q5
+            sql = 'INSERT INTO history (tid,bid,aid,delta,mtime, filler) VALUES (%d,%d,%d,%d, NOW(), \'aaaaaaaaaaaaaaaaaaaaaa\')' % (tid, bid, aid, delta)
+            conn.query(sql)
+            #rows = conn.store_result()
+            #print 'DEBUG Q5: ', rows
+            # Q6
+            sql = 'COMMIT'
+            conn.query(sql)
+            #rows = conn.store_result()
+            #print 'DEBUG Q6: ', rows
+        # finish work load
+        self.doClose(conn)
         return
 
 
@@ -219,7 +277,7 @@ class MySQLBench(object):
         self.conn = self.doConnect()
 
         # scaling factor should be the same as count(bid) from branches.
-        self.conn.query("SELECT count(bid) FROM branches");
+        self.conn.query("SELECT count(bid) FROM branches")
         rows = self.conn.store_result().fetch_row(maxrows=1, how=1)
         self.tps = int(rows[0]['count(bid)'])
 
@@ -249,6 +307,7 @@ class MySQLBench(object):
             t.start()
 
         time.sleep(3)
+
 
         self.cv.acquire()
         while self.con_complete < self.nclients:
