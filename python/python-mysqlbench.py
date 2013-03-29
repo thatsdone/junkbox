@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-# python-
+#
+# Name: python-mysqlbench.py
 #
 # Description:
 #   A simple python port of mysqlbench which is originally pgbench of
@@ -10,6 +11,7 @@
 #
 # Author: Masanori Itoh <masanori.itoh@gmail.com>
 #
+# Original credits are here:
 """
 /*
 mysqlbench
@@ -51,7 +53,6 @@ class MySQLBench(object):
     nbranches = 1
     ntellers = 10
     naccounts = 100000
-
     #
     is_init_mode = 0
     mysqlhost = ''
@@ -70,14 +71,12 @@ class MySQLBench(object):
     #
     threads = []
     con_complete = 0
-    lock = None
 
     def usage(self):
         print 'Usage...'
 
     def parse_arg(self, argv):
         # print 'MySQLBench::parse_arg called.'
-
         try:
             opts, args = getopt.getopt(argv[1:],
                                    'ih:nvp:dc:t:s:U:P:CSE:D:', [])
@@ -155,7 +154,7 @@ class MySQLBench(object):
 
 
     def initialize(self):
-        print 'MySQLBench::initialize called.'
+        # print 'MySQLBench::initialize called.'
 
         DDLs = [
             "DROP TABLE IF EXISTS branches",
@@ -220,13 +219,11 @@ class MySQLBench(object):
         self.cv.release()
 
         # generate workload
-        # print 'DEBUG: doOne here we go... id: %d / %s' % (id, datetime.now())
-        #
         cnt = 0
         ecnt = 0
         for n in range(0, self.nxacts):
             #
-            # In random.randint(begin, end), begin and end are inclusive.
+            # in random.randint(begin, end) case, begin and end are inclusive.
             aid = random.randint(1, self.naccounts * self.tps)
             bid = random.randint(1, self.nbranches * self.tps)
             tid = random.randint(1, self.ntellers * self.tps)
@@ -279,16 +276,10 @@ class MySQLBench(object):
         for i in range(0, self.nclients):
             normal_xacts += self.threads[i]['cnt']
 
-#        t1 = float(normal_xacts) * 1000000 / (ts3 - ts1)
-#        t2 = float(normal_xacts) * 1000000 / (ts2 - ts1)
-#        print ts1, ts2, ts3
         t1 = (ts3 - ts1)
         t2 = (ts3 - ts2)
-        t1 = t1.total_seconds()
-        t2 = t2.total_seconds()
-#        print t1, t2
-        t1 = float(normal_xacts) / t1
-        t2 = float(normal_xacts) / t2
+        t1 = float(normal_xacts) / t1.total_seconds()
+        t2 = float(normal_xacts) / t2.total_seconds()
 
         if self.ttype == 0:
             test = 'TPC-B (sort of)'
@@ -328,56 +319,43 @@ class MySQLBench(object):
         # close
         self.doClose(self.conn)
 
-        #create threads
         self.cv = threading.Condition()
         self.cv_conn = threading.Condition()
         self.ready = False
         self.con_complete = 0
-        self.lock = threading.Lock()
 
         tv1 = datetime.now()
 
+        #create threads
         for i in range(0, self.nclients):
-            # print 'i = %d' % i
             t=threading.Thread(target=self.doOne, name='threadb-%d' % i, args=(i,))
             self.threads.append({'id': i, 'state': 'INIT' , 'thread': t, 'conn': None })
             t.start()
 
-        # time.sleep(3)
-
-
+        # wait for connection setup of all child threads.
         self.cv_conn.acquire()
         while self.con_complete < self.nclients:
             self.cv_conn.wait()
         self.cv_conn.release()
-        # print 'DEBUG: con_complete: %d' % self.con_complete
-        #set random seed
-        #get startup time
-        #check connections
 
         tv2 = datetime.now()
 
+        # print 'go...'
+        # start all threads
         self.cv.acquire()
         self.ready = True
         self.cv.notifyAll()
         self.cv.release()
-
-        # print 'go...'
-        # start all threads
-        time.sleep(3)
-        # print 'calling join...'
-
-#        print self.threads
-#        for i in range(0, self.nclients):
-#            print i, self.threads[i]
+        #
+        # wait for all threads end up.
         for t in self.threads:
             t['thread'].join()
         print 'all threads completed'
-        # wait for all threads end up.
 
         tv3 = datetime.now()
 
         self.print_results(tv1, tv2, tv3)
+
 
 if __name__ == '__main__':
     mb = MySQLBench()
