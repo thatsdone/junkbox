@@ -76,7 +76,7 @@ class MySQLBench(object):
         print 'Usage...'
 
     def parse_arg(self, argv):
-        print 'MySQLBench::parse_arg called.'
+        # print 'MySQLBench::parse_arg called.'
 
         try:
             opts, args = getopt.getopt(argv[1:],
@@ -123,9 +123,13 @@ class MySQLBench(object):
                 usage()
                 sys.exit(1)
 
+        # debug for positional argument
+        # print argv, len(argv)
+        # print opts, len(opts)
+        # sys.exit(1)
 
     def doClose(self, conn):
-        print 'MySQLBench::doClose called.'
+        # print 'MySQLBench::doClose called.'
         try:
             conn.close()
 
@@ -136,7 +140,7 @@ class MySQLBench(object):
             
 
     def doConnect(self):
-        print 'MySQLBench::doConnect called.'
+        # print 'MySQLBench::doConnect called.'
         try:
             conn=mysql.connect(host=self.mysqlhost,
                              db=self.dbname,
@@ -195,41 +199,38 @@ class MySQLBench(object):
 
 
     def doOne(self, id):
-        print 'doOne called. ident: %d id: %d' % (threading.currentThread().ident, id)
-        #
+        # print 'doOne called. ident: %d id: %d' % (threading.currentThread().ident, id)
+        # establish a connection
         conn = self.doConnect()
 
         # test
-        if self.debug:
-            conn.query("SELECT connection_id()");
-            print 'id: %d con_id: %s' % (id, conn.store_result().fetch_row(maxrows=1, how=1))
-
-
-        # establish a connection
-        self.lock.acquire()
+        #if self.debug:
+        #    conn.query("SELECT connection_id()");
+        #    print 'id: %d con_id: %s' % (id, conn.store_result().fetch_row(maxrows=1, how=1))
+        # count up the global connection counter and notify.
+        self.cv_conn.acquire()
         self.con_complete += 1
-        self.lock.release()
+        self.cv_conn.notify()
+        self.cv_conn.release()
 
-        # wait for other threads
+        # wait for other threads get ready
         self.cv.acquire()
         while not self.ready == True:
             self.cv.wait()
         self.cv.release()
 
         # generate workload
-        print 'DEBUG: doOne here we go... id: %d / %s' % (id, datetime.now())
+        # print 'DEBUG: doOne here we go... id: %d / %s' % (id, datetime.now())
         #
         cnt = 0
         ecnt = 0
-        print 'DEBUG: before loop'
         for n in range(0, self.nxacts):
-            print 'DEBUG: %d' % n
             #
             # In random.randint(begin, end), begin and end are inclusive.
             aid = random.randint(1, self.naccounts * self.tps)
             bid = random.randint(1, self.nbranches * self.tps)
             tid = random.randint(1, self.ntellers * self.tps)
-            print 'tx: %d aid: %d bid: %d tid: %d' % (n, aid, bid, tid)
+            # print 'tx: %d aid: %d bid: %d tid: %d' % (n, aid, bid, tid)
             delta = random.randint(1, 1000)
             # Q0
             sql = 'BEGIN'
@@ -245,7 +246,8 @@ class MySQLBench(object):
             sql = 'SELECT abalance FROM accounts WHERE aid = %d' % (aid)
             conn.query(sql)
             # memo. have to do this fetch_fow for Q3 and later execution...
-            print conn.store_result().fetch_row(maxrows=1, how=1)
+            rows = conn.store_result().fetch_row(maxrows=1, how=1)
+            # print 'id: %d %s'  % (id, rows)
             # Q3
             sql = ' UPDATE tellers SET tbalance = tbalance + %d WHERE tid = %d' % (delta, tid)
             conn.query(sql)
@@ -267,12 +269,43 @@ class MySQLBench(object):
             #rows = conn.store_result()
             #print 'DEBUG Q6: ', rows
         # finish work load
+            cnt += 1
         self.doClose(conn)
+        self.threads[id]['cnt'] = cnt
         return
 
+    def print_results(self, ts1, ts2, ts3):
+        normal_xacts = 0
+        for i in range(0, self.nclients):
+            normal_xacts += self.threads[i]['cnt']
+
+#        t1 = float(normal_xacts) * 1000000 / (ts3 - ts1)
+#        t2 = float(normal_xacts) * 1000000 / (ts2 - ts1)
+#        print ts1, ts2, ts3
+        t1 = (ts3 - ts1)
+        t2 = (ts3 - ts2)
+        t1 = t1.total_seconds()
+        t2 = t2.total_seconds()
+#        print t1, t2
+        t1 = float(normal_xacts) / t1
+        t2 = float(normal_xacts) / t2
+
+        if self.ttype == 0:
+            test = 'TPC-B (sort of)'
+        else:
+            test = 'SELECT only'
+        print 'transaction type                    . . . : %s' % test
+        print 'scaling factor                      . . . : %d' % self.tps
+        print 'number of clients                     . . : %d' % self.nclients
+        print 'number of transactions per client         : %d' % self.nxacts
+        print 'number of transactions actually processed : %d/%d' % (normal_xacts, self.nxacts * self.nclients)
+        print 'tps (include connections establishing)  . : %f' % t1
+        print 'tps (exclude connections establishing)  . : %f' % t2
+        
+        return
 
     def run(self):
-        print 'MySQLBench::run called.'
+        # print 'MySQLBench::run called.'
 
         self.conn = self.doConnect()
 
@@ -281,7 +314,7 @@ class MySQLBench(object):
         rows = self.conn.store_result().fetch_row(maxrows=1, how=1)
         self.tps = int(rows[0]['count(bid)'])
 
-        print 'DEBUG: scaling factor = %d' % self.tps
+        # print 'DEBUG: scaling factor = %d' % self.tps
 
         if self.is_no_vacuum is not 0:
             print 'starting vacuum...'
@@ -297,8 +330,12 @@ class MySQLBench(object):
 
         #create threads
         self.cv = threading.Condition()
+        self.cv_conn = threading.Condition()
         self.ready = False
+        self.con_complete = 0
         self.lock = threading.Lock()
+
+        tv1 = datetime.now()
 
         for i in range(0, self.nclients):
             # print 'i = %d' % i
@@ -306,28 +343,29 @@ class MySQLBench(object):
             self.threads.append({'id': i, 'state': 'INIT' , 'thread': t, 'conn': None })
             t.start()
 
-        time.sleep(3)
+        # time.sleep(3)
 
 
-        self.cv.acquire()
+        self.cv_conn.acquire()
         while self.con_complete < self.nclients:
-            self.cv.wait()
-        self.cv.release()
-        print 'DEBUG: con_complete: %d' % self.con_complete
+            self.cv_conn.wait()
+        self.cv_conn.release()
+        # print 'DEBUG: con_complete: %d' % self.con_complete
+        #set random seed
+        #get startup time
+        #check connections
 
+        tv2 = datetime.now()
 
         self.cv.acquire()
         self.ready = True
         self.cv.notifyAll()
         self.cv.release()
-        
 
-        #set random seed
-        #get startup time
-        #check connections
-        print 'go...'
+        # print 'go...'
         # start all threads
         time.sleep(3)
+        # print 'calling join...'
 
 #        print self.threads
 #        for i in range(0, self.nclients):
@@ -336,6 +374,10 @@ class MySQLBench(object):
             t['thread'].join()
         print 'all threads completed'
         # wait for all threads end up.
+
+        tv3 = datetime.now()
+
+        self.print_results(tv1, tv2, tv3)
 
 if __name__ == '__main__':
     mb = MySQLBench()
