@@ -1,12 +1,11 @@
 #!/usr/bin/python
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
-#
 # Name: python-mysqlbench.py
 #
 # Description:
 #   A simple python port of mysqlbench which is originally pgbench of
 #   PostgreSQL.
-# 
+#
 #   http://www.mysql.gr.jp/frame/modules/bwiki/index.php?plugin=attach&refer=Contrib&openfile=mysqlbench-0.1.tgz
 #
 # Author: Masanori Itoh <masanori.itoh@gmail.com>
@@ -48,6 +47,7 @@ import threading
 import time
 from datetime import datetime, timedelta
 import random
+
 
 class MySQLBench(object):
     nbranches = 1
@@ -113,7 +113,7 @@ class MySQLBench(object):
             elif opt in ('-U'):
                 self.login = arg
             elif opt in ('-P'):
-                self.password= arg
+                self.password = arg
             elif opt in ('-E'):
                 self.engine = arg
             elif opt in ('-D'):
@@ -136,15 +136,14 @@ class MySQLBench(object):
             print sys.exc_info()[0]
             print sys.exc_info()[1]
             sys.exit(0)
-            
 
     def doConnect(self):
         # print 'MySQLBench::doConnect called.'
         try:
-            conn=mysql.connect(host=self.mysqlhost,
-                             db=self.dbname,
-                             user=self.login,
-                             passwd=self.password)
+            conn = mysql.connect(host=self.mysqlhost,
+                                 db=self.dbname,
+                                 user=self.login,
+                                 passwd=self.password)
             return conn
 
         except:
@@ -152,60 +151,69 @@ class MySQLBench(object):
             print sys.exc_info()[1]
             sys.exit(0)
 
-
     def initialize(self):
         # print 'MySQLBench::initialize called.'
 
         DDLs = [
-            "DROP TABLE IF EXISTS branches",
-            "CREATE TABLE branches (bid int PRIMARY KEY, bbalance int, filler char(88))",
-            "DROP TABLE IF EXISTS tellers",
-            "CREATE TABLE tellers (tid int PRIMARY KEY, bid int, tbalance int, filler char(84))",
-            "DROP TABLE IF EXISTS accounts",
-            "CREATE TABLE accounts (aid int PRIMARY KEY, bid int, abalance int, filler char(84))",
-            "DROP TABLE IF EXISTS history",
-            "CREATE TABLE history (tid int, bid int, aid int, delta int, mtime timestamp, filler char(22))"
+            'DROP TABLE IF EXISTS branches',
+            'CREATE TABLE branches (bid int PRIMARY KEY, bbalance int, '
+                'filler char(88))',
+            'DROP TABLE IF EXISTS tellers',
+            'CREATE TABLE tellers (tid int PRIMARY KEY, bid int, '
+            'tbalance int, filler char(84))',
+            'DROP TABLE IF EXISTS accounts',
+            'CREATE TABLE accounts (aid int PRIMARY KEY, bid int, '
+                'abalance int, filler char(84))',
+            'DROP TABLE IF EXISTS history',
+            'CREATE TABLE history (tid int, bid int, aid int, '
+                'delta int, mtime timestamp, filler char(22))'
             ]
         conn = self.doConnect()
         for stmt in DDLs:
             if stmt.startswith('CREATE'):
-                sql ='%s ENGINE=%s' % (stmt, self.engine)
+                sql = '%s ENGINE=%s' % (stmt, self.engine)
             else:
                 sql = '%s' % stmt
             conn.query(sql)
 
-        conn.query("BEGIN");
+        conn.query('BEGIN')
 
         for i in range(0, self.nbranches * self.tps):
-            sql = 'INSERT INTO branches (bid, bbalance, filler) VALUES (%d, 0, REPEAT(\'b\',88))' %  (i + 1)
-            conn.query(sql);
+            sql = 'INSERT INTO branches (bid, bbalance, filler) ' \
+                'VALUES (%d, 0, REPEAT(\'b\',88))' % (i + 1)
+            conn.query(sql)
 
         for i in range(0, self.ntellers * self.tps):
-            sql = 'INSERT INTO tellers (tid, bid, tbalance, filler) VALUES (%d, %d, 0, REPEAT(\'t\',84))' % (i + 1, i / self.ntellers + 1)
-            conn.query(sql);
+            sql = 'INSERT INTO tellers (tid, bid, tbalance, filler) ' \
+                'VALUES (%d, %d, 0, REPEAT(\'t\',84))' \
+                % (i + 1, i / self.ntellers + 1)
+            conn.query(sql)
 
         print 'Filling tables...'
         for i in range(0, self.naccounts * self.tps):
             j = i + 1
-            sql = 'INSERT INTO accounts (aid, bid, abalance, filler) VALUES (%d, %d, %d, REPEAT(\'c\',84))' % (j, j / self.naccounts, 0)
-            conn.query(sql);
+            sql = 'INSERT INTO accounts (aid, bid, abalance, filler) ' \
+                'VALUES (%d, %d, %d, REPEAT(\'c\',84))' \
+            % (j, j / self.naccounts, 0)
+            conn.query(sql)
 
-        conn.query("COMMIT");
+        conn.query('COMMIT')
         conn.query('OPTIMIZE TABLE branches, tellers, accounts, history')
         #
         self.doClose(conn)
         print 'done.'
 
-
     def doOne(self, id):
-        # print 'doOne called. ident: %d id: %d' % (threading.currentThread().ident, id)
+        #print 'doOne called. ident: %d id: %d' %
+        #(threading.currentThread().ident, id)
         # establish a connection
         conn = self.doConnect()
 
         # test
         #if self.debug:
-        #    conn.query("SELECT connection_id()");
-        #    print 'id: %d con_id: %s' % (id, conn.store_result().fetch_row(maxrows=1, how=1))
+        #    conn.query('SELECT connection_id()')
+        #    print 'id: %d con_id: %s' %
+        #    (id, conn.store_result().fetch_row(maxrows=1, how=1))
         # count up the global connection counter and notify.
         self.cv_conn.acquire()
         self.con_complete += 1
@@ -214,7 +222,7 @@ class MySQLBench(object):
 
         # wait for other threads get ready
         self.cv.acquire()
-        while not self.ready == True:
+        while not self.ready:
             self.cv.wait()
         self.cv.release()
 
@@ -234,7 +242,8 @@ class MySQLBench(object):
             conn.query(sql)
             #
             # Q1
-            sql = 'UPDATE accounts SET abalance = abalance + %d WHERE aid = %d'% (delta, aid)
+            sql = 'UPDATE accounts SET abalance = abalance + %d ' \
+                'WHERE aid = %d' % (delta, aid)
             conn.query(sql)
             #rows = conn.store_result()
             #print 'DEBUG Q1: ', rows
@@ -246,17 +255,21 @@ class MySQLBench(object):
             rows = conn.store_result().fetch_row(maxrows=1, how=1)
             # print 'id: %d %s'  % (id, rows)
             # Q3
-            sql = ' UPDATE tellers SET tbalance = tbalance + %d WHERE tid = %d' % (delta, tid)
+            sql = ' UPDATE tellers SET tbalance = tbalance + %d ' \
+                'WHERE tid = %d' % (delta, tid)
             conn.query(sql)
             #rows = conn.store_result()
             #print 'DEBUG Q3: ', rows
             # Q4
-            sql = 'UPDATE branches SET bbalance = bbalance + %d WHERE bid = %d' % (delta, bid)
+            sql = 'UPDATE branches SET bbalance = bbalance + %d ' \
+                'WHERE bid = %d' % (delta, bid)
             conn.query(sql)
             #rows = conn.store_result()
             #print 'DEBUG Q4: ', rows
             # Q5
-            sql = 'INSERT INTO history (tid,bid,aid,delta,mtime, filler) VALUES (%d,%d,%d,%d, NOW(), \'aaaaaaaaaaaaaaaaaaaaaa\')' % (tid, bid, aid, delta)
+            sql = 'INSERT INTO history (tid,bid,aid,delta,mtime, filler) ' \
+                'VALUES (%d,%d,%d,%d, NOW(), \'aaaaaaaaaaaaaaaaaaaaaa\')' \
+                % (tid, bid, aid, delta)
             conn.query(sql)
             #rows = conn.store_result()
             #print 'DEBUG Q5: ', rows
@@ -287,12 +300,15 @@ class MySQLBench(object):
             test = 'SELECT only'
         print 'transaction type                    . . . : %s' % test
         print 'scaling factor                      . . . : %d' % self.tps
-        print 'number of clients                     . . : %d' % self.nclients
-        print 'number of transactions per client         : %d' % self.nxacts
-        print 'number of transactions actually processed : %d/%d' % (normal_xacts, self.nxacts * self.nclients)
+        print 'number of clients                     . . : %d' \
+            % self.nclients
+        print 'number of transactions per client         : %d' \
+            % self.nxacts
+        print 'number of transactions actually processed : %d/%d' \
+            % (normal_xacts, self.nxacts * self.nclients)
         print 'tps (include connections establishing)  . : %f' % t1
         print 'tps (exclude connections establishing)  . : %f' % t2
-        
+
         return
 
     def run(self):
@@ -309,13 +325,13 @@ class MySQLBench(object):
 
         if self.is_no_vacuum is not 0:
             print 'starting vacuum...'
-            self.conn.query("OPTIMIZE TABLE branches");
-            self.conn.query("OPTIMIZE TABLE tellers");
-            self.conn.query("OPTIMIZE TABLE history");
-            self.conn.query("OPTIMIZE TABLE branches");
+            self.conn.query("OPTIMIZE TABLE branches")
+            self.conn.query("OPTIMIZE TABLE tellers")
+            self.conn.query("OPTIMIZE TABLE history")
+            self.conn.query("OPTIMIZE TABLE branches")
 
         if self.is_full_vacuum is not 0:
-            self.conn.query("OPTIMIZE TABLE accounts");
+            self.conn.query("OPTIMIZE TABLE accounts")
         # close
         self.doClose(self.conn)
 
@@ -328,8 +344,10 @@ class MySQLBench(object):
 
         #create threads
         for i in range(0, self.nclients):
-            t=threading.Thread(target=self.doOne, name='threadb-%d' % i, args=(i,))
-            self.threads.append({'id': i, 'state': 'INIT' , 'thread': t, 'conn': None })
+            t = threading.Thread(target=self.doOne,
+                                     name='threadb-%d' % i, args=(i,))
+            self.threads.append({'id': i, 'state': 'INIT',
+                                     'thread': t, 'conn': None})
             t.start()
 
         # wait for connection setup of all child threads.
