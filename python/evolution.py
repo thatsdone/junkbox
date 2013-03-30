@@ -1,6 +1,6 @@
 #
 # evolution.py
-# 
+#
 # A simple(/stupid) and straight forward port of an example
 # from 'Land of Lisp'  http://landoflisp.com/evolution.lisp
 #
@@ -9,7 +9,7 @@
 #
 # Note2:
 # In the original program, 'genes' of an animal is referenced only
-# by 'turn'. This means genes have effects only on making a decision of 
+# by 'turn'. This means genes have effects only on making a decision of
 # choosing direction to move to in the current step.
 # In a sense, that's why there are 8 elements in 'genes', I think.
 # First, 'turn' function sums up all 8 elements of the given genes,
@@ -21,7 +21,7 @@
 # If xnu is negative, 'angle' returns 0 immediately.
 # If not, 'angle' calls itself recursively using '(cdr genes)' and 'xnu'
 # instead of the given genes and x. On return, the result is incremented.
-# Thus, dir(ection) from 0 to 7 will be choosed according to 8 values 
+# Thus, dir(ection) from 0 to 7 will be choosed according to 8 values
 # contained in the given genes.
 #
 # dir(ection) is like the following.
@@ -39,6 +39,7 @@ import sys
 import random
 import getopt
 
+
 def draw_world():
     global counter, killed_animal, sym_space, sym_animal, sym_plant, quiet
 #    print 'draw_world called.'
@@ -52,9 +53,12 @@ def draw_world():
         aa.append([a['x'], a['y']])
         age_total += (counter - a['birth'])
         energy_total += a['energy']
-        num_alive += 1 
+        num_alive += 1
 
-    print 'w: %d h: %d update: %d #animals: %d #killed: %d #plants: %d avg.age: %.1f avg.energy %.1f' % (width, height, counter, len(animals), killed_animal, len(plants), float(age_total) / num_alive, float(energy_total) / num_alive)
+    print 'w: %d h: %d update: %d #animals: %d #killed: %d ' \
+        '#plants: %d avg.age: %.1f avg.energy %.1f' \
+        % (width, height, counter, len(animals), killed_animal, len(plants),
+           float(age_total) / num_alive, float(energy_total) / num_alive)
 
     if quiet:
         return
@@ -71,9 +75,11 @@ def draw_world():
         print '%s%s%s' % ('|', msg, '|')
     return
 
+
 def fresh_line():
     print 'fresh_line called.'
     return
+
 
 def move(animal):
 #    print 'move called.'
@@ -103,10 +109,12 @@ def move(animal):
     animal['energy'] -= 1
     return
 
+
 def turn(animal):
 #    print 'turn called.'
     global debug
     x = random.randint(0, sum(animal['genes']))
+
     def angle(genes, x):
         if len(genes) == 0:
             return 0
@@ -120,6 +128,7 @@ def turn(animal):
     animal['dir'] = (animal['dir'] + a) % 8
     return
 
+
 def eat(animal):
 #    print 'eat called.'
     pos = {'x': animal['x'], 'y': animal['y']}
@@ -128,9 +137,10 @@ def eat(animal):
         plants.remove(pos)
     return
 
+
 def reproduce(animal):
 #    print 'reproduce called.'
-    global animals_added,animal_id,counter
+    global animals_added, animal_id, counter
     e = animal['energy']
     if e >= reproduce_energy:
         animal['energy'] = (e - 1) / 2
@@ -140,13 +150,14 @@ def reproduce(animal):
         mutation = random.randint(0, 7)
         original = True
         if original:
-            genes[mutation] = max(1, genes[mutation] + random.randint(0, 2) - 1)
+            genes[mutation] = max(1, genes[mutation]
+                                  + random.randint(0, 2) - 1)
         else:
             g = random.randint(1, 10)
             if genes[mutation] == g:
                 genes[mutation] = 1
             else:
-                genes[mutation] = g           
+                genes[mutation] = g
         animal_new['genes'] = genes
         animal_id += 1
         animal_new['id'] = animal_id
@@ -154,6 +165,7 @@ def reproduce(animal):
         animal_new['parent'] = animal['id']
         animals_added.append(animal_new)
     return
+
 
 def random_plant(pos):
 #    print 'random_plants called.'
@@ -164,6 +176,7 @@ def random_plant(pos):
     if not {'x': x, 'y': y} in plants:
         plants.append({'x': x, 'y': y})
     return
+
 
 def add_plants():
 #    print 'add_plants called.'
@@ -194,17 +207,19 @@ def update_world():
     add_plants()
     return
 
+
 def print_animal(animal):
-    print 'id: %6d p: %6d x: %3d y: %3d dir: %d e: %3d b:%6d d: %6d g: %s' % (
-        animal['id'],
-        animal['parent'],
-        animal['x'],
-        animal['y'],
-        animal['dir'],
-        animal['energy'],
-        animal['birth'],
-        animal['death'],
-        animal['genes'])
+    print 'id: %6d p: %6d x: %3d y: %3d dir: %d e: %3d b:%6d d: %6d g: %s' \
+        % (animal['id'],
+           animal['parent'],
+           animal['x'],
+           animal['y'],
+           animal['dir'],
+           animal['energy'],
+           animal['birth'],
+           animal['death'],
+           animal['genes'])
+
 
 def evolution():
 #    print 'evolution'
@@ -254,12 +269,12 @@ def evolution():
 
         for i in range(0, x):
             update_world()
-            
+
         draw_world()
 
 if __name__ == '__main__':
 
-    debug=0
+    debug = 0
     prompt = 'evolution: '
     sym_space = '-'
     sym_animal = 'A'
@@ -297,7 +312,8 @@ if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:],
                                    'i:t:bqT',
-                                   [ 'interval=', 'total=', 'batch', 'quiet'])
+                                   ['interval=', 'total=',
+                                    'batch', 'quiet'])
     except getopt.GetoptError:
         print sys.exc_info()
         print 'getopt error...'
@@ -324,4 +340,3 @@ if __name__ == '__main__':
                 draw_world()
     else:
         evolution()
-        
