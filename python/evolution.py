@@ -37,7 +37,6 @@
 #
 import sys
 import random
-import readline
 import getopt
 
 def draw_world():
@@ -209,6 +208,7 @@ def print_animal(animal):
 
 def evolution():
 #    print 'evolution'
+    import readline
     global prompt
 
     draw_world()
