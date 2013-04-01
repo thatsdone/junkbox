@@ -272,6 +272,14 @@ def evolution():
 
         draw_world()
 
+def usage():
+    print 'Usage: ', sys.argv[0], ' [options]'
+    print '  options: -i <interval>      : interval to show status info.'
+    print '           -t <total update>  : total update count'
+    print '           -b                 : batch mode'
+    print '           -q                 : quiet mode'
+    print '           -T                 : track killed animals too'
+
 if __name__ == '__main__':
 
     debug = 0
@@ -315,9 +323,10 @@ if __name__ == '__main__':
                                    ['interval=', 'total=',
                                     'batch', 'quiet'])
     except getopt.GetoptError:
-        print sys.exc_info()
-        print 'getopt error...'
+        print sys.exc_info()[1]
+        usage()
         sys.exit(2)
+
     for opt, arg in opts:
         if opt in ('-b' or '--batch'):
             batch = 1
