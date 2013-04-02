@@ -76,11 +76,6 @@ def draw_world():
     return
 
 
-def fresh_line():
-    print 'fresh_line called.'
-    return
-
-
 def move(animal):
 #    print 'move called.'
     direction = animal['dir']
@@ -300,13 +295,13 @@ if __name__ == '__main__':
     jungle = [45, 10, 10, 10]
     animals = [{'x': int((width - 1) / 2),
                 'y': int((height - 1) / 2),
-                'energy':1000,
+                'energy': 1000,
                 'dir': 0,
                 'id': 0,
                 'birth': 0,
                 'death': 0,
                 'parent': 0,
-                'genes':   [random.randint(0, 9) for r in range(8)]
+                'genes': [random.randint(0, 9) for r in range(8)]
                 }]
     animals_added = []
     animals_dead = []
