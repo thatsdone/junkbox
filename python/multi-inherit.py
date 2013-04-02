@@ -1,6 +1,12 @@
 #
 # multi-inherit.py : multple inheritance examples.
 # 
+# See:
+#   http://docs.python.jp/2/tutorial/classes.html
+#   http://docs.python.jp/2/glossary.html#term-new-style-classi
+#   http://docs.python.jp/2/reference/datamodel.html#newstyle
+#   http://www.python.org/doc/newstyle/
+#
 # (Case 1)
 #
 #  A ---+
