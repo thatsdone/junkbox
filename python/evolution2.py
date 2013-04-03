@@ -40,17 +40,38 @@ import random
 import getopt
 
 class Animal(object):
-    def __init__(self):
-        print 'Animal __init__ called.'
-        return self
+    id = 0
+    x = 0
+    y = 0
+    energy = 0
+    dir = 0
+    id = 0
+    birth = 0
+    death = 0
+    parent = 0
+    genes = []
+
+    def __init__(self, world):
+        #print 'Animal.__init__ called.'
+        if self.id == 0:
+            self.x = int((world.width - 1) / 2)
+            self.y = int((world.height - 1) / 2)
+            self.energy = 1000
+            self.dir = 0
+            self.id = 0
+            self.birth = 0
+            self.death = 0
+            self.parent = 0
+            self.genes = [random.randint(0, 9) for r in range(8)]
+        return
 
     def update(self):
         print 'Animal::update called.'
         return
 
-    def turn(self, animal):
-        #print 'Animal::turn called.'
-        x = random.randint(0, sum(animal['genes']))
+    def turn(self):
+        #print 'Animal.turn called.'
+        x = random.randint(0, sum(self.genes))
 
         def angle(genes, x):
             if len(genes) == 0:
@@ -61,14 +82,14 @@ class Animal(object):
             else:
                 return angle(genes[1:], xnu) + 1
 
-        a = angle(animal['genes'], x)
-        animal['dir'] = (animal['dir'] + a) % 8
+        a = angle(self.genes, x)
+        self.dir = (self.dir + a) % 8
 
-    def move(self, animal):
-        #print 'Animal::move called.'
-        direction = animal['dir']
-        x = animal['x']
-        y = animal['y']
+    def move(self, world):
+        #print 'Animal.move called.'
+        direction = self.dir
+        x = self.x
+        y = self.y
 
         def movex(direction):
             if (direction >= 2 and direction <= 4):
@@ -86,26 +107,27 @@ class Animal(object):
             else:
                 return 0
 
-        animal['x'] = (x + movex(direction)) % self.width
+        self.x = (x + movex(direction)) % world.width
         # oops... here was a critical bug. the below 'y' was 'x'...orz
-        animal['y'] = (y + movey(direction)) % self.height
-        animal['energy'] -= 1
+        self.y = (y + movey(direction)) % world.height
+        self.energy -= 1
 
-    def eat(self, animal):
-        #print 'Animal::eat called.'
-        pos = {'x': animal['x'], 'y': animal['y']}
-        if pos in self.plants:
-            animal['energy'] += self.plant_energy
-            self.plants.remove(pos)
+    def eat(self, world):
+        #print 'Animal.eat called.'
+        for p in world.plants:
+            if p.x == self.x and p.y == self.y:
+                self.energy += world.plant_energy
+                world.plants.remove(p)
 
-    def reproduce(self, animal):
-        #print 'Animal::reproduce called.'
-        e = animal['energy']
-        if e >= self.reproduce_energy:
-            animal['energy'] = (e - 1) / 2
-            animal_new = animal.copy()
+    def reproduce(self, world):
+        #print 'Animal.reproduce called.'
+        import copy
+        e = self.energy
+        if e >= world.reproduce_energy:
+            self.energy = (e - 1) / 2
+            animal_new = copy.copy(self)
             # last [:] is important for copying the entire list. or deepcopy()?
-            genes = list(animal_new['genes'])[:]
+            genes = list(animal_new.genes)[:]
             mutation = random.randint(0, 7)
             original = True
             if original:
@@ -118,116 +140,155 @@ class Animal(object):
                 else:
                     genes[mutation] = g
 
-            animal_new['genes'] = genes
-            self.animal_id += 1
-            animal_new['id'] = self.animal_id
-            animal_new['birth'] = self.counter
-            animal_new['parent'] = animal['id']
-            self.animals_added.append(animal_new)
+            animal_new.genes = genes
+            world.animal_id += 1
+            animal_new.id = world.animal_id
+            animal_new.birth = world.clock
+            animal_new.parent = self.id
+            world.animals_added.append(animal_new)
 
     def kill(self):
-        print 'Animal::kill called.'
+        print 'Animal.kill called.'
         return
 
-    def add(self):
-        print 'Animal::add called.'
+    def show(self):
+        print 'id: %6d p: %6d x: %3d y: %3d dir: %d e: %3d b:%6d d: %6d g: %s' \
+            % (self.id,
+               self.parent,
+               self.x,
+               self.y,
+               self.dir,
+               self.energy,
+               self.birth,
+               self.death,
+               self.genes)
         return
+
+#    def add(self):
+#        print 'Animal.add called.'
+#        return
 
 class Plant(object):
-    def __init__(self):
-        print 'Plant __init__ called.'
-        return self
+    x = 0
+    y = 0
 
-    def update(self):
-        #print 'Plant::update called.'
-        Plant.add(self.jungle)
-        Plant.add([0, 0, self.width, self.height])
+    def __init__(self, world, pos):
+        #print 'Plant.__init__ called.'
+
+        (left, top, width, height) = pos
+        width = width - left
+        height = height - top
+        # Precisely speaking, here must be some roundup.
+#        x = (left + random.randint(0, world.width - 1))
+#        y = (top + random.randint(0, world.height - 1))
+        x = (left + random.randint(0, width - 1))
+        y = (top + random.randint(0, height - 1))
+#
+        for p in  world.plants:
+            if p.x != x and p.y != y:
+                self.x = x
+                self.y = y
+        else:
+            return None
+
+    def update(self, world):
+        #print 'Plant.update called.'
+        self.add(super(self).jungle, world)
+        self.add([0, 0, self.width, self.height], world)
 
     def erase(self):
         return
 
-    def add(self, pos):
-        #print 'Plant::add called.'
+    def add(self, pos, world):
+        #print 'Plant.add called.'
         (left, top, width, height) = pos
         # Precisely speaking, here must be some roundup.
         x = (left + random.randint(0, self.width - 1))
         y = (top + random.randint(0, self.height - 1))
         if not {'x': x, 'y': y} in self.plants:
-            self.plants.append({'x': x, 'y': y})
+            world.plants.append({'x': x, 'y': y})
+
+    def show(self):
+        print 'x: %3d y: %3d' % (self.x, self.y)
 
 
-class World(Animal, Plant):
+class World(object):
+    # the entire wold, and jungle
     width = 100
     height = 30
-    #
-    counter = 0
+    land = [0, 0, width, height]
+#    jungle = [45, 10, 10, 10]
+    jungle = [45, 10, 65, 20]
+    # world clock
+    clock = 0
     #
     killed_animal = 0
-    #
+    # constants
     plant_energy = 80
     reproduce_energy = 200
     #
+    # list of Plant object
     plants = []
-    jungle = [45, 10, 10, 10]
-    animals = [{'x': int((width - 1) / 2),
-                'y': int((height - 1) / 2),
-                'energy': 1000,
-                'dir': 0,
-                'id': 0,
-                'birth': 0,
-                'death': 0,
-                'parent': 0,
-                'genes': [random.randint(0, 9) for r in range(8)]
-                }]
-    animals_added = []
+    # list of Animal object
+    animals = []
     animals_dead = []
+    animals_added = []
     animal_id = 0
 
     def __init__(self):
-        Animal.__init__(self)
-        Plant.__init__(self)
-        Plant.update(self)
+        #print 'World.__init__ called.'
+        self.animals.append(Animal(self))
+        self.plants.append(Plant(self, self.land))
+        self.plants.append(Plant(self, self.jungle))
+        return
 
     def update(self):
-        #print 'World::update called.'
+        #print 'World.update called.'
 
-        self.counter += 1
+        self.clock += 1
         for animal in self.animals:
-            if animal['energy'] <= 0:
+            if animal.energy <= 0:
                 self.animals.remove(animal)
                 if self.track_animals:
                     self.animals_dead.append(animal)
-                animal['death'] = self.counter
+                animaldeath = self.clock
                 self.killed_animal += 1
         self.animals_added = []
         for animal in self.animals:
-            self.turn(animal)
-            self.move(animal)
-            self.eat(animal)
-            self.reproduce(animal)
+            animal.turn()
+            animal.move(self)
+            animal.eat(self)
+            animal.reproduce(self)
         self.animals.extend(self.animals_added)
         # self must be specified... why???
-        Plant.update(self)
-
-    def show(self):
-        return
+        self.plants.append(Plant(self, self.land))
+        self.plants.append(Plant(self, self.jungle))
 
     def draw(self):
-        #print 'World::draw called'
+        #print 'World.draw called'
         num_alive = 0
         age_total = 0
         energy_total = 0
 
+        #print self.animals
+        #print self.plants
         aa = []
         for a in self.animals:
-            aa.append([a['x'], a['y']])
-            age_total += (self.counter - a['birth'])
-            energy_total += a['energy']
+            aa.append([a.x, a.y])
+            age_total += (self.clock - a.birth)
+            energy_total += a.energy
             num_alive += 1
 
+        pp = []
+        for p in self.plants:
+            pp.append([p.x, p.y])
+
+        # work around...
+        if num_alive == 0:
+            num_alive = 1
         print 'w: %d h: %d update: %d #animals: %d #killed: %d ' \
             '#plants: %d avg.age: %.1f avg.energy %.1f' \
-            % (self.width, self.height, self.counter,
+            % (self.width, self.height, self.clock,
                len(self.animals), self.killed_animal,
                len(self.plants), float(age_total) / num_alive,
                float(energy_total) / num_alive)
@@ -240,7 +301,7 @@ class World(Animal, Plant):
             for x in range(0, self.width):
                 if [x, y] in aa:
                     msg = msg + self.sym_animal
-                elif {'x': x, 'y': y} in self.plants:
+                elif [x, y] in pp:
                     msg = msg + self.sym_plant
                 else:
                     msg = msg + self.sym_space
@@ -277,7 +338,7 @@ class Evolution(World):
         print '           -T                 : track killed animals too'
 
     def parse_args(self, argv):
-        print 'parse_args called.'
+        #print 'Evolution.parse_args called.'
         try:
             opts, args = getopt.getopt(argv[1:],
                                        'i:t:bqT',
@@ -303,7 +364,7 @@ class Evolution(World):
                 sys.exit(1)
 
     def interact(self):
-        print 'interact'
+        # print 'Evolution.interact called'
         import readline
 
         self.draw()
@@ -325,20 +386,20 @@ class Evolution(World):
                 x = 0
                 print 'Alive animals'
                 for a in self.animals:
-                    print_animal(a)
+                    a.show()
                 continue
 
             elif line == 'dumpd':
                 x = 0
                 print 'Dead animals'
                 for a in self.animals_dead:
-                    print_animal(a)
+                    a.show()
                 continue
 
             elif line == 'dumpplant':
                 x = 0
                 for p in self.plants:
-                    print p
+                    p.show()
                 continue
 
             elif line.isdigit():
@@ -353,327 +414,18 @@ class Evolution(World):
             self.draw()
 
     def run(self):
-        print 'Evolution::run called.'
+        #print 'Evolution.run called.'
         if self.batch == 0:
-            print 'interactive'
             self.interact()
 
         else:
             for x in range(0, total):
                 self.update()
-                if self.counter % self.interval == 0:
+                if self.clock % self.interval == 0:
                     self.draw()
-#
-#
-##################################################
 
-def draw_world():
-    global counter, killed_animal, sym_space, sym_animal, sym_plant, quiet
-#    print 'draw_world called.'
-
-    num_alive = 0
-    age_total = 0
-    energy_total = 0
-
-    aa = []
-    for a in animals:
-        aa.append([a['x'], a['y']])
-        age_total += (counter - a['birth'])
-        energy_total += a['energy']
-        num_alive += 1
-
-    print 'w: %d h: %d update: %d #animals: %d #killed: %d ' \
-        '#plants: %d avg.age: %.1f avg.energy %.1f' \
-        % (width, height, counter, len(animals), killed_animal, len(plants),
-           float(age_total) / num_alive, float(energy_total) / num_alive)
-
-    if quiet:
-        return
-
-    for y in range(0, height):
-        msg = ''
-        for x in range(0, width):
-            if [x, y] in aa:
-                msg = msg + sym_animal
-            elif {'x': x, 'y': y} in plants:
-                msg = msg + sym_plant
-            else:
-                msg = msg + sym_space
-        print '%s%s%s' % ('|', msg, '|')
-    return
-
-
-def move(animal):
-#    print 'move called.'
-    direction = animal['dir']
-    x = animal['x']
-    y = animal['y']
-
-    def movex(direction):
-        if (direction >= 2 and direction <= 4):
-            return 1
-        elif (direction == 1 or direction == 5):
-            return 0
-        else:
-            return -1
-
-    def movey(direction):
-        if (direction >= 0 and direction <= 2):
-            return -1
-        elif (direction >= 4 and direction <= 6):
-            return 1
-        else:
-            return 0
-
-    animal['x'] = (x + movex(direction)) % width
-    # oops... here was a critical bug. the below 'y' was 'x'...orz
-    animal['y'] = (y + movey(direction)) % height
-    animal['energy'] -= 1
-    return
-
-
-def turn(animal):
-#    print 'turn called.'
-    global debug
-    x = random.randint(0, sum(animal['genes']))
-
-    def angle(genes, x):
-        if len(genes) == 0:
-            return 0
-        xnu = x - genes[0]
-        if xnu < 0:
-            return 0
-        else:
-            return angle(genes[1:], xnu) + 1
-
-    a = angle(animal['genes'], x)
-    animal['dir'] = (animal['dir'] + a) % 8
-    return
-
-
-def eat(animal):
-#    print 'eat called.'
-    pos = {'x': animal['x'], 'y': animal['y']}
-    if pos in plants:
-        animal['energy'] += plant_energy
-        plants.remove(pos)
-    return
-
-
-def reproduce(animal):
-#    print 'reproduce called.'
-    global animals_added, animal_id, counter
-    e = animal['energy']
-    if e >= reproduce_energy:
-        animal['energy'] = (e - 1) / 2
-        animal_new = animal.copy()
-        # last [:] is important for copying the entire list. or deepcopy()?
-        genes = list(animal_new['genes'])[:]
-        mutation = random.randint(0, 7)
-        original = True
-        if original:
-            genes[mutation] = max(1, genes[mutation]
-                                  + random.randint(0, 2) - 1)
-        else:
-            g = random.randint(1, 10)
-            if genes[mutation] == g:
-                genes[mutation] = 1
-            else:
-                genes[mutation] = g
-        animal_new['genes'] = genes
-        animal_id += 1
-        animal_new['id'] = animal_id
-        animal_new['birth'] = counter
-        animal_new['parent'] = animal['id']
-        animals_added.append(animal_new)
-    return
-
-
-def random_plant(pos):
-#    print 'random_plants called.'
-    (left, top, width, height) = pos
-    #   Precisely speaking, here must be some roundup.
-    x = (left + random.randint(0, width - 1))
-    y = (top + random.randint(0, height - 1))
-    if not {'x': x, 'y': y} in plants:
-        plants.append({'x': x, 'y': y})
-    return
-
-
-def add_plants():
-#    print 'add_plants called.'
-    global width, height, jungle
-    random_plant(jungle)
-    random_plant([0, 0, width, height])
-    return
-
-
-def update_world():
-#    print 'update_world called.'
-    global counter, killed_animal, animals_added, animals_dead, track_animals
-    counter += 1
-    for animal in animals:
-        if animal['energy'] <= 0:
-            animals.remove(animal)
-            if track_animals:
-                animals_dead.append(animal)
-            animal['death'] = counter
-            killed_animal += 1
-    animals_added = []
-    for animal in animals:
-        turn(animal)
-        move(animal)
-        eat(animal)
-        reproduce(animal)
-    animals.extend(animals_added)
-    add_plants()
-    return
-
-
-def print_animal(animal):
-    print 'id: %6d p: %6d x: %3d y: %3d dir: %d e: %3d b:%6d d: %6d g: %s' \
-        % (animal['id'],
-           animal['parent'],
-           animal['x'],
-           animal['y'],
-           animal['dir'],
-           animal['energy'],
-           animal['birth'],
-           animal['death'],
-           animal['genes'])
-
-
-def evolution():
-#    print 'evolution'
-    import readline
-    global prompt
-
-    draw_world()
-
-    while True:
-        try:
-            x = 0
-            line = raw_input(prompt)
-
-        except EOFError:
-            print 'quitting...'
-            sys.exit(0)
-
-        if line == 'quit':
-            print 'quitting...'
-            sys.exit(0)
-
-        elif line == 'dump':
-            x = 0
-            print 'Alive animals'
-            for a in animals:
-                print_animal(a)
-            continue
-
-        elif line == 'dumpd':
-            x = 0
-            print 'Dead animals'
-            for a in animals_dead:
-                print_animal(a)
-            continue
-
-        elif line == 'dumpplant':
-            x = 0
-            for p in plants:
-                print p
-            continue
-
-        elif line.isdigit():
-            x = int(line)
-
-        else:
-            x = 1
-
-        for i in range(0, x):
-            update_world()
-
-        draw_world()
-
-def usage():
-    print 'Usage: ', sys.argv[0], ' [options]'
-    print '  options: -i <interval>      : interval to show status info.'
-    print '           -t <total update>  : total update count'
-    print '           -b                 : batch mode'
-    print '           -q                 : quiet mode'
-    print '           -T                 : track killed animals too'
 
 if __name__ == '__main__':
 
-#########################################################################
     ev = Evolution(sys.argv)
     ev.run()
-    sys.exit(0)
-
-#########################################################################
-    debug = 0
-    prompt = 'evolution: '
-    sym_space = '-'
-    sym_animal = 'A'
-    sym_plant = 'T'
-
-    width = 100
-    height = 30
-    counter = 0
-    killed_animal = 0
-
-    plant_energy = 80
-    reproduce_energy = 200
-
-    plants = []
-    jungle = [45, 10, 10, 10]
-    animals = [{'x': int((width - 1) / 2),
-                'y': int((height - 1) / 2),
-                'energy': 1000,
-                'dir': 0,
-                'id': 0,
-                'birth': 0,
-                'death': 0,
-                'parent': 0,
-                'genes': [random.randint(0, 9) for r in range(8)]
-                }]
-    animals_added = []
-    animals_dead = []
-    animal_id = 0
-
-    batch = 0
-    quiet = 0
-    interval = 1
-    total = 1000
-    track_animals = 0
-    try:
-        opts, args = getopt.getopt(sys.argv[1:],
-                                   'i:t:bqT',
-                                   ['interval=', 'total=',
-                                    'batch', 'quiet'])
-    except getopt.GetoptError:
-        print sys.exc_info()[1]
-        usage()
-        sys.exit(2)
-
-    for opt, arg in opts:
-        if opt in ('-b' or '--batch'):
-            batch = 1
-        elif opt in ('-q' or '--quiet'):
-            quiet = 1
-        elif opt in ('-i' or '--interval'):
-            interval = int(arg)
-        elif opt in ('-t' or '--total'):
-            total = int(arg)
-        elif opt in ('-T' or '--track-animals'):
-            track_animals = 1
-        else:
-            sys.exit(1)
-
-    add_plants()
-    if batch:
-        for x in range(0, total):
-            update_world()
-            if counter % interval == 0:
-                draw_world()
-    else:
-        evolution()
