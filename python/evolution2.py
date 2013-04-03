@@ -407,7 +407,7 @@ class Evolution(World):
             self.interact()
 
         else:
-            for x in range(0, total):
+            for x in range(0, self.total):
                 self.update()
                 if self.clock % self.interval == 0:
                     self.draw()
