@@ -63,11 +63,14 @@ class Animal(object):
             self.death = 0
             self.parent = 0
             self.genes = [random.randint(0, 9) for r in range(8)]
-        return
 
-    def update(self):
-        print 'Animal::update called.'
-        return
+    def update(self, world):
+        #print 'Animal::update called.'
+        self.turn()
+        self.move(world)
+        self.eat(world)
+        new = self.reproduce(world)
+        return new
 
     def turn(self):
         #print 'Animal.turn called.'
@@ -145,7 +148,9 @@ class Animal(object):
             animal_new.id = world.animal_id
             animal_new.birth = world.clock
             animal_new.parent = self.id
-            world.animals_added.append(animal_new)
+            return animal_new
+        else:
+            return None
 
     def kill(self):
         print 'Animal.kill called.'
@@ -164,9 +169,6 @@ class Animal(object):
                self.genes)
         return
 
-#    def add(self):
-#        print 'Animal.add called.'
-#        return
 
 class Plant(object):
     x = 0
@@ -174,39 +176,17 @@ class Plant(object):
 
     def __init__(self, world, pos):
         #print 'Plant.__init__ called.'
-
         (left, top, width, height) = pos
-        width = width - left
-        height = height - top
-        # Precisely speaking, here must be some roundup.
-#        x = (left + random.randint(0, world.width - 1))
-#        y = (top + random.randint(0, world.height - 1))
-        x = (left + random.randint(0, width - 1))
-        y = (top + random.randint(0, height - 1))
-#
+        deltax = width - left
+        deltay = height - top
+        x = (left + random.randint(0, deltax - 1))
+        y = (top + random.randint(0, deltay - 1))
         for p in  world.plants:
             if p.x != x and p.y != y:
                 self.x = x
                 self.y = y
         else:
             return None
-
-    def update(self, world):
-        #print 'Plant.update called.'
-        self.add(super(self).jungle, world)
-        self.add([0, 0, self.width, self.height], world)
-
-    def erase(self):
-        return
-
-    def add(self, pos, world):
-        #print 'Plant.add called.'
-        (left, top, width, height) = pos
-        # Precisely speaking, here must be some roundup.
-        x = (left + random.randint(0, self.width - 1))
-        y = (top + random.randint(0, self.height - 1))
-        if not {'x': x, 'y': y} in self.plants:
-            world.plants.append({'x': x, 'y': y})
 
     def show(self):
         print 'x: %3d y: %3d' % (self.x, self.y)
@@ -232,7 +212,6 @@ class World(object):
     # list of Animal object
     animals = []
     animals_dead = []
-    animals_added = []
     animal_id = 0
 
     def __init__(self):
@@ -244,23 +223,24 @@ class World(object):
 
     def update(self):
         #print 'World.update called.'
-
         self.clock += 1
         for animal in self.animals:
             if animal.energy <= 0:
                 self.animals.remove(animal)
                 if self.track_animals:
                     self.animals_dead.append(animal)
-                animaldeath = self.clock
+                animal.death = self.clock
                 self.killed_animal += 1
-        self.animals_added = []
+        animals_new = []
         for animal in self.animals:
-            animal.turn()
-            animal.move(self)
-            animal.eat(self)
-            animal.reproduce(self)
-        self.animals.extend(self.animals_added)
-        # self must be specified... why???
+#            animal.turn()
+#            animal.move(self)
+#            animal.eat(self)
+#            new = animal.reproduce(self)
+            new = animal.update(self)
+            if new:
+                animals_new.append(new)
+        self.animals.extend(animals_new)
         self.plants.append(Plant(self, self.land))
         self.plants.append(Plant(self, self.jungle))
 
@@ -270,8 +250,7 @@ class World(object):
         age_total = 0
         energy_total = 0
 
-        #print self.animals
-        #print self.plants
+        # better algorithm/data structure for lookup ???
         aa = []
         for a in self.animals:
             aa.append([a.x, a.y])
@@ -296,6 +275,7 @@ class World(object):
         if self.quiet:
             return
 
+        print '+%s+' % ('-' * self.width)
         for y in range(0, self.height):
             msg = ''
             for x in range(0, self.width):
@@ -306,9 +286,11 @@ class World(object):
                 else:
                     msg = msg + self.sym_space
             print '%s%s%s' % ('|', msg, '|')
+        print '+%s+' % ('-' * self.width)
 
     def dump(self):
         return
+
 
 class Evolution(World):
     #
@@ -341,7 +323,7 @@ class Evolution(World):
         #print 'Evolution.parse_args called.'
         try:
             opts, args = getopt.getopt(argv[1:],
-                                       'i:t:bqT',
+                                       'i:t:bqTA:P:S:',
                                        ['interval=', 'total=',
                                         'batch', 'quiet'])
         except getopt.GetoptError:
@@ -360,6 +342,12 @@ class Evolution(World):
                 self.total = int(arg)
             elif opt in ('-T' or '--track-animals'):
                 self.track_animals = 1
+            elif opt in ('-A'):
+                self.sym_animal = arg
+            elif opt in ('-P'):
+                self.sym_plant = arg
+            elif opt in ('-S'):
+                self.sym_space = arg
             else:
                 sys.exit(1)
 
