@@ -176,30 +176,6 @@ class MySQLBench(object):
         # print opts, len(opts)
         # sys.exit(1)
 
-    def doClose(self, conn):
-        # print 'MySQLBench::doClose called.'
-        try:
-            conn.close()
-
-        except:
-            print sys.exc_info()[0]
-            print sys.exc_info()[1]
-            sys.exit(0)
-
-    def doConnect(self):
-        # print 'MySQLBench::doConnect called.'
-        try:
-            conn = mysql.connect(host=self.mysqlhost,
-                                 db=self.dbname,
-                                 user=self.login,
-                                 passwd=self.password)
-            return conn
-
-        except:
-            print sys.exc_info()[0]
-            print sys.exc_info()[1]
-            sys.exit(0)
-
     def getSession(self):
         # print 'MySQLBench::getSession called.'
         try:
@@ -236,39 +212,45 @@ class MySQLBench(object):
             'CREATE TABLE history (tid int, bid int, aid int, '
                 'delta int, mtime timestamp, filler char(22))'
             ]
-        conn = self.doConnect()
+        session = self.getSession()
         for stmt in DDLs:
             if stmt.startswith('CREATE'):
                 sql = '%s ENGINE=%s' % (stmt, self.engine)
             else:
                 sql = '%s' % stmt
-            conn.query(sql)
+            session.execute(sql)
 
-        conn.query('BEGIN')
+        session.begin()
+        try:
+            for i in range(0, self.nbranches * self.tps):
+                sql = 'INSERT INTO branches (bid, bbalance, filler) ' \
+                    'VALUES (%d, 0, REPEAT(\'b\',88))' % (i + 1)
+                session.execute(sql)
 
-        for i in range(0, self.nbranches * self.tps):
-            sql = 'INSERT INTO branches (bid, bbalance, filler) ' \
-                'VALUES (%d, 0, REPEAT(\'b\',88))' % (i + 1)
-            conn.query(sql)
+            for i in range(0, self.ntellers * self.tps):
+                sql = 'INSERT INTO tellers (tid, bid, tbalance, filler) ' \
+                    'VALUES (%d, %d, 0, REPEAT(\'t\',84))' \
+                    % (i + 1, i / self.ntellers + 1)
+                session.execute(sql)
 
-        for i in range(0, self.ntellers * self.tps):
-            sql = 'INSERT INTO tellers (tid, bid, tbalance, filler) ' \
-                'VALUES (%d, %d, 0, REPEAT(\'t\',84))' \
-                % (i + 1, i / self.ntellers + 1)
-            conn.query(sql)
+            print 'Filling tables...'
+            for i in range(0, self.naccounts * self.tps):
+                j = i + 1
+                sql = 'INSERT INTO accounts (aid, bid, abalance, filler) ' \
+                    'VALUES (%d, %d, %d, REPEAT(\'c\',84))' \
+                    % (j, j / self.naccounts, 0)
+                session.execute(sql)
 
-        print 'Filling tables...'
-        for i in range(0, self.naccounts * self.tps):
-            j = i + 1
-            sql = 'INSERT INTO accounts (aid, bid, abalance, filler) ' \
-                'VALUES (%d, %d, %d, REPEAT(\'c\',84))' \
-            % (j, j / self.naccounts, 0)
-            conn.query(sql)
+            session.commit()
+            session.execute('OPTIMIZE TABLE branches, tellers, accounts, history')
+        except:
+            print sys.exc_info()[0]
+            print sys.exc_info()[1]
+            session.rollback()
+            raise
 
-        conn.query('COMMIT')
-        conn.query('OPTIMIZE TABLE branches, tellers, accounts, history')
-        #
-        self.doClose(conn)
+        session.close()
+        #self.doClose(conn)
         print 'done.'
 
     def doOne(self, id):
@@ -316,6 +298,7 @@ class MySQLBench(object):
                 # Q2
                 sql = 'SELECT abalance FROM accounts WHERE aid = %d' % (aid)
                 result = session.execute(sql)
+                result.fetchall()
                 # Q3
                 sql = ' UPDATE tellers SET tbalance = tbalance + %d ' \
                     'WHERE tid = %d' % (delta, tid)
@@ -336,10 +319,12 @@ class MySQLBench(object):
                 print sys.exc_info()[0]
                 print sys.exc_info()[1]
                 session.rollback()
+                ecnt += 1
                 raise
 
         session.close()
         self.threads[id]['cnt'] = cnt
+        self.threads[id]['ecnt'] = ecnt
         return
 
     def print_results(self, ts1, ts2, ts3):
@@ -372,26 +357,27 @@ class MySQLBench(object):
     def run(self):
         # print 'MySQLBench::run called.'
 
-        self.conn = self.doConnect()
+        #self.conn = self.doConnect()
+        session = self.getSession()
 
         # scaling factor should be the same as count(bid) from branches.
-        self.conn.query("SELECT count(bid) FROM branches")
-        rows = self.conn.store_result().fetch_row(maxrows=1, how=1)
-        self.tps = int(rows[0]['count(bid)'])
-
+        result = session.execute("SELECT count(bid) FROM branches")
+        self.tps = int(result.fetchone()[0])
+        # rows = self.conn.store_result().fetch_row(maxrows=1, how=1)
+        # self.tps = int(rows[0]['count(bid)'])
         # print 'DEBUG: scaling factor = %d' % self.tps
 
         if self.is_no_vacuum is not 0:
             print 'starting vacuum...'
-            self.conn.query("OPTIMIZE TABLE branches")
-            self.conn.query("OPTIMIZE TABLE tellers")
-            self.conn.query("OPTIMIZE TABLE history")
-            self.conn.query("OPTIMIZE TABLE branches")
+            session.execute("OPTIMIZE TABLE branches")
+            session.execute("OPTIMIZE TABLE tellers")
+            session.execute("OPTIMIZE TABLE history")
+            session.execute("OPTIMIZE TABLE branches")
 
         if self.is_full_vacuum is not 0:
-            self.conn.query("OPTIMIZE TABLE accounts")
+            session.execute("OPTIMIZE TABLE accounts")
         # close
-        self.doClose(self.conn)
+        session.close()
 
         self.cv = threading.Condition()
         self.cv_conn = threading.Condition()
