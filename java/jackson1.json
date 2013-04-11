@@ -1,0 +1,25 @@
+{
+	"name": "zone1",
+	"nodes": [
+		 {
+	            "name": "opsthv01",
+	            "status": "POWER_ON",
+	            "hypervisor": "kvm",
+	            "instances": [
+	                {"id": "5c41f3da-a9e1-46e7-b53c-7f05a11f622d",
+			"status": "BUILDING" },
+	                {"id": "5c41f3da-a9e1-46e7-b53c-7f05a11fxxxx"}
+			]
+		},
+	        {
+	            "name": "opsthtv02",
+	            "status": "POWER_ON",
+	            "instances": [
+	                {"id": "279fe06d-76dd-4383-9768-46f8339a0889",
+			 "status": "ACTIVE" },
+	                {"id": "81f61b67-1fb8-4923-9f44-9f4090aaec02",
+			  "status": "MIGRATING" }
+	            ]
+	        }
+	]
+}
