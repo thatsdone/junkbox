@@ -5,6 +5,7 @@
  * using a convenient library, 'jackson'.
  */
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectWriter;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -44,6 +45,12 @@ public class Jackson1 {
 
 	System.out.println("Output a parsed object using readValue() via writeValueAsString()");
 	System.out.println(mapper.writeValueAsString(zone));
+
+        //The below causes an warning. Why?
+	ObjectWriter writer = mapper.defaultPrettyPrintingWriter();
+	System.out.println("\nPrettyPrinting example");
+	System.out.println(writer.writeValueAsString(zone));
+
 
 	System.out.println("\nObject traversal example.");
 	System.out.println("zone : " + zone.name);
