@@ -68,6 +68,7 @@ public class Jnova {
 				 quiet = false;
 			}
 		}
+        // Get account informatoin from environment variables.
 		if (quiet == false) {
 			System.out.println("OS_AUTH_URL    : " + os_auth_url);
 			System.out.println("OS_PASSWORD    : " + os_password);
@@ -93,7 +94,7 @@ public class Jnova {
 			keystoneClient.setLogger(devnull);
 		}
 
-		// Set account information.
+		// Set account information, and issue an authentication request.
 		Access access = keystoneClient.tokens()
 			.authenticate(new UsernamePassword(os_username, os_password))
 			.withTenantName(os_tenant_name)
@@ -125,7 +126,7 @@ public class Jnova {
 
 		//Set the token now we got for the following requests.
 		//Note that we can use the same token with the above keystone requests
-		//unless it's expired.
+		//unless it's not expired.
 		 novaClient.token(access.getToken().getId());
 
 		/*
@@ -136,18 +137,19 @@ public class Jnova {
 			Servers servers;
 			if (all_tenants) {
 				// nova list --all-tenants
-				// get servers of all_tenants. (want to user pagination... ) 
+				// get servers of all_tenants. (want to use pagination if possible... ) 
 				 servers = novaClient.servers()
 					.list(true).queryParam("all_tenants", "1").execute();
 			} else {
-				// Note that 'true' of list(true) appends 'detailed'
+				// Note that 'true' of list(true) appends 'detaile'
 				// path element like:  GET /v1.1/TENANT_ID/servers/detail
 				// Simple 'nova list' does not use it.
 				servers = novaClient.servers().list(true).execute();
 			}
-			for(Server server : servers) {
-				System.out.println(server);
-			}
+			//for(Server server : servers) {
+			//	System.out.println(server);
+			//}
+            printjson(servers);
 
 		} else if (args[0].equals("show")) {
 			;
@@ -158,7 +160,8 @@ public class Jnova {
 			if (args[0].equals("host-list")) {
 				// nova host-list
 				Hosts hosts = novaClient.hosts().list().execute();
-				System.out.println(hosts);
+				//System.out.println(hosts);
+				printjson(hosts);
 				/*
 				for(Hosts.Host host : hosts) {
 					System.out.println(host);
@@ -175,7 +178,8 @@ public class Jnova {
 				// nova host-describe HOSTNAME
 				if (args.length >= 2) {
 					Host h = novaClient.hosts().show(args[1]).execute();
-					System.out.println(h);
+					//System.out.println(h);
+					printjson(h);
 				} else {
 					System.out.println("Specify hostname");
 				}
@@ -205,25 +209,29 @@ public class Jnova {
 			if (args[0].equals("service-list")) {
 				// nova service-list
 				Services services = novaClient.services().list().execute();
-				for(Service service : services) {
-					System.out.println(service);
-				} 
+                
+				//for(Service service : services) {
+			    //		System.out.println(service); 
+				//} 
+                printjson(services);              
 
 			} else if (args[0].equals("service-disable")) {
 				// nova service-disable HOST SERVIVCE
 				ServiceUpdateReq s = new ServiceUpdateReq();
-				s.setHost("ocpswhnc3.ocp-cloud.net"); //1
-				s.setBinary("nova-compute"); //2
+				s.setHost(args[1]);
+				s.setBinary(args[2]);
 				Service resp = novaClient.services().disableService(s).execute();
-				System.out.println(resp);
+				//System.out.println(resp);
+    			printjson(resp);	
 
 			} else if (args[0].equals("service-enable")) { 
 				// nova service-enable HOST SERVIVCE
 				ServiceUpdateReq s = new ServiceUpdateReq();
-				s.setHost("ocpswhnc3.ocp-cloud.net"); //1
-				s.setBinary("nova-compute"); //2
+				s.setHost(args[1]);
+				s.setBinary(args[2]);
 				Service resp = novaClient.services().enableService(s).execute();
-				System.out.println(resp);
+				//System.out.println(resp);
+				printjson(resp);
 			}
 
 		} else {
