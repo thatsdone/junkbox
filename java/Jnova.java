@@ -30,6 +30,10 @@ import java.io.PrintStream;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+/*
+import java.util.logging.*;
+import java.util.Enumeration;
+*/
 
 public class Jnova {
 
@@ -89,6 +93,13 @@ public class Jnova {
 
 		// First, create a Keystone cliet class instance.
 		Keystone keystoneClient = new Keystone(os_auth_url);
+		/*
+		  LogManager lm  = LogManager.getLogManager();
+		  for (Enumeration l = lm.getLoggerNames();l.hasMoreElements();) {
+		  String s = (String) l.nextElement();
+		  System.out.println(s);
+		  }
+		*/
 		if (quiet) {
 			//original (workaround) extension of openstack-java-sdk.
 			keystoneClient.setLogger(devnull);
