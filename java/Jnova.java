@@ -30,8 +30,8 @@ import java.io.PrintStream;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-/*
 import java.util.logging.*;
+/*
 import java.util.Enumeration;
 */
 
@@ -45,6 +45,16 @@ public class Jnova {
 			System.out.println("Exception! :" + e);
 		}
 	}
+
+	/*
+	 * NullFilter for disabling log output
+	 */
+	public static class NullFilter implements Filter {
+		public boolean isLoggable(LogRecord record) {
+			return false;
+		}
+	}
+
 
 	/**
 	 * @param args
@@ -100,6 +110,24 @@ public class Jnova {
 		  System.out.println(s);
 		  }
 		*/
+
+
+		try {
+			devnull = new PrintStream("/dev/null");
+		} catch (Exception e) {
+			;
+		}
+		Handler nullHandler = new StreamHandler(devnull,
+												new SimpleFormatter());
+		Logger l = Logger.getLogger("os");
+		l.addHandler(nullHandler);
+		l.setFilter(new NullFilter());
+
+		System.out.println("Filter : " + l.getFilter());
+		for (Handler h : l.getHandlers()) {
+			System.out.println("Handlers: " + h);
+		}
+
 		if (quiet) {
 			//original (workaround) extension of openstack-java-sdk.
 			keystoneClient.setLogger(devnull);
