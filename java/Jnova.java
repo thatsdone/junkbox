@@ -1,14 +1,29 @@
 /**
  * Jnova.java
  * 
- * A Java version 'nova' command using https://github.com/woorea/openstack-java-sdk.
+ * A Java version 'nova' command using:
+ *    https://github.com/woorea/openstack-java-sdk
+ *
+ * Note that this program uses some extended features of the java sdk
+ * of a forked version available below:
+ *    https://github.com/thatsdone/openstack-java-sdk 
  * 
- * - Depends on bunch of libraries
- * - Very ugly huge main() method.
+ * Currently the following sub commands are implemented.
+ *   nova list  --all-tenants
+ *   nova host-list
+ *   nova host-describe
+ *   nova hypervisor-list
+ *   nova hypervisor-show
+ *   nova hypervisor-stats
+ *   nova service-list
+ *   nova service-enable
+ *   nova service-disable
+ *
+ * Authentication information must be specified as environment variables
+ * such as OS_AUTH_URL etc.
  *
  *  Author: Masanori Itoh <masanori.itoh@gmail.com>
  */
-
 import com.woorea.openstack.keystone.Keystone;
 import com.woorea.openstack.keystone.model.Access;
 import com.woorea.openstack.keystone.model.authentication.UsernamePassword;
@@ -31,10 +46,6 @@ import java.io.PrintStream;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.util.logging.*;
-/*
-import java.util.Enumeration;
-*/
-//import org.apache.commons.io.output.NullOutputStream;
 
 public class Jnova {
 
@@ -51,6 +62,8 @@ public class Jnova {
 	 * NullFilter for disabling log output
 	 */
 	public static class NullFilter implements Filter {
+
+		// isLoggable says everything is NOT logabble.
 		public boolean isLoggable(LogRecord record) {
 			//System.out.println("DEBUG: " + record.getLevel());
 			return false;
@@ -78,6 +91,9 @@ public class Jnova {
 		boolean all_tenants = false;
 		boolean debug = false;
 		boolean log_message = false;
+		/*
+		 * skip the first argument. ( i = 1, not 0)
+		 */
 		for(int i = 1; i < args.length; i++) {
 			if (args[i].equals("--all-tenants")) {
 				all_tenants = true;
@@ -98,34 +114,17 @@ public class Jnova {
 		// First, create a Keystone cliet class instance.
 		Keystone keystoneClient = new Keystone(os_auth_url);
 		/*
-		  // research purpose
-		  LogManager lm  = LogManager.getLogManager();
-		  for (Enumeration l = lm.getLoggerNames();l.hasMoreElements();) {
-		  String s = (String) l.nextElement();
-		  System.out.println(s);
-		  }
-		*/
-
+		 * research purpose code chunk to see all log handlers in the system.
+		 * LogManager lm  = LogManager.getLogManager();
+		 * for (Enumeration l = lm.getLoggerNames();l.hasMoreElements();) {
+		 *    String s = (String) l.nextElement();
+		 *    System.out.println(s);
+		 * }
+		 */
 		if (log_message == false) {
-			/*
-			PrintStream devnull = null;
-			try {
-				devnull = new PrintStream("/dev/null");
-			} catch (Exception e) {
-				System.out.println("Failed to call PrintStream(/dev/null)");
-				System.exit(0);
-			}
-			Handler nullHandler = new StreamHandler(devnull, new SimpleFormatter());
-			*/
-			/*
-			Handler nullHandler = new StreamHandler(new NullOutputStream(),
-													new SimpleFormatter());
-			*/
 			// openstack-java-sdk creates a logger named "os" internally.
 			Logger l = Logger.getLogger("os");
-			//l.addHandler(nullHandler);
 			l.setFilter(new NullFilter());
-
 			if (debug) {
 				System.out.println("DEBUG: Filter : " + l.getFilter());
 				for (Handler h : l.getHandlers()) {
@@ -141,37 +140,38 @@ public class Jnova {
 			.withTenantName(os_tenant_name)
 			.execute();
 		
-		//Set the token now we got for the following requests.
-		//keystoneClient.token(access.getToken().getId());
-
 		String nova_endpoint = KeystoneUtils
 			.findEndpointURL(access.getServiceCatalog(),
 							 "compute", null, "public");
 		if (debug) {
-			System.out.println("DEBUG:" + nova_endpoint);
+			System.out.println("DEBUG: " + nova_endpoint);
 		}
-		// The above contains TENANT_ID like
-		//   http://SERVICE_HOST:PORT/v1.1/TENANT_ID
-		// at least version 3.2.2-SNAPSHOT of openstack-java-sdk.
-		//
-		// Thus, below does not work.
-		//		Nova novaClient = new Nova(nova_endpoint.concat("/")
-		//								   .concat(access.getToken()
-		//										   .getTenant().getId()));
+		/*
+		 * The above contains TENANT_ID like:
+		 *   http://SERVICE_HOST:PORT/v1.1/TENANT_ID
+		 * according to endpoints definition in keystone configuration.
+		 * It's the same as keystone endpoint-list.
+		 *
+		 * Note that we don't need to append a '/' to the URL because
+		 * openstack-java-sdk library codes add it.
+		 *   Nova novaClient = new Nova(nova_endpoint.concat("/"));
+		 */
 
-		//		Nova novaClient = new Nova(nova_endpoint.concat("/"));
+		// Create a Nova client object.
 		Nova novaClient = new Nova(nova_endpoint);
 
-		//Set the token now we got for the following requests.
-		//Note that we can use the same token with the above keystone requests
-		//unless it's not expired.
+		/*
+		 * Set the token now we got for the following requests.
+		 * Note that we can use the same token in the above keystone response
+		 * unless it's not expired.
+		 */
 		novaClient.token(access.getToken().getId());
 
 		/*
 		 * command handlers
 		 */
 		if (args[0].equals("list")) {
-			//servers
+			//servers :
 			Servers servers;
 			if (all_tenants) {
 				// nova list --all-tenants
@@ -193,6 +193,7 @@ public class Jnova {
 			}
 
 		} else if (args[0].equals("show")) {
+			// NOT IMPLEMENTED YET
 			;
 
 		} else if (args[0].startsWith("host")) {
@@ -200,7 +201,9 @@ public class Jnova {
 			if (args[0].equals("host-list")) {
 				// nova host-list
 				Hosts hosts = novaClient.hosts().list().execute();
-				//System.out.println(hosts);
+				if (debug) {
+					System.out.println(hosts);
+				}
 				printjson(hosts);
 				if (debug) {
 					for(Hosts.Host host : hosts) {
@@ -232,7 +235,8 @@ public class Jnova {
 			// os-hypervisors :
 			if (args[0].equals("hypervisor-list")) {
 				// nova hypervisor-list
-				Hypervisors hypervisors = novaClient.hypervisors().list().execute();
+				Hypervisors hypervisors = novaClient.hypervisors().list()
+										  .execute();
 				if (debug) {
 					System.out.println(hypervisors);
 				}
