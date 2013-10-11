@@ -34,6 +34,7 @@ import java.util.logging.*;
 /*
 import java.util.Enumeration;
 */
+//import org.apache.commons.io.output.NullOutputStream;
 
 public class Jnova {
 
@@ -51,6 +52,7 @@ public class Jnova {
 	 */
 	public static class NullFilter implements Filter {
 		public boolean isLoggable(LogRecord record) {
+			//System.out.println("DEBUG: " + record.getLevel());
 			return false;
 		}
 	}
@@ -74,36 +76,29 @@ public class Jnova {
 
 		// Parse comnand line arguments.
 		boolean all_tenants = false;
-		boolean quiet = true;
+		boolean debug = false;
+		boolean log_message = false;
 		for(int i = 1; i < args.length; i++) {
 			if (args[i].equals("--all-tenants")) {
 				all_tenants = true;
 			} else if (args[i].equals("--debug")) {
-				 quiet = false;
+				debug = true;
+			} else if (args[i].equals("--log-message")) {
+				 log_message = true;
 			}
 		}
         // Get account informatoin from environment variables.
-		if (quiet == false) {
+		if (debug) {
 			System.out.println("OS_AUTH_URL    : " + os_auth_url);
 			System.out.println("OS_PASSWORD    : " + os_password);
 			System.out.println("OS_TENANT_NAME : " + os_tenant_name);
 			System.out.println("OS_USERNAME    : " + os_username);
 		}
 
-		// Create a /dev/null PrintStream when quet mode.
-		PrintStream devnull = null;
-		if (quiet) {
-			try {
-				devnull = new PrintStream("/dev/null");
-			} catch (Exception e) {
-				System.out.println("Failed to call PrintStream(/dev/null)");
-				System.exit(0);
-			}
-		}
-
 		// First, create a Keystone cliet class instance.
 		Keystone keystoneClient = new Keystone(os_auth_url);
 		/*
+		  // research purpose
 		  LogManager lm  = LogManager.getLogManager();
 		  for (Enumeration l = lm.getLoggerNames();l.hasMoreElements();) {
 		  String s = (String) l.nextElement();
@@ -111,26 +106,33 @@ public class Jnova {
 		  }
 		*/
 
+		if (log_message == false) {
+			/*
+			PrintStream devnull = null;
+			try {
+				devnull = new PrintStream("/dev/null");
+			} catch (Exception e) {
+				System.out.println("Failed to call PrintStream(/dev/null)");
+				System.exit(0);
+			}
+			Handler nullHandler = new StreamHandler(devnull, new SimpleFormatter());
+			*/
+			/*
+			Handler nullHandler = new StreamHandler(new NullOutputStream(),
+													new SimpleFormatter());
+			*/
+			// openstack-java-sdk creates a logger named "os" internally.
+			Logger l = Logger.getLogger("os");
+			//l.addHandler(nullHandler);
+			l.setFilter(new NullFilter());
 
-		try {
-			devnull = new PrintStream("/dev/null");
-		} catch (Exception e) {
-			;
-		}
-		Handler nullHandler = new StreamHandler(devnull,
-												new SimpleFormatter());
-		Logger l = Logger.getLogger("os");
-		l.addHandler(nullHandler);
-		l.setFilter(new NullFilter());
+			if (debug) {
+				System.out.println("DEBUG: Filter : " + l.getFilter());
+				for (Handler h : l.getHandlers()) {
+					System.out.println("DEBUG: Handlers: " + h);
+				}
+			}
 
-		System.out.println("Filter : " + l.getFilter());
-		for (Handler h : l.getHandlers()) {
-			System.out.println("Handlers: " + h);
-		}
-
-		if (quiet) {
-			//original (workaround) extension of openstack-java-sdk.
-			keystoneClient.setLogger(devnull);
 		}
 
 		// Set account information, and issue an authentication request.
@@ -140,12 +142,12 @@ public class Jnova {
 			.execute();
 		
 		//Set the token now we got for the following requests.
-		keystoneClient.token(access.getToken().getId());
+		//keystoneClient.token(access.getToken().getId());
 
 		String nova_endpoint = KeystoneUtils
 			.findEndpointURL(access.getServiceCatalog(),
 							 "compute", null, "public");
-		if (quiet == false) {
+		if (debug) {
 			System.out.println("DEBUG:" + nova_endpoint);
 		}
 		// The above contains TENANT_ID like
@@ -156,17 +158,14 @@ public class Jnova {
 		//		Nova novaClient = new Nova(nova_endpoint.concat("/")
 		//								   .concat(access.getToken()
 		//										   .getTenant().getId()));
-		Nova novaClient = new Nova(nova_endpoint.concat("/"));
-		if (quiet) {
-			//Note that setLogger is not a standard method.
-			//Just a workaround extension of openstack-java-sdk.
-			novaClient.setLogger(devnull);
-		}
+
+		//		Nova novaClient = new Nova(nova_endpoint.concat("/"));
+		Nova novaClient = new Nova(nova_endpoint);
 
 		//Set the token now we got for the following requests.
 		//Note that we can use the same token with the above keystone requests
 		//unless it's not expired.
-		 novaClient.token(access.getToken().getId());
+		novaClient.token(access.getToken().getId());
 
 		/*
 		 * command handlers
@@ -176,23 +175,25 @@ public class Jnova {
 			Servers servers;
 			if (all_tenants) {
 				// nova list --all-tenants
-				// get servers of all_tenants. (want to use pagination if possible... ) 
+				// get servers of all_tenants.
+				// (want to use pagination if possible... ) 
 				 servers = novaClient.servers()
 					.list(true).queryParam("all_tenants", "1").execute();
 			} else {
-				// Note that 'true' of list(true) appends 'detaile'
+				// Note that 'true' of list(true) appends 'detail'
 				// path element like:  GET /v1.1/TENANT_ID/servers/detail
 				// Simple 'nova list' does not use it.
 				servers = novaClient.servers().list(true).execute();
 			}
-			//for(Server server : servers) {
-			//	System.out.println(server);
-			//}
             printjson(servers);
+			if (debug) {
+				for(Server server : servers) {
+					System.out.println(server);
+				}
+			}
 
 		} else if (args[0].equals("show")) {
 			;
-
 
 		} else if (args[0].startsWith("host")) {
 			// os-hosts : get per-host informatoin using /os-hosts extension
@@ -201,24 +202,27 @@ public class Jnova {
 				Hosts hosts = novaClient.hosts().list().execute();
 				//System.out.println(hosts);
 				printjson(hosts);
-				/*
-				for(Hosts.Host host : hosts) {
-					System.out.println(host);
-					if (host.getService().equals("compute")) {
-						String hostname = host.getHostName();
-						//System.out.println(hostname);
-						Host h = novaClient.hosts().show(hostname).execute();
-						System.out.println(h);
+				if (debug) {
+					for(Hosts.Host host : hosts) {
+						System.out.println(host);
+						if (host.getService().equals("compute")) {
+							String hostname = host.getHostName();
+							//System.out.println(hostname);
+							Host h = novaClient.hosts().show(hostname)
+								.execute();
+							System.out.println(h);
+						}
 					}
 				}
-				*/
 
 			} else if (args[0].equals("host-describe")) {
 				// nova host-describe HOSTNAME
 				if (args.length >= 2) {
 					Host h = novaClient.hosts().show(args[1]).execute();
-					//System.out.println(h);
 					printjson(h);
+					if (debug) {
+						System.out.println(h);
+					}
 				} else {
 					System.out.println("Specify hostname");
 				}
@@ -229,18 +233,28 @@ public class Jnova {
 			if (args[0].equals("hypervisor-list")) {
 				// nova hypervisor-list
 				Hypervisors hypervisors = novaClient.hypervisors().list().execute();
-				//System.out.println(hypervisors);
+				if (debug) {
+					System.out.println(hypervisors);
+				}
 				printjson(hypervisors);
-				for(Hypervisor hypervisor : hypervisors) {
-					Hypervisor hv = novaClient.hypervisors().show(hypervisor.getId()).execute();
-					System.out.println(hv);
-					printjson(hv);
+				if (debug){
+					for(Hypervisor hypervisor : hypervisors) {
+						Hypervisor hv = novaClient.hypervisors()
+							.show(hypervisor.getId()).execute();
+						printjson(hv);
+						if (debug) {
+							System.out.println(hv);
+						}
+					}
 				}
 			} else if (args[0].equals("hypervisor-stats")) {
 				// nova hypervisor-stats
-				HypervisorStatistics stat = novaClient.hypervisors().showStats().execute();
-				//System.out.println(stat);
+				HypervisorStatistics stat = novaClient.hypervisors()
+					.showStats().execute();
 				printjson(stat);
+				if (debug) {
+					System.out.println(stat);
+				}
 			}
 
 		} else if (args[0].startsWith("service")) {
@@ -248,11 +262,12 @@ public class Jnova {
 			if (args[0].equals("service-list")) {
 				// nova service-list
 				Services services = novaClient.services().list().execute();
-                
-				//for(Service service : services) {
-			    //		System.out.println(service); 
-				//} 
-                printjson(services);              
+                printjson(services);
+				if (debug) {
+					for(Service service : services) {
+							System.out.println(service); 
+					} 
+				}
 
 			} else if (args[0].equals("service-disable")) {
 				// nova service-disable HOST SERVIVCE
@@ -260,8 +275,10 @@ public class Jnova {
 				s.setHost(args[1]);
 				s.setBinary(args[2]);
 				Service resp = novaClient.services().disableService(s).execute();
-				//System.out.println(resp);
     			printjson(resp);	
+				if (debug) {
+					System.out.println(resp);
+				}
 
 			} else if (args[0].equals("service-enable")) { 
 				// nova service-enable HOST SERVIVCE
@@ -269,8 +286,10 @@ public class Jnova {
 				s.setHost(args[1]);
 				s.setBinary(args[2]);
 				Service resp = novaClient.services().enableService(s).execute();
-				//System.out.println(resp);
 				printjson(resp);
+				if (debug) {
+					System.out.println(resp);
+				}
 			}
 
 		} else {
