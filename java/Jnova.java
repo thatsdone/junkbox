@@ -2,27 +2,27 @@
  * Jnova.java
  * 
  * A Java version 'nova' command using:
- *    https://github.com/woorea/openstack-java-sdk
+ *	  https://github.com/woorea/openstack-java-sdk
  *
  * Note that this program uses some extended features of the java sdk
  * of a forked version available below:
- *    https://github.com/thatsdone/openstack-java-sdk 
+ *	  https://github.com/thatsdone/openstack-java-sdk 
  * 
  * Currently the following sub commands are implemented.
- *   nova list  --all-tenants
- *   nova host-list
- *   nova host-describe
- *   nova hypervisor-list
- *   nova hypervisor-show
- *   nova hypervisor-stats
- *   nova service-list
- *   nova service-enable
- *   nova service-disable
+ *	 nova list	--all-tenants
+ *	 nova host-list
+ *	 nova host-describe
+ *	 nova hypervisor-list
+ *	 nova hypervisor-show
+ *	 nova hypervisor-stats
+ *	 nova service-list
+ *	 nova service-enable
+ *	 nova service-disable
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc.
  *
- *  Author: Masanori Itoh <masanori.itoh@gmail.com>
+ *	Author: Masanori Itoh <masanori.itoh@gmail.com>
  */
 import com.woorea.openstack.keystone.Keystone;
 import com.woorea.openstack.keystone.model.Access;
@@ -137,7 +137,7 @@ public class Jnova {
 		String os_username = System.getenv("OS_USERNAME");
 
 		if (os_auth_url == null || os_password == null ||
-			os_tenant_name == null || os_username == null)  {
+			os_tenant_name == null || os_username == null)	{
 			System.out.println("set OS_* environment variables.");
 			System.exit(0);
 		}
@@ -158,12 +158,12 @@ public class Jnova {
 				 log_message = true;
 			}
 		}
-        // Get account informatoin from environment variables.
+		// Get account informatoin from environment variables.
 		if (debug) {
-			System.out.println("OS_AUTH_URL    : " + os_auth_url);
-			System.out.println("OS_PASSWORD    : " + os_password);
+			System.out.println("OS_AUTH_URL	   : " + os_auth_url);
+			System.out.println("OS_PASSWORD	   : " + os_password);
 			System.out.println("OS_TENANT_NAME : " + os_tenant_name);
-			System.out.println("OS_USERNAME    : " + os_username);
+			System.out.println("OS_USERNAME	   : " + os_username);
 		}
 
 		// First, create a Keystone cliet class instance.
@@ -172,8 +172,8 @@ public class Jnova {
 		 * research purpose code chunk to see all log handlers in the system.
 		 * LogManager lm  = LogManager.getLogManager();
 		 * for (Enumeration l = lm.getLoggerNames();l.hasMoreElements();) {
-		 *    String s = (String) l.nextElement();
-		 *    System.out.println(s);
+		 *	  String s = (String) l.nextElement();
+		 *	  System.out.println(s);
 		 * }
 		 */
 		if (log_message == false) {
@@ -203,13 +203,13 @@ public class Jnova {
 		}
 		/*
 		 * The above contains TENANT_ID like:
-		 *   http://SERVICE_HOST:PORT/v1.1/TENANT_ID
+		 *	 http://SERVICE_HOST:PORT/v1.1/TENANT_ID
 		 * according to endpoints definition in keystone configuration.
 		 * It's the same as keystone endpoint-list.
 		 *
 		 * Note that we don't need to append a '/' to the URL because
 		 * openstack-java-sdk library codes add it.
-		 *   Nova novaClient = new Nova(nova_endpoint.concat("/"));
+		 *	 Nova novaClient = new Nova(nova_endpoint.concat("/"));
 		 */
 
 		// Create a Nova client object.
@@ -240,7 +240,7 @@ public class Jnova {
 				// Simple 'nova list' does not use it.
 				servers = novaClient.servers().list(true).execute();
 			}
-            printjson(servers);
+			printjson(servers);
 			if (debug) {
 				for(Server server : servers) {
 					System.out.println(server);
@@ -334,7 +334,7 @@ public class Jnova {
 			if (args[0].equals("service-list")) {
 				// nova service-list
 				Services services = novaClient.services().list().execute();
-                printjson(services);
+				printjson(services);
 				if (debug) {
 					for(Service service : services) {
 							System.out.println(service); 
@@ -347,7 +347,7 @@ public class Jnova {
 				s.setHost(args[1]);
 				s.setBinary(args[2]);
 				Service resp = novaClient.services().disableService(s).execute();
-    			printjson(resp);	
+				printjson(resp);	
 				if (debug) {
 					System.out.println(resp);
 				}
