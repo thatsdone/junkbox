@@ -10,6 +10,7 @@
  * 
  * Currently the following sub commands are implemented.
  *	 nova list	--all-tenants
+ *	 nova show
  *	 nova host-list
  *	 nova host-describe
  *	 nova hypervisor-list
@@ -248,8 +249,12 @@ public class Jnova {
 			}
 
 		} else if (args[0].equals("show")) {
-			// NOT IMPLEMENTED YET
-			;
+			if (args.length >= 2) {
+				Server server = novaClient.servers().show(args[1]).execute();
+				printjson(server);
+			} else {
+				System.out.println("Specify server id");
+			}
 
 		} else if (args[0].startsWith("host")) {
 			// os-hosts : get per-host informatoin using /os-hosts extension
