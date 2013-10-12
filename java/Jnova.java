@@ -39,7 +39,10 @@ import com.woorea.openstack.nova.model.Services;
 import com.woorea.openstack.nova.model.Hypervisor;
 import com.woorea.openstack.nova.model.Hypervisors;
 import com.woorea.openstack.nova.model.HypervisorStatistics;
+import com.woorea.openstack.nova.model.QuotaSet;
+import com.woorea.openstack.nova.model.SimpleTenantUsage;
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
+import com.woorea.openstack.nova.api.QuotaSetsResource;
 
 import java.lang.System;
 import java.io.PrintStream;
@@ -314,7 +317,7 @@ public class Jnova {
 				if (debug) {
 					System.out.println(hv);
 				}
-
+				/*
 				try {
 					CpuInfo cpuinfo = new ObjectMapper()
 						.readValue(hv.getCpuInfo(), CpuInfo.class);
@@ -322,7 +325,7 @@ public class Jnova {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
+				*/
 
 			} else if (args[0].equals("hypervisor-stats")) {
 				// nova hypervisor-stats
@@ -367,6 +370,15 @@ public class Jnova {
 				if (debug) {
 					System.out.println(resp);
 				}
+			}
+
+		} else if (args[0].equals("usage-list")) {
+			if (args.length >= 2) {
+				SimpleTenantUsage stu = novaClient.quotaSets()
+					.showUsage(args[1]).execute();
+				printjson(stu);
+			} else {
+				System.out.println("Specify tenant id");
 			}
 
 		} else {
