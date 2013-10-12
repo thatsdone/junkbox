@@ -42,19 +42,74 @@ import com.woorea.openstack.keystone.utils.KeystoneUtils;
 
 import java.lang.System;
 import java.io.PrintStream;
+import java.lang.Integer;
+
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
-
+import org.codehaus.jackson.type.JavaType;
+//import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import java.util.logging.*;
+import org.codehaus.jackson.map.annotate.JsonRootName;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 public class Jnova {
+
+	/*
+	 * a class for JSON/Object mapping. To be migrated to openstack-java-sdk.
+	 */
+	//@JsonIgnoreProperties(ignoreUnknown = true)
+	@JsonRootName("cpu_info")
+	public static class CpuInfo {
+
+		private String vendor;
+
+		private String arch;
+
+		private String model;
+
+		private List<String> features;
+
+		private Map<String, Integer> topology = new HashMap<String, Integer>();
+
+		public String getVendor() {
+			return vendor;
+		}
+
+		public String getArch() {
+			return arch;
+		}
+
+		public String getModel() {
+			return model;
+		}
+
+		public List<String> getFeatures() {
+			return features;
+		}
+
+		public Map<String, Integer> getTopology() {
+			return topology;
+		}
+
+	}
 
 	public static void printjson(Object o) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			System.out.println(mapper.writeValueAsString(o));
+			//System.out.println(mapper.writeValueAsString(o));
+			/*
+			  DefaultPrettyPrinter pp = new DefaultPrettyPrinter();
+			  pp.indentArrayWith(new Lf2SpacesIndenter());
+			  System.out.println(mapper.writer(pp).writeValueAsString(o));
+			*/
+			System.out.println(mapper.writerWithDefaultPrettyPrinter()
+							   .writeValueAsString(o));
 		} catch (Exception e) {
-			System.out.println("Exception! :" + e);
+			e.printStackTrace();
 		}
 	}
 
@@ -241,16 +296,29 @@ public class Jnova {
 					System.out.println(hypervisors);
 				}
 				printjson(hypervisors);
-				if (debug){
-					for(Hypervisor hypervisor : hypervisors) {
-						Hypervisor hv = novaClient.hypervisors()
-							.show(hypervisor.getId()).execute();
-						printjson(hv);
-						if (debug) {
-							System.out.println(hv);
-						}
-					}
+
+			} else if (args[0].equals("hypervisor-show")) {
+				// nova hypervisor-show
+				if (args.length < 2) {
+					System.out.println("Specify hypervisor id");
+					System.exit(0);
 				}
+				Hypervisor hv = novaClient.hypervisors()
+					.show(new Integer(args[1])).execute();
+				printjson(hv);
+				if (debug) {
+					System.out.println(hv);
+				}
+
+				try {
+					CpuInfo cpuinfo = new ObjectMapper()
+						.readValue(hv.getCpuInfo(), CpuInfo.class);
+					printjson(cpuinfo);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+
+
 			} else if (args[0].equals("hypervisor-stats")) {
 				// nova hypervisor-stats
 				HypervisorStatistics stat = novaClient.hypervisors()
