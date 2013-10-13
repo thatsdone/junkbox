@@ -19,6 +19,7 @@
  *	 nova service-list
  *	 nova service-enable
  *	 nova service-disable
+ *	 nova usage-list
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc.
@@ -62,45 +63,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 public class Jnova {
 
-	/*
-	 * a class for JSON/Object mapping. To be migrated to openstack-java-sdk.
-	 */
-	//@JsonIgnoreProperties(ignoreUnknown = true)
-	@JsonRootName("cpu_info")
-	public static class CpuInfo {
-
-		private String vendor;
-
-		private String arch;
-
-		private String model;
-
-		private List<String> features;
-
-		private Map<String, Integer> topology = new HashMap<String, Integer>();
-
-		public String getVendor() {
-			return vendor;
-		}
-
-		public String getArch() {
-			return arch;
-		}
-
-		public String getModel() {
-			return model;
-		}
-
-		public List<String> getFeatures() {
-			return features;
-		}
-
-		public Map<String, Integer> getTopology() {
-			return topology;
-		}
-
-	}
-
 	public static void printjson(Object o) {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
@@ -135,43 +97,43 @@ public class Jnova {
 	 */
 	public static void main(String[] args) {
 		
-		String os_auth_url = System.getenv("OS_AUTH_URL");
-		String os_password = System.getenv("OS_PASSWORD");
-		String os_tenant_name = System.getenv("OS_TENANT_NAME");
-		String os_username = System.getenv("OS_USERNAME");
+		String osAuthUrl = System.getenv("OS_AUTH_URL");
+		String osPassword = System.getenv("OS_PASSWORD");
+		String osTenantName = System.getenv("OS_TENANT_NAME");
+		String osUsername = System.getenv("OS_USERNAME");
 
-		if (os_auth_url == null || os_password == null ||
-			os_tenant_name == null || os_username == null)	{
+		if (osAuthUrl == null || osPassword == null ||
+			osTenantName == null || osUsername == null)	{
 			System.out.println("set OS_* environment variables.");
 			System.exit(0);
 		}
 
 		// Parse comnand line arguments.
-		boolean all_tenants = false;
+		boolean allTenants = false;
 		boolean debug = false;
-		boolean log_message = false;
+		boolean logMessage = false;
 		/*
 		 * skip the first argument. ( i = 1, not 0)
 		 */
 		for(int i = 1; i < args.length; i++) {
 			if (args[i].equals("--all-tenants")) {
-				all_tenants = true;
+				allTenants = true;
 			} else if (args[i].equals("--debug")) {
 				debug = true;
 			} else if (args[i].equals("--log-message")) {
-				 log_message = true;
+				 logMessage = true;
 			}
 		}
 		// Get account informatoin from environment variables.
 		if (debug) {
-			System.out.println("OS_AUTH_URL	   : " + os_auth_url);
-			System.out.println("OS_PASSWORD	   : " + os_password);
-			System.out.println("OS_TENANT_NAME : " + os_tenant_name);
-			System.out.println("OS_USERNAME	   : " + os_username);
+			System.out.println("OS_AUTH_URL	   : " + osAuthUrl);
+			System.out.println("OS_PASSWORD	   : " + osPassword);
+			System.out.println("OS_TENANT_NAME : " + osTenantName);
+			System.out.println("OS_USERNAME	   : " + osUsername);
 		}
 
 		// First, create a Keystone cliet class instance.
-		Keystone keystoneClient = new Keystone(os_auth_url);
+		Keystone keystoneClient = new Keystone(osAuthUrl);
 		/*
 		 * research purpose code chunk to see all log handlers in the system.
 		 * LogManager lm  = LogManager.getLogManager();
@@ -180,7 +142,7 @@ public class Jnova {
 		 *	  System.out.println(s);
 		 * }
 		 */
-		if (log_message == false) {
+		if (logMessage == false) {
 			// openstack-java-sdk creates a logger named "os" internally.
 			Logger l = Logger.getLogger("os");
 			l.setFilter(new NullFilter());
@@ -195,15 +157,15 @@ public class Jnova {
 
 		// Set account information, and issue an authentication request.
 		Access access = keystoneClient.tokens()
-			.authenticate(new UsernamePassword(os_username, os_password))
-			.withTenantName(os_tenant_name)
+			.authenticate(new UsernamePassword(osUsername, osPassword))
+			.withTenantName(osTenantName)
 			.execute();
 		
-		String nova_endpoint = KeystoneUtils
+		String novaEndpoint = KeystoneUtils
 			.findEndpointURL(access.getServiceCatalog(),
 							 "compute", null, "public");
 		if (debug) {
-			System.out.println("DEBUG: " + nova_endpoint);
+			System.out.println("DEBUG: " + novaEndpoint);
 		}
 		/*
 		 * The above contains TENANT_ID like:
@@ -213,11 +175,11 @@ public class Jnova {
 		 *
 		 * Note that we don't need to append a '/' to the URL because
 		 * openstack-java-sdk library codes add it.
-		 *	 Nova novaClient = new Nova(nova_endpoint.concat("/"));
+		 *	 Nova novaClient = new Nova(novaEndpoint.concat("/"));
 		 */
 
 		// Create a Nova client object.
-		Nova novaClient = new Nova(nova_endpoint);
+		Nova novaClient = new Nova(novaEndpoint);
 
 		/*
 		 * Set the token now we got for the following requests.
@@ -232,9 +194,9 @@ public class Jnova {
 		if (args[0].equals("list")) {
 			//servers :
 			Servers servers;
-			if (all_tenants) {
+			if (allTenants) {
 				// nova list --all-tenants
-				// get servers of all_tenants.
+				// get servers of all tenants.
 				// (want to use pagination if possible... ) 
 				 servers = novaClient.servers()
 					.list(true).queryParam("all_tenants", "1").execute();
@@ -317,15 +279,6 @@ public class Jnova {
 				if (debug) {
 					System.out.println(hv);
 				}
-				/*
-				try {
-					CpuInfo cpuinfo = new ObjectMapper()
-						.readValue(hv.getCpuInfo(), CpuInfo.class);
-					printjson(cpuinfo);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				*/
 
 			} else if (args[0].equals("hypervisor-stats")) {
 				// nova hypervisor-stats
