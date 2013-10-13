@@ -20,6 +20,8 @@
  *	 nova service-enable
  *	 nova service-disable
  *	 nova usage-list
+ *	 nova aggregate-list
+ *	 nova aggregate-details (not yet)
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc.
@@ -42,6 +44,9 @@ import com.woorea.openstack.nova.model.Hypervisors;
 import com.woorea.openstack.nova.model.HypervisorStatistics;
 import com.woorea.openstack.nova.model.QuotaSet;
 import com.woorea.openstack.nova.model.SimpleTenantUsage;
+import com.woorea.openstack.nova.model.HostAggregate;
+import com.woorea.openstack.nova.model.HostAggregates;
+
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 import com.woorea.openstack.nova.api.QuotaSetsResource;
 
@@ -326,12 +331,33 @@ public class Jnova {
 			}
 
 		} else if (args[0].equals("usage-list")) {
+			/// os-simple-tenant-usage
 			if (args.length >= 2) {
+				// nova usage-list
 				SimpleTenantUsage stu = novaClient.quotaSets()
 					.showUsage(args[1]).execute();
 				printjson(stu);
 			} else {
 				System.out.println("Specify tenant id");
+			}
+
+		} else if (args[0].startsWith("aggregate")) {
+			// os-aggregates
+			if (args[0].equals("aggregate-list")) {
+				// nova aggregate-list
+				HostAggregates ags = novaClient.aggregates().list().execute();
+				printjson(ags);
+
+			} else if (args[0].equals("aggregate-details")) {
+				// nova aggregate-details AGGREGATE_ID
+				// does not work currently because of sdk (probably...)
+				if (args.length >= 2) {
+					HostAggregate ag = novaClient.aggregates().
+						showAggregate(args[1]).execute();
+					printjson(ag);
+				} else {
+					System.out.println("Specify tenant id");
+				}
 			}
 
 		} else {
