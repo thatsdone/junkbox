@@ -46,6 +46,7 @@ import com.woorea.openstack.nova.model.QuotaSet;
 import com.woorea.openstack.nova.model.SimpleTenantUsage;
 import com.woorea.openstack.nova.model.HostAggregate;
 import com.woorea.openstack.nova.model.HostAggregates;
+import com.woorea.openstack.nova.model.AvailabilityZoneInfo;
 
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 import com.woorea.openstack.nova.api.QuotaSetsResource;
@@ -337,6 +338,9 @@ public class Jnova {
 				SimpleTenantUsage stu = novaClient.quotaSets()
 					.showUsage(args[1]).execute();
 				printjson(stu);
+				if (debug) {
+					System.out.println(stu);
+				}
 			} else {
 				System.out.println("Specify tenant id");
 			}
@@ -347,6 +351,9 @@ public class Jnova {
 				// nova aggregate-list
 				HostAggregates ags = novaClient.aggregates().list().execute();
 				printjson(ags);
+				if (debug) {
+					System.out.println(ags);
+				}
 
 			} else if (args[0].equals("aggregate-details")) {
 				// nova aggregate-details AGGREGATE_ID
@@ -355,10 +362,25 @@ public class Jnova {
 					HostAggregate ag = novaClient.aggregates().
 						showAggregate(args[1]).execute();
 					printjson(ag);
+					if (debug) {
+						System.out.println(ag);
+					}
+
 				} else {
 					System.out.println("Specify tenant id");
 				}
 			}
+
+		} else if (args[0].equals("availability-zone-list")) {
+			// os-availability-zone
+			// nova availability-zone-list
+			AvailabilityZoneInfo az = novaClient.availabilityZoneInfo()
+				.show(true).execute();
+			printjson(az);
+			if (debug) {
+				System.out.println(az);
+			}
+
 
 		} else {
 			System.out.println("Unknown command :" + args[0]);
