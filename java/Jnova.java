@@ -21,7 +21,8 @@
  *	 nova service-disable
  *	 nova usage-list
  *	 nova aggregate-list
- *	 nova aggregate-details (not yet)
+ *	 nova aggregate-details
+ *	 nova flavor-list
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc.
@@ -47,6 +48,8 @@ import com.woorea.openstack.nova.model.SimpleTenantUsage;
 import com.woorea.openstack.nova.model.HostAggregate;
 import com.woorea.openstack.nova.model.HostAggregates;
 import com.woorea.openstack.nova.model.AvailabilityZoneInfo;
+import com.woorea.openstack.nova.model.Flavor;
+import com.woorea.openstack.nova.model.Flavors;
 
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 import com.woorea.openstack.nova.api.QuotaSetsResource;
@@ -213,6 +216,29 @@ public class Jnova {
 				servers = novaClient.servers().list(true).execute();
 			}
 			printjson(servers);
+			if (debug) {
+				for (Server s : servers) {
+					System.out.println("Hypervisor     : "
+									   + s.getHypervisorHostname());
+					System.out.println("VM Name        : "
+									   + s.getInstanceName());
+					System.out.println("Flavor         : " +
+									   s.getFlavor().getId());
+					System.out.println("Instance Id    : " + s.getId());
+					System.out.println("Image Id       : " +
+									   s.getImage().getId());
+					System.out.println("Keypair Name   : " + s.getKeyName());
+					System.out.println("Instance Name  : " + s.getName());
+					System.out.println("Instance Status: " + s.getStatus());
+					System.out.println("Tenant Id      : " + s.getTenantId());
+					System.out.println("User Id        : " + s.getUserId());
+					System.out.println("Task State     : " + s.getTaskState());
+					System.out.println("VM State       : " + s.getVmState());
+					System.out.println("");
+				}
+			}
+
+			//
 			if (debug) {
 				for(Server server : servers) {
 					System.out.println(server);
@@ -381,6 +407,14 @@ public class Jnova {
 				System.out.println(az);
 			}
 
+		} else if (args[0].equals("flavor-list")) {
+			// flavors
+			// nova flavor-list
+			Flavors flavors = novaClient.flavors().list(true).execute();
+			printjson(flavors);
+			if (debug) {
+				System.out.println(flavors);
+			}
 
 		} else {
 			System.out.println("Unknown command :" + args[0]);
