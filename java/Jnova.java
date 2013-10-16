@@ -38,7 +38,6 @@ import com.woorea.openstack.nova.model.Servers;
 import com.woorea.openstack.nova.model.Host;
 import com.woorea.openstack.nova.model.Hosts;
 import com.woorea.openstack.nova.model.Service;
-import com.woorea.openstack.nova.model.ServiceAction.ServiceUpdateReq;
 import com.woorea.openstack.nova.model.Services;
 import com.woorea.openstack.nova.model.Hypervisor;
 import com.woorea.openstack.nova.model.Hypervisors;
@@ -336,24 +335,28 @@ public class Jnova {
 
 			} else if (args[0].equals("service-disable")) {
 				// nova service-disable HOST SERVIVCE
-				ServiceUpdateReq s = new ServiceUpdateReq();
-				s.setHost(args[1]);
-				s.setBinary(args[2]);
-				Service resp = novaClient.services().disableService(s).execute();
-				printjson(resp);	
-				if (debug) {
-					System.out.println(resp);
+				if (args.length >= 3) {
+					Service resp = novaClient.services()
+						.disableService(args[1], args[2]).execute();
+					printjson(resp);	
+					if (debug) {
+						System.out.println(resp);
+					}
+				} else {
+					System.out.println("Specify host name and service binary name");
 				}
 
 			} else if (args[0].equals("service-enable")) { 
 				// nova service-enable HOST SERVIVCE
-				ServiceUpdateReq s = new ServiceUpdateReq();
-				s.setHost(args[1]);
-				s.setBinary(args[2]);
-				Service resp = novaClient.services().enableService(s).execute();
-				printjson(resp);
-				if (debug) {
-					System.out.println(resp);
+				if (args.length >= 3) {
+					Service resp = novaClient.services()
+						.enableService(args[1], args[2]).execute();
+					printjson(resp);
+					if (debug) {
+						System.out.println(resp);
+					}
+				} else {
+					System.out.println("Specify host name and service binary name");
 				}
 			}
 
