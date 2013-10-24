@@ -23,6 +23,7 @@
  *	 nova aggregate-list
  *	 nova aggregate-details
  *	 nova flavor-list
+ *	 nova live-migration
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc.
@@ -52,6 +53,7 @@ import com.woorea.openstack.nova.model.Flavors;
 
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 import com.woorea.openstack.nova.api.QuotaSetsResource;
+import com.woorea.openstack.nova.api.ServersResource;
 
 import java.lang.System;
 import java.io.PrintStream;
@@ -417,6 +419,30 @@ public class Jnova {
 			printjson(flavors);
 			if (debug) {
 				System.out.println(flavors);
+			}
+
+		} else if (args[0].equals("live-migration")) {
+			boolean block = false;
+			boolean disk = false;
+			if (args.length >= 3) {
+				//System.out.println("len: " + args.length);
+				for (int i = 3; i < args.length; i++) {
+					if (args[i].equals("--block-migrate")) {
+						block = true;
+					} else if (args[i].equals("--disk-over-commit")) {
+						disk = true;
+					} else {
+						System.out.println("Unknown option: " + args[i]);
+					}
+				}
+				//System.out.println("block: " + block + ", disk: " + disk);
+				//System.exit(0);
+				novaClient.servers()
+					.migrateLive(args[1], args[2], block, disk)
+					.execute();
+
+			} else {
+				System.out.println("Specify server_id and hostname");
 			}
 
 		} else {
