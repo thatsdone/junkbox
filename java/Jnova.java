@@ -85,7 +85,7 @@ public class Jnova {
     private static String osTenantName = System.getenv("OS_TENANT_NAME");
     private static String osUsername = System.getenv("OS_USERNAME");
 
-    public static HashMap<String, String> cArray = new HashMap<String, String>();
+    public static LinkedHashMap<String, String> cArray = new LinkedHashMap<String, String>();
 
     static {
         cArray.put("list", "server");
@@ -104,22 +104,6 @@ public class Jnova {
         cArray.put("flavor-list", "flavor");
         cArray.put("live-migration", "server");
     }
-
-    public static String[] commandArray = {"list",
-                                           "show",
-                                           "host-list",
-                                           "host-describe",
-                                           "hypervisor-list",
-                                           "hypervisor-show",
-                                           "hypervisor-stats",
-                                           "service-list",
-                                           "service-enable",
-                                           "service-disable",
-                                           "usage-list",
-                                           "aggregate-list",
-                                           "aggregate-details",
-                                           "flavor-list",
-                                           "live-migration"};
 
     public static void printjson(Object o) {
         ObjectMapper mapper = new ObjectMapper();
@@ -221,20 +205,12 @@ public class Jnova {
                 break;
             }
         }
-        if (!Arrays.asList(commandArray).contains(command)) {
+
+        if(!cArray.containsKey(command)) {
             System.out.println("Unknown command: " + command);
-                printUsage();
-                System.exit(0);
+            printUsage();
+            System.exit(0);
         }
-        /*
-        for (String s : newargs) {
-            System.out.println("DEBUG: " + s);
-        }
-        System.out.println(newargs.length + " / " + args.length);
-        for (;idx < args.length; idx++) {
-            ;
-        }
-        */
 
         String newargs[] = Arrays.copyOfRange(args, idx + 1, args.length);
 
@@ -338,8 +314,10 @@ public class Jnova {
 
     private static void printUsage() {
         System.out.println("Usage: ");
-        for (String cmd : commandArray) {
-            System.out.println("    jnova " + cmd + " [options]");
+
+        for (Map.Entry<String, String> entry : cArray.entrySet()) {
+            System.out.println("    jnova " + entry.getKey());
+            
         }
     }
 
@@ -369,14 +347,8 @@ public class Jnova {
          */
         String command = null;
         for(int i = 0; i < args.length; i++) {
-            if (args[i].equals("--all-tenants")) { //
+            if (args[i].equals("--all-tenants")) {
                 allTenants = true;
-                /*
-            } else if (args[i].equals("--debug")) {
-                debug = true;
-            } else if (args[i].equals("--log-message")) {
-                logMessage = true;
-                */
             } else if ((command == null) && !args[i].startsWith("--")){ 
                 command = new String(args[i]);
             }
