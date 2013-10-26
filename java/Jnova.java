@@ -52,6 +52,7 @@ import com.woorea.openstack.nova.model.HostAggregates;
 import com.woorea.openstack.nova.model.AvailabilityZoneInfo;
 import com.woorea.openstack.nova.model.Flavor;
 import com.woorea.openstack.nova.model.Flavors;
+import com.woorea.openstack.nova.model.Extensions;
 
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 //import com.woorea.openstack.nova.api.QuotaSetsResource;
@@ -106,6 +107,7 @@ public class Jnova {
         cArray.put("flavor-list", "flavor");
         cArray.put("live-migration", "server");
         cArray.put("availability-zone-list", "availabilityZone");
+        cArray.put("list-extensions", "extensions");
     }
 
     public static void printJson(Object o) {
@@ -194,6 +196,10 @@ public class Jnova {
     public static void availabilityZone(String[] args) {
         if(isDebug())
             System.out.println("availabilityZone() called.");
+    }
+    public static void extensions(String[] args) {
+        if(isDebug())
+            System.out.println("extensions() called.");
     }
 
     /**
@@ -634,8 +640,22 @@ public class Jnova {
                 System.out.println("Specify server_id and hostname");
             }
 
+        } else if (command.equals("list-extensions")) {
+            // extensions
+            // nova list-extensions
+            /*
+             * NOTE(thatsdone): list(true) causes an error.
+             * Looks like '/v2/TENANT_ID/extensions/detail' is not supported.
+             */
+            Extensions ex = novaClient.extensions().list(false).execute();
+            printJson(ex);
+            if (isDebug()) {
+                System.out.println(ex);
+            }
+
         } else {
             System.out.println("Unknown command :" + command);
+
         }
     }
 }
