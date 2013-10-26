@@ -8,8 +8,8 @@
  * of a forked version available below:
  *    https://github.com/thatsdone/openstack-java-sdk 
  * 
- * Currently the following sub commands are implemented.
- *   nova list  --all-tenants
+ * Currently the following sub command equivalents are implemented.
+ *   nova list
  *   nova show
  *   nova host-list
  *   nova host-describe
@@ -22,11 +22,13 @@
  *   nova usage-list
  *   nova aggregate-list
  *   nova aggregate-details
+ *   nova availability-zone-list
  *   nova flavor-list
  *   nova live-migration
+ *   nova availability-zone-list
  *
  * Authentication information must be specified as environment variables
- * such as OS_AUTH_URL etc.
+ * such as OS_AUTH_URL etc at the moment.
  *
  *  Author: Masanori Itoh <masanori.itoh@gmail.com>
  */
@@ -98,14 +100,15 @@ public class Jnova {
         cArray.put("service-list", "service");
         cArray.put("service-enable", "service");
         cArray.put("service-disable", "service");
-        cArray.put("usage-list", "quotaset");
+        cArray.put("usage-list", "quotaSet");
         cArray.put("aggregate-list", "aggregate");
         cArray.put("aggregate-details", "aggregate");
         cArray.put("flavor-list", "flavor");
         cArray.put("live-migration", "server");
+        cArray.put("availability-zone-list", "availabilityZone");
     }
 
-    public static void printjson(Object o) {
+    public static void printJson(Object o) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             //System.out.println(mapper.writeValueAsString(o));
@@ -124,7 +127,7 @@ public class Jnova {
     /*
      * NullFilter for disabling log output
      */
-    public static class NullFilter implements Filter {
+    private static class NullFilter implements Filter {
 
         // isLoggable says everything is NOT logabble.
         public boolean isLoggable(LogRecord record) {
@@ -134,6 +137,7 @@ public class Jnova {
     }
 
     private static void setupLog() {
+
         /*
          * research purpose code chunk to see all log handlers in the system.
          * LogManager lm  = LogManager.getLogManager();
@@ -142,7 +146,7 @@ public class Jnova {
          *    System.out.println(s);
          * }
          */
-        if (logMessage == false) {
+        if (!isLogMessage()) {
             // openstack-java-sdk gets/creates a logger named "os" internally.
             Logger l = Logger.getLogger("os");
             l.setFilter(new NullFilter());
@@ -156,6 +160,9 @@ public class Jnova {
         }
     }
 
+    /*
+     * skeltons of per resource method for near future use.
+     */
     public static void server(String[] args) {
         if(isDebug())
             System.out.println("server() called.");
@@ -172,7 +179,7 @@ public class Jnova {
         if(isDebug())
             System.out.println("service() called.");
     }
-    public static void quotaset(String[] args) {
+    public static void quotaSet(String[] args) {
         if(isDebug())
             System.out.println("quotaset() called.");
     }
@@ -182,7 +189,11 @@ public class Jnova {
     }
     public static void aggregate(String[] args) {
         if(isDebug())
-            System.out.println("aggregat    e() called.");
+            System.out.println("aggregate() called.");
+    }
+    public static void availabilityZone(String[] args) {
+        if(isDebug())
+            System.out.println("availabilityZone() called.");
     }
 
     /**
@@ -394,7 +405,7 @@ public class Jnova {
                 // Simple 'nova list' does not use it.
                 servers = novaClient.servers().list(true).execute();
             }
-            printjson(servers);
+            printJson(servers);
             if (isDebug()) {
                 for (Server s : servers) {
                     System.out.println("Hypervisor     : "
@@ -427,7 +438,7 @@ public class Jnova {
         } else if (command.equals("show")) {
             if (args.length >= 2) {
                 Server server = novaClient.servers().show(args[1]).execute();
-                printjson(server);
+                printJson(server);
             } else {
                 System.out.println("Specify server id");
             }
@@ -440,7 +451,7 @@ public class Jnova {
                 if (isDebug()) {
                     System.out.println(hosts);
                 }
-                printjson(hosts);
+                printJson(hosts);
                 if (isDebug()) {
                     for(Hosts.Host host : hosts) {
                         System.out.println(host);
@@ -458,7 +469,7 @@ public class Jnova {
                 // nova host-describe HOSTNAME
                 if (args.length >= 2) {
                     Host h = novaClient.hosts().show(args[1]).execute();
-                    printjson(h);
+                    printJson(h);
                     if (isDebug()) {
                         System.out.println(h);
                     }
@@ -476,7 +487,7 @@ public class Jnova {
                 if (isDebug()) {
                     System.out.println(hypervisors);
                 }
-                printjson(hypervisors);
+                printJson(hypervisors);
 
             } else if (command.equals("hypervisor-show")) {
                 // nova hypervisor-show
@@ -486,7 +497,7 @@ public class Jnova {
                 }
                 Hypervisor hv = novaClient.hypervisors()
                     .show(new Integer(args[1])).execute();
-                printjson(hv);
+                printJson(hv);
                 if (isDebug()) {
                     System.out.println(hv);
                 }
@@ -495,7 +506,7 @@ public class Jnova {
                 // nova hypervisor-stats
                 HypervisorStatistics stat = novaClient.hypervisors()
                     .showStats().execute();
-                printjson(stat);
+                printJson(stat);
                 if (isDebug()) {
                     System.out.println(stat);
                 }
@@ -506,7 +517,7 @@ public class Jnova {
             if (command.equals("service-list")) {
                 // nova service-list
                 Services services = novaClient.services().list().execute();
-                printjson(services);
+                printJson(services);
                 if (isDebug()) {
                     for(Service service : services) {
                             System.out.println(service); 
@@ -518,7 +529,7 @@ public class Jnova {
                 if (args.length >= 3) {
                     Service resp = novaClient.services()
                         .disableService(args[1], args[2]).execute();
-                    printjson(resp);    
+                    printJson(resp);    
                     if (isDebug()) {
                         System.out.println(resp);
                     }
@@ -531,7 +542,7 @@ public class Jnova {
                 if (args.length >= 3) {
                     Service resp = novaClient.services()
                         .enableService(args[1], args[2]).execute();
-                    printjson(resp);
+                    printJson(resp);
                     if (isDebug()) {
                         System.out.println(resp);
                     }
@@ -546,7 +557,7 @@ public class Jnova {
                 // nova usage-list
                 SimpleTenantUsage stu = novaClient.quotaSets()
                     .showUsage(args[1]).execute();
-                printjson(stu);
+                printJson(stu);
                 if (isDebug()) {
                     System.out.println(stu);
                 }
@@ -559,7 +570,7 @@ public class Jnova {
             if (command.equals("aggregate-list")) {
                 // nova aggregate-list
                 HostAggregates ags = novaClient.aggregates().list().execute();
-                printjson(ags);
+                printJson(ags);
                 if (isDebug()) {
                     System.out.println(ags);
                 }
@@ -570,7 +581,7 @@ public class Jnova {
                 if (args.length >= 2) {
                     HostAggregate ag = novaClient.aggregates().
                         showAggregate(args[1]).execute();
-                    printjson(ag);
+                    printJson(ag);
                     if (isDebug()) {
                         System.out.println(ag);
                     }
@@ -585,7 +596,7 @@ public class Jnova {
             // nova availability-zone-list
             AvailabilityZoneInfo az = novaClient.availabilityZoneInfo()
                 .show(true).execute();
-            printjson(az);
+            printJson(az);
             if (isDebug()) {
                 System.out.println(az);
             }
@@ -594,7 +605,7 @@ public class Jnova {
             // flavors
             // nova flavor-list
             Flavors flavors = novaClient.flavors().list(true).execute();
-            printjson(flavors);
+            printJson(flavors);
             if (isDebug()) {
                 System.out.println(flavors);
             }
