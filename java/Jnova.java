@@ -26,6 +26,8 @@
  *   nova flavor-list
  *   nova live-migration
  *   nova availability-zone-list
+ *   nova list-extensions
+ *   nova image-list
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc at the moment.
@@ -53,6 +55,7 @@ import com.woorea.openstack.nova.model.AvailabilityZoneInfo;
 import com.woorea.openstack.nova.model.Flavor;
 import com.woorea.openstack.nova.model.Flavors;
 import com.woorea.openstack.nova.model.Extensions;
+import com.woorea.openstack.nova.model.Images;
 
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 //import com.woorea.openstack.nova.api.QuotaSetsResource;
@@ -108,6 +111,7 @@ public class Jnova {
         cArray.put("live-migration", "server");
         cArray.put("availability-zone-list", "availabilityZone");
         cArray.put("list-extensions", "extensions");
+        cArray.put("image-list", "image");
     }
 
     public static void printJson(Object o) {
@@ -200,6 +204,10 @@ public class Jnova {
     public static void extensions(String[] args) {
         if(isDebug())
             System.out.println("extensions() called.");
+    }
+    public static void image(String[] args) {
+        if(isDebug())
+            System.out.println("image() called.");
     }
 
     /**
@@ -651,6 +659,15 @@ public class Jnova {
             printJson(ex);
             if (isDebug()) {
                 System.out.println(ex);
+            }
+
+        } else if (command.equals("image-list")) {
+            // images
+            // nova image-list
+            Images  img = novaClient.images().list(true).execute();
+            printJson(img);
+            if (isDebug()) {
+                System.out.println(img);
             }
 
         } else {
