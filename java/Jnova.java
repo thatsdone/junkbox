@@ -16,6 +16,7 @@
  *   nova hypervisor-list
  *   nova hypervisor-show
  *   nova hypervisor-stats
+ *   nova hypervisor-servers
  *   nova service-list
  *   nova service-enable
  *   nova service-disable
@@ -47,6 +48,7 @@ import com.woorea.openstack.nova.model.Services;
 import com.woorea.openstack.nova.model.Hypervisor;
 import com.woorea.openstack.nova.model.Hypervisors;
 import com.woorea.openstack.nova.model.HypervisorStatistics;
+import com.woorea.openstack.nova.model.HypervisorServers;
 import com.woorea.openstack.nova.model.QuotaSet;
 import com.woorea.openstack.nova.model.SimpleTenantUsage;
 import com.woorea.openstack.nova.model.HostAggregate;
@@ -101,6 +103,7 @@ public class Jnova {
         cArray.put("hypervisor-list", "hypervisor");
         cArray.put("hypervisor-show", "hypervisor");
         cArray.put("hypervisor-stats", "hypervisor");
+        cArray.put("hypervisor-servers", "hypervisor");
         cArray.put("service-list", "service");
         cArray.put("service-enable", "service");
         cArray.put("service-disable", "service");
@@ -523,6 +526,18 @@ public class Jnova {
                 printJson(stat);
                 if (isDebug()) {
                     System.out.println(stat);
+                }
+            } else if (command.equals("hypervisor-servers")) {
+                // nova hypervisor-servers
+                if (args.length < 2) {
+                    System.out.println("Specify hypervisor name pattern");
+                    System.exit(0);
+                }
+                HypervisorServers hs = novaClient.hypervisors()
+                    .showServers(args[1]).execute();
+                printJson(hs);
+                if (isDebug()) {
+                    System.out.println(hs);
                 }
             }
 
