@@ -88,6 +88,7 @@ public class Jnova {
     private static boolean debug = false;
     private static boolean logMessage = false;
 
+    // Get account informatoin from environment variables.
     private static String osAuthUrl = System.getenv("OS_AUTH_URL");
     private static String osPassword = System.getenv("OS_PASSWORD");
     private static String osTenantName = System.getenv("OS_TENANT_NAME");
@@ -219,15 +220,38 @@ public class Jnova {
      * @param   args : the same as args of main()
      * @return  LinkedHashMap of handler method and arguments for that.
      */
-    private static Map<Method, String[]> parse(String[] args) {
+    private static String[] parse(String[] args) {
         String command = args[0];
 
         int idx;
         for(idx = 0; idx < args.length; idx++) {
+            //System.out.println("i = " + idx + " args[i] = " + args[idx]);
             if (args[idx].equals("--debug")) {
                 debug = true;
+
             } else if (args[idx].equals("--log-message")) {
                 logMessage = true;
+
+            } else if (args[idx].equals("--os-username")) {
+                idx++;
+                osUsername = args[idx];
+                continue;
+
+            } else if (args[idx].equals("--os-password")) {
+                idx++;
+                osPassword = args[idx];
+                continue;
+
+            } else if (args[idx].equals("--os-tenant-name")) {
+                idx++;
+                osTenantName = args[idx];
+                continue;
+
+            } else if (args[idx].equals("--os-auth-url")) {
+                idx++;
+                osAuthUrl = args[idx];
+                continue;
+
             } else if (!args[idx].startsWith("--")) {
                 command = args[idx];
                 break;
@@ -239,36 +263,22 @@ public class Jnova {
             printUsage();
             System.exit(0);
         }
+        String subargs[] = Arrays.copyOfRange(args, idx, args.length);
 
-        String newargs[] = Arrays.copyOfRange(args, idx + 1, args.length);
-
-        LinkedHashMap<Method, String[]> map =
-            new LinkedHashMap<Method, String[]>();
-        try {
-            map.put(Jnova.class.getMethod(cArray.get(command), String[].class),
-                    newargs);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(0);
-            //return null;
-        }
         if (isDebug()) {
             System.out.println("DEBUG: command is: " + command);
-            System.out.println("DEBUG: hanndler is: " + map);
-            for (String s : newargs) {
-                System.out.println("DEBUG: newargs: " + s);
+            for (String s : subargs) {
+                System.out.println("DEBUG: subargs: " + s);
             }
         }
 
-
-        // Get account informatoin from environment variables.
         if (isDebug()) {
             System.out.println("OS_AUTH_URL    : " + osAuthUrl);
             System.out.println("OS_PASSWORD    : " + osPassword);
             System.out.println("OS_TENANT_NAME : " + osTenantName);
             System.out.println("OS_USERNAME    : " + osUsername);
         }
-        return map;
+        return subargs;
     }
 
     public static boolean isDebug() {
@@ -361,43 +371,28 @@ public class Jnova {
             System.exit(0);
         }
 
+        // Parse comnand line arguments.
+        String[] c = parse(args);
+
         if (osAuthUrl == null || osPassword == null ||
             osTenantName == null || osUsername == null) {
-            System.out.println("set OS_* environment variables.");
+            System.out.println("specify account information.");
             System.exit(0);
         }
 
-        // Parse comnand line arguments.
-        boolean allTenants = false;
+        String command = c[0];
 
-        /*
-         * to be migrated to each handler
-         */
-        String command = null;
-        for(int i = 0; i < args.length; i++) {
-            if (args[i].equals("--all-tenants")) {
-                allTenants = true;
-            } else if ((command == null) && !args[i].startsWith("--")){ 
-                command = new String(args[i]);
-            }
-        }
-
-        Map<Method, String[]> c = parse(args);
-        // parse returns only one pair of Map.
-        for (Map.Entry<Method, String[]> entry : c.entrySet()) {
-            Method m = (Method)entry.getKey();
-            String[] cmdargs = (String[])entry.getValue();
-            try {
-                // Note(thatsdone):
-                // Without the cast (Object) below, elements of cmdargs[]
-                // will be handled as independent classes and causes an error.
-                // Could be a pitfall.
-                m.invoke(null, (Object)cmdargs);
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(0);
-            }
-            break;
+        try {
+            Method m = Jnova.class.getMethod(cArray.get(command),
+                                             String[].class);
+            // Note(thatsdone):
+            // Without the cast (Object) below, elements of cmdargs[]
+            // will be handled as independent classes and causes an error.
+            // Could be a pitfall.
+            m.invoke(null, (Object)c);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(0);
         }
 
         // getNovaClient() succeeds, or aborts the process.
@@ -409,6 +404,12 @@ public class Jnova {
          */
         if (command.equals("list")) {
             //servers :
+            boolean allTenants = false;
+            for(int i = 0; i < args.length; i++) {
+                if (args[i].equals("--all-tenants")) {
+                    allTenants = true;
+                }
+            }
             Servers servers;
             if (allTenants) {
                 // nova list --all-tenants
