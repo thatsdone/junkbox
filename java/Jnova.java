@@ -58,6 +58,7 @@ import com.woorea.openstack.nova.model.Flavor;
 import com.woorea.openstack.nova.model.Flavors;
 import com.woorea.openstack.nova.model.Extensions;
 import com.woorea.openstack.nova.model.Images;
+import com.woorea.openstack.nova.model.Volumes;
 
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 //import com.woorea.openstack.nova.api.QuotaSetsResource;
@@ -116,6 +117,7 @@ public class Jnova {
         cArray.put("availability-zone-list", "availabilityZone");
         cArray.put("list-extensions", "extensions");
         cArray.put("image-list", "image");
+        cArray.put("volume-list", "volume");
     }
 
     public static void printJson(Object o) {
@@ -213,6 +215,10 @@ public class Jnova {
         if(isDebug())
             System.out.println("image() called.");
     }
+    public static void volume(String[] args) {
+        if(isDebug())
+            System.out.println("volume() called.");
+    }
 
     /**
      * parse() : parse the top level command line arguments.
@@ -220,7 +226,7 @@ public class Jnova {
      * @param   args : the same as args of main()
      * @return  LinkedHashMap of handler method and arguments for that.
      */
-    private static String[] parse(String[] args) {
+    private static String[] parseCommon(String[] args) {
         String command = args[0];
 
         int idx;
@@ -372,7 +378,7 @@ public class Jnova {
         }
 
         // Parse comnand line arguments.
-        String[] c = parse(args);
+        String[] c = parseCommon(args);
 
         if (osAuthUrl == null || osPassword == null ||
             osTenantName == null || osUsername == null) {
@@ -684,6 +690,34 @@ public class Jnova {
             printJson(img);
             if (isDebug()) {
                 System.out.println(img);
+            }
+
+        } else if (command.equals("volume-list")) {
+            // os-volumes
+            // nova volume-list
+            // Note that nova command uses 'volumes' instead of 'os-volumes'.
+            boolean allTenants = false;
+            for(int i = 0; i < args.length; i++) {
+                if (args[i].equals("--all-tenants")) {
+                    allTenants = true;
+                }
+            }
+            Volumes volumes;
+            // Note that 'true' of list(true) appends 'detail'
+            // path element like:  GET /v1.1/TENANT_ID/volumes/detail.
+
+            if (allTenants) {
+                // nova volume-list --all-tenants
+                // get servers of all tenants.
+                // (want to use pagination if possible... ) 
+                 volumes = novaClient.volumes()
+                    .list(true).queryParam("all_tenants", "1").execute();
+            } else {
+                volumes = novaClient.volumes().list(true).execute();
+            }
+            printJson(volumes);
+            if (isDebug()) {
+                System.out.println(volumes);
             }
 
         } else {
