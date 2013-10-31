@@ -23,6 +23,12 @@
  *   nova usage-list
  *   nova aggregate-list
  *   nova aggregate-details
+ *   nova aggregate-create
+ *   nova aggregate-delete
+ *   nova aggregate-add-host
+ *   nova aggregate-remove-host
+ *   nova aggregate-update
+ *   nova aggregate-set-metadata
  *   nova availability-zone-list
  *   nova flavor-list
  *   nova live-migration
@@ -112,6 +118,12 @@ public class Jnova {
         cArray.put("usage-list", "quotaSet");
         cArray.put("aggregate-list", "aggregate");
         cArray.put("aggregate-details", "aggregate");
+        cArray.put("aggregate-create", "aggregate");
+        cArray.put("aggregate-delete", "aggregate");
+        cArray.put("aggregate-add-host", "aggregate");
+        cArray.put("aggregate-remove-host", "aggregate");
+        cArray.put("aggregate-update", "aggregate");
+        cArray.put("aggregate-set-metadata", "aggregate");
         cArray.put("flavor-list", "flavor");
         cArray.put("live-migration", "server");
         cArray.put("availability-zone-list", "availabilityZone");
@@ -614,16 +626,97 @@ public class Jnova {
             } else if (command.equals("aggregate-details")) {
                 // nova aggregate-details AGGREGATE_ID
                 // does not work currently because of sdk (probably...)
-                if (args.length >= 2) {
+                if (c.length >= 2) {
                     HostAggregate ag = novaClient.aggregates().
-                        showAggregate(args[1]).execute();
+                        showAggregate(c[1]).execute();
                     printJson(ag);
                     if (isDebug()) {
                         System.out.println(ag);
                     }
 
                 } else {
-                    System.out.println("Specify tenant id");
+                    System.out.println("Specify aggregate id");
+                }
+
+            } else if (command.equals("aggregate-create")) {
+                //NOTE(itoumsn): availability_zone is optional!
+                if (c.length >= 2) {
+                    HostAggregate ag = novaClient.aggregates().
+                        createAggregate(c[1], (c.length == 2) ? null : c[2])
+						.execute();
+                    printJson(ag);
+                    if (isDebug()) {
+                        System.out.println(ag);
+                    }
+
+                } else {
+                    System.out.println("Specify aggregate name and availability zone name(optionally)");
+                }
+
+            } else if (command.equals("aggregate-delete")) {
+                if (c.length >= 2) {
+                    novaClient.aggregates().
+                        deleteAggregate(c[1]).execute();
+
+                } else {
+                    System.out.println("Specify aggregate id");
+                }
+
+            } else if (command.equals("aggregate-add-host")) {
+                if (c.length >= 3) {
+                    HostAggregate ag = novaClient.aggregates().
+                        addHost(c[1], c[2]).execute();
+                    printJson(ag);
+                    if (isDebug()) {
+                        System.out.println(ag);
+                    }
+
+                } else {
+                    System.out.println("Specify aggregate id and host name");
+                }
+
+            } else if (command.equals("aggregate-remove-host")) {
+                if (c.length >= 3) {
+                    HostAggregate ag = novaClient.aggregates()
+                        .removeHost(c[1], c[2]).execute();
+                    printJson(ag);
+                    if (isDebug()) {
+                        System.out.println(ag);
+                    }
+
+                } else {
+                    System.out.println("Specify aggregate id and host name");
+                }
+
+            } else if (command.equals("aggregate-update")) {
+                if (c.length >= 3) {
+                    HostAggregate ag = novaClient.aggregates()
+                        .updateAggregateMetadata(c[1], c[2], (c.length == 3 ? null : c[3])).execute();
+                    printJson(ag);
+                    if (isDebug()) {
+                        System.out.println(ag);
+                    }
+
+                } else {
+                    System.out.println("Specify aggregate id, name and availability_zone(optional)");
+                }
+
+            } else if (command.equals("aggregate-set-metadata")) {
+                if (c.length >= 3) {
+                    String[] kv = c[2].split("=");
+                    if (isDebug()) {
+                        System.out.println("key / value = " + kv[0] + " / " + kv[1]);
+                    }
+
+                    HostAggregate ag = novaClient.aggregates()
+                        .setMetadata(c[1], kv[0], kv[1]).execute();
+                    printJson(ag);
+                    if (isDebug()) {
+                        System.out.println(ag);
+                    }
+
+                } else {
+                    System.out.println("Specify aggregate id and 'key=value' pair");
                 }
             }
 
