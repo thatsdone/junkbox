@@ -35,6 +35,8 @@
  *   nova availability-zone-list
  *   nova list-extensions
  *   nova image-list
+ *   nova volume-list
+ *   nova rate-limits
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc at the moment.
@@ -65,6 +67,7 @@ import com.woorea.openstack.nova.model.Flavors;
 import com.woorea.openstack.nova.model.Extensions;
 import com.woorea.openstack.nova.model.Images;
 import com.woorea.openstack.nova.model.Volumes;
+import com.woorea.openstack.nova.model.Limits;
 
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 //import com.woorea.openstack.nova.api.QuotaSetsResource;
@@ -130,6 +133,7 @@ public class Jnova {
         cArray.put("list-extensions", "extensions");
         cArray.put("image-list", "image");
         cArray.put("volume-list", "volume");
+        cArray.put("rate-limits", "quotaSet");
     }
 
     public static void printJson(Object o) {
@@ -643,7 +647,7 @@ public class Jnova {
                 if (c.length >= 2) {
                     HostAggregate ag = novaClient.aggregates().
                         createAggregate(c[1], (c.length == 2) ? null : c[2])
-						.execute();
+                        .execute();
                     printJson(ag);
                     if (isDebug()) {
                         System.out.println(ag);
@@ -786,6 +790,26 @@ public class Jnova {
             }
 
         } else if (command.equals("volume-list")) {
+            /*
+            Keystone keystoneClient = new Keystone(osAuthUrl);
+
+            // Set account information, and issue an authentication request.
+            Access access = keystoneClient.tokens()
+                .authenticate(new UsernamePassword(osUsername, osPassword))
+                .withTenantName(osTenantName)
+                .execute();
+
+            String cinderEndpoint = KeystoneUtils
+                .findEndpointURL(access.getServiceCatalog(),
+                                 "volume", null, "public");
+            if (isDebug()) {
+                System.out.println("DEBUG: " + cinderEndpoint);
+            }
+            // Create a Nova client object.
+            Nova novaClientv = new Nova(cinderEndpoint);
+            novaClientv.token(access.getToken().getId());
+            */
+
             // os-volumes
             // nova volume-list
             // Note that nova command uses 'volumes' instead of 'os-volumes'.
@@ -811,6 +835,15 @@ public class Jnova {
             printJson(volumes);
             if (isDebug()) {
                 System.out.println(volumes);
+            }
+
+        } else if (command.equals("rate-limits")) {
+            // limits
+            // nova rate-limits
+            Limits limits = novaClient.quotaSets().showUsedLimits().execute();
+            printJson(limits);
+            if (isDebug()) {
+                System.out.println(limits);
             }
 
         } else {
