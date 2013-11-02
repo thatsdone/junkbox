@@ -95,6 +95,9 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 public class Jnova {
 
+    //work around for 'validate'
+    private static String adminTokenId;
+
     private static boolean debug = false;
     private static boolean logMessage = false;
 
@@ -134,6 +137,7 @@ public class Jnova {
         cArray.put("image-list", "image");
         cArray.put("volume-list", "volume");
         cArray.put("rate-limits", "quotaSet");
+        cArray.put("validate", "quotaSet");
     }
 
     public static void printJson(Object o) {
@@ -360,7 +364,8 @@ public class Jnova {
              * response unless it's not expired.
              */
             novaClient.token(access.getToken().getId());
-
+            //work around for 'validate'
+            adminTokenId = access.getToken().getId();
             return novaClient;
 
         } catch (Exception e) {
@@ -845,6 +850,25 @@ public class Jnova {
             if (isDebug()) {
                 System.out.println(limits);
             }
+
+
+        } else if (command.equals("validate")) {
+            // this is a poc code to validate a token using an admin token
+            // using an extended feature of openstack-java-sdk.
+            //
+            // First, create a non-administrative token.
+            Keystone keystoneClient = new Keystone(osAuthUrl);
+            // replace user, password and tenant below.
+            Access access = keystoneClient.tokens()
+                .authenticate(new UsernamePassword("seminar", "seminar"))
+                .withTenantName("seminar")
+                .execute();
+
+            // Second, call validate() method.
+            Access validation = keystoneClient.tokens()
+                .validate(access.getToken().getId(), adminTokenId)
+                .execute();
+            printJson(validation);
 
         } else {
             System.out.println("Unknown command :" + command);
