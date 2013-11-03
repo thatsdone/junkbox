@@ -37,6 +37,7 @@
  *   nova image-list
  *   nova volume-list
  *   nova rate-limits
+ *   nova cinder-list
  *
  * Authentication information must be specified as environment variables
  * such as OS_AUTH_URL etc at the moment.
@@ -138,6 +139,8 @@ public class Jnova {
         cArray.put("volume-list", "volume");
         cArray.put("rate-limits", "quotaSet");
         cArray.put("validate", "quotaSet");
+        cArray.put("cinder-list", "volume");
+
     }
 
     public static void printJson(Object o) {
@@ -794,8 +797,19 @@ public class Jnova {
                 System.out.println(img);
             }
 
-        } else if (command.equals("volume-list")) {
-            /*
+        } else if (command.equals("cinder-list")) {
+            boolean allTenants = false;
+            for(int i = 0; i < args.length; i++) {
+                if (args[i].equals("--all-tenants")) {
+                    if (i + 1 == args.length) {
+                        System.out.println("Specify 0 or 1.");
+                        System.exit(0);
+                    } else if (args[i + 1].equals("1")){
+                        allTenants = true;
+                        break;
+                    }
+                }
+            }
             Keystone keystoneClient = new Keystone(osAuthUrl);
 
             // Set account information, and issue an authentication request.
@@ -813,8 +827,18 @@ public class Jnova {
             // Create a Nova client object.
             Nova novaClientv = new Nova(cinderEndpoint);
             novaClientv.token(access.getToken().getId());
-            */
+            Volumes volumesv;
+            if (allTenants) {
+                volumesv = novaClientv.volumes()
+                    .list(true, "/volumes")
+                    .queryParam("all_tenants", "1").execute();
+            } else {
+                volumesv = novaClientv.volumes()
+                    .list(true, "/volumes").execute();
+            }
+            printJson(volumesv);
 
+        } else if (command.equals("volume-list")) {
             // os-volumes
             // nova volume-list
             // Note that nova command uses 'volumes' instead of 'os-volumes'.
@@ -830,8 +854,6 @@ public class Jnova {
 
             if (allTenants) {
                 // nova volume-list --all-tenants
-                // get servers of all tenants.
-                // (want to use pagination if possible... ) 
                  volumes = novaClient.volumes()
                     .list(true).queryParam("all_tenants", "1").execute();
             } else {
