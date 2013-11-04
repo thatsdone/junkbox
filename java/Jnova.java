@@ -70,6 +70,9 @@ import com.woorea.openstack.nova.model.Images;
 import com.woorea.openstack.nova.model.Volumes;
 import com.woorea.openstack.nova.model.Limits;
 
+import com.woorea.openstack.cinder.Cinder;
+//import com.woorea.openstack.cinder.model.Volumes;
+
 import com.woorea.openstack.keystone.utils.KeystoneUtils;
 //import com.woorea.openstack.nova.api.QuotaSetsResource;
 //import com.woorea.openstack.nova.api.ServersResource;
@@ -825,16 +828,14 @@ public class Jnova {
                 System.out.println("DEBUG: " + cinderEndpoint);
             }
             // Create a Nova client object.
-            Nova novaClientv = new Nova(cinderEndpoint);
-            novaClientv.token(access.getToken().getId());
-            Volumes volumesv;
+            Cinder cinderClient = new Cinder(cinderEndpoint);
+            cinderClient.token(access.getToken().getId());
+            com.woorea.openstack.cinder.model.Volumes volumesv;
             if (allTenants) {
-                volumesv = novaClientv.volumes()
-                    .list(true, "/volumes")
-                    .queryParam("all_tenants", "1").execute();
+                volumesv = cinderClient.volumes()
+                    .list(true).queryParam("all_tenants", "1").execute();
             } else {
-                volumesv = novaClientv.volumes()
-                    .list(true, "/volumes").execute();
+                volumesv = cinderClient.volumes().list(true).execute();
             }
             printJson(volumesv);
 
