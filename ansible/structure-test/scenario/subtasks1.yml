@@ -1,0 +1,13 @@
+---
+- name: subtask1-1
+  debug:
+    msg: "subtask1-1"
+
+- name: subtask1-2
+  debug:
+    msg: "is_bailout = {{ is_bailout }}"
+    # Top level 'is_bailout' is accessible from here. (1st level nest)
+
+- name: subtask1-3
+  include_tasks: subtasks2.yml
+

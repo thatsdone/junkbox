@@ -1,0 +1,5 @@
+---
+- name: subtask2-1
+  debug:
+    msg: "is_bailout={{ is_bailout }}"
+    # Top level 'is_bailout' is accessible from here (2nd level nest).

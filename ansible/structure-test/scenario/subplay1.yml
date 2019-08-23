@@ -1,0 +1,14 @@
+---
+- name: subplay1 - imported from play3
+  hosts:
+    - node
+  gather_facts: false
+  any_errors_fatal: true
+  become: True
+  tasks:
+    - name: subplay1-task11
+      debug:
+        msg: "subplay1-task11"
+    - name: subplay1-task12
+      debug:
+        msg: "subplay1-task12"
