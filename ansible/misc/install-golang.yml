@@ -1,0 +1,24 @@
+# install golang from ppa
+# change golang_package: as you like
+---
+- name: install
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: true
+  vars:
+     golang_package: "golang-go"
+#    golang_package: "golang-1.11-go"
+  tasks:
+    - name: setup golang ppa repository
+      apt_repository:
+        repo: ppa:longsleep/golang-backports
+        state: present
+        update_cache: yes
+
+    - name: install
+      apt:
+        name: "{{ golang_package }}"
+        state: present
+        update_cache: yes
+
