@@ -1,0 +1,106 @@
+---
+- name: launch a compute instance
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    image: "ubuntu-16.04-LTS-server-cloudimage-amd64"
+    az: "nova"
+    region: "RegionOne"
+    keypair: "my-key1"
+    sg: "my-sg1"
+    netname: my-private1
+    volume_size: 30
+    vms:
+      - vmname: vm201
+        fixed_ip: 192.168.1.201
+        floating_ip: 10.1.1.201
+        flavor: x1.medium
+        volumes:
+          - vol11
+
+      - vmname: vm202
+        fixed_ip: 192.168.1.202
+        floating_ip: 10.1.1.202
+        flavor: x1.medium
+        volumes:
+          - vol12
+# If you don't set environment variables,
+# you can write credentials like below.
+#        auth:
+#          auth_url: http://KEYSTONE_IP:5000/v3
+#          username: USERNAME
+#          password: "XXXXXXXXXXXX"
+#          project_name: PROJECT
+#          user_domain_name: Default
+#          project_domain_name: Default
+
+  tasks:
+    - name: create ports
+      os_port:
+        state: present
+        name: "port-{{ item.vmname }}"
+        network: "{{ netname }}"
+        fixed_ips: 
+          - ip_address: "{{ item.fixed_ip }}"
+        # Writing security_groups here was necessary to avoid:
+        #   https://github.com/ansible/ansible/issues/58495
+        security_groups: "{{ sg }}"
+      with_items:
+        "{{ vms }}"
+      tags:
+        - create_port
+
+    - name: launch ubuntu VM
+      os_server:
+        state: present
+        name: "{{ item.vmname }}"
+        floating_ips: 
+          - "{{ item.floating_ip }}"
+        nics: 
+          - port-name: "port-{{ item.vmname }}"
+        region_name: "{{ region }}"
+        availability_zone: "{{ az }}"
+        image: "{{ image }}"
+        key_name: "{{ keypair }}"
+        flavor: "{{ item.flavor }}"
+        #auto_ip: no
+        wait: no
+      with_items:
+        "{{ vms }}"
+      tags:
+        - launch_vm
+
+    - name: associate floating ip
+      os_floating_ip:
+        state: present
+        server: "{{ item.vmname }}"
+        fixed_address: "{{ item.fixed_ip }}"
+        floating_ip_address: "{{ item.floating_ip }}"
+      with_items:
+        "{{ vms }}"
+      tags:
+        - associate_floating_ip
+
+    - name: create volumes
+      os_volume:
+        state: present
+        display_name: "{{ item.1 }}"
+        availability_zone: "{{ az }}"
+        size: "{{ volume_size }}"
+      with_subelements:
+        - "{{ vms }}"
+        - volumes
+      tags:
+        - create_volume
+        
+    - name: attach volume
+      os_server_volume:
+        state: present
+        server: "{{ item.0.vmname }}"
+        volume: "{{ item.1 }}"
+      with_subelements:
+        - "{{ vms }}"
+        - volumes
+      tags:
+        - attach_volume
