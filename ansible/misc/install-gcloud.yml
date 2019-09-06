@@ -1,0 +1,23 @@
+# install Google Cloud SDK
+---
+- name: install
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: true
+  tasks:
+    - name: import google cloud key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+        
+    - name: setup google cloud sdk
+      apt_repository:
+        repo: deb  http://packages.cloud.google.com/apt cloud-sdk-{{ ansible_distribution_release }} main
+        state: present
+
+    - name: install google cloud sdk
+      apt:
+        name: google-cloud-sdk
+        update_cache: yes
+
