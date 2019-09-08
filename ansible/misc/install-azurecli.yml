@@ -1,0 +1,22 @@
+# install Azure CLI
+---
+- name: install
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: true
+  tasks:
+    - name: import azure key
+      apt_key:
+        url: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+        
+    - name: setup azure cli repo
+      apt_repository:
+        repo: deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ {{ ansible_distribution_release }} main
+        state: present
+        
+    - name: install azure cli
+      apt:
+        name: azure-cli
+        update_cache: yes
