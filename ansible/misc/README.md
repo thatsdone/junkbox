@@ -8,5 +8,8 @@ This directory contains some utility standalone playbooks.
    * install docker-ce from docker.com
 * install-golang.yml
    * install golang from ppa:longsleep/golang-backports
-
+* install-gcloud.yml
+   * install Google Cloud SDK
+* install-azurecli.yml
+   * install Azure SDK
 
