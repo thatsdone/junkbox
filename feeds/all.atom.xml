@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-09-03T00:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] On OpenSDS</title><link href="https://thatsdone.github.io/junkbox/opensds.html" rel="alternate"></link><published>2019-09-03T00:00:00+09:00</published><updated>2019-09-03T00:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-03:/junkbox/opensds.html</id><summary type="html">&lt;p&gt;My recent OpenSDS related activities&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近は趣味と実益を兼ねて &lt;a href="https://opensds.io/"&gt;OpenSDS&lt;/a&gt; をいじっています。&lt;/p&gt;
+&lt;p&gt;OpenSDS は、名前からして「また新しい Software Defined Storage の実装ですか？」と聞かれるのですが、実は複数のストレージコントローラをたばねるものです。
+block storage から出発して、今はNFSのような file storage や Object Storage もサポートしています。&lt;/p&gt;
+&lt;p&gt;その昔いじっていたOpenStackも sub project がたくさんありましたが、OpenSDS もだいぶにぎやかになってきました。&lt;/p&gt;
+&lt;p&gt;この中では telemetry と anomaly-detection (仕事的には multi-cloudも) に興味があるのですが、まずは簡単に使えるようにしなくちゃね...ということで、
+githubの私のページの activity を見てもらってもわかる通り、
+opensds-installer をせっせと直しています。まずは ansible で、helm chart はその次ですかね...&lt;/p&gt;
+&lt;p&gt;余談ですが、現在、OpenSDSの認証には OpenStack の Keystone が導入されています。
+Keystone の場合、認証した結果に各種関連サービスの endpoint の一覧が返却される
+という変わった(?)仕様なのですが、このあたり、どこまで integration するかは
+まだやわらかいようです。&lt;/p&gt;</content></entry><entry><title>[en/ja] Resuming github pages</title><link href="https://thatsdone.github.io/junkbox/resuming.html" rel="alternate"></link><published>2019-09-02T22:50:00+09:00</published><updated>2019-09-02T22:50:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-02:/junkbox/resuming.html</id><summary type="html">&lt;p&gt;resuming this page after several years interval&lt;/p&gt;</summary><content type="html">&lt;p&gt;[en]
+I'm resuming this github page after several years interval.
+Recent my (technical) interests are below.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Connected Cars /Autonomous Cars&lt;/li&gt;
+&lt;li&gt;Open Source&lt;/li&gt;
+&lt;li&gt;MLOps&lt;/li&gt;
+&lt;li&gt;etc.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;[ja]
+数年ぶりにこのページの更新を再開しようと思います。
+最近の興味は以下のような感じです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Connected Cars /Autonomous Cars&lt;/li&gt;
+&lt;li&gt;Open Source&lt;/li&gt;
+&lt;li&gt;MLOps&lt;/li&gt;
+&lt;li&gt;等&lt;/li&gt;
+&lt;/ul&gt;</content></entry><entry><title>About Me</title><link href="https://thatsdone.github.io/junkbox/about.html" rel="alternate"></link><published>2019-09-01T00:00:00+09:00</published><updated>2019-09-01T00:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-01:/junkbox/about.html</id><summary type="html">&lt;p&gt;about me&lt;/p&gt;</summary><content type="html">&lt;p&gt;I'm a kind of software engineer and researcher.&lt;/p&gt;
+&lt;p&gt;Since April of 2018, I'm working on mainly infrastructure things shooting for
+DataCenter side of Connected Car/Autonomous Car systems.&lt;/p&gt;</content></entry></feed>

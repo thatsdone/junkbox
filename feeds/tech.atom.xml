@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-09-03T00:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] On OpenSDS</title><link href="https://thatsdone.github.io/junkbox/opensds.html" rel="alternate"></link><published>2019-09-03T00:00:00+09:00</published><updated>2019-09-03T00:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-03:/junkbox/opensds.html</id><summary type="html">&lt;p&gt;My recent OpenSDS related activities&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近は趣味と実益を兼ねて &lt;a href="https://opensds.io/"&gt;OpenSDS&lt;/a&gt; をいじっています。&lt;/p&gt;
+&lt;p&gt;OpenSDS は、名前からして「また新しい Software Defined Storage の実装ですか？」と聞かれるのですが、実は複数のストレージコントローラをたばねるものです。
+block storage から出発して、今はNFSのような file storage や Object Storage もサポートしています。&lt;/p&gt;
+&lt;p&gt;その昔いじっていたOpenStackも sub project がたくさんありましたが、OpenSDS もだいぶにぎやかになってきました。&lt;/p&gt;
+&lt;p&gt;この中では telemetry と anomaly-detection (仕事的には multi-cloudも) に興味があるのですが、まずは簡単に使えるようにしなくちゃね...ということで、
+githubの私のページの activity を見てもらってもわかる通り、
+opensds-installer をせっせと直しています。まずは ansible で、helm chart はその次ですかね...&lt;/p&gt;
+&lt;p&gt;余談ですが、現在、OpenSDSの認証には OpenStack の Keystone が導入されています。
+Keystone の場合、認証した結果に各種関連サービスの endpoint の一覧が返却される
+という変わった(?)仕様なのですが、このあたり、どこまで integration するかは
+まだやわらかいようです。&lt;/p&gt;</content></entry></feed>
