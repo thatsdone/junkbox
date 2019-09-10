@@ -1,0 +1,26 @@
+---
+- name: install
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: true
+  tasks:
+    - name: import kubernetes repository GPG key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: setup kubernetes repo
+      apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-{{ ansible_distribution_release }} main
+        state: present
+
+- name: install kubernetes packages
+  apt:
+    name: "{{ packages }}"
+    update_cache: yes
+  vars:
+    packages:
+      - kubelet
+      - kubeadm
+      - kubectl
