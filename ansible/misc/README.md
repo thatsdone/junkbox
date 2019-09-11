@@ -12,4 +12,6 @@ This directory contains some utility standalone playbooks.
    * install Google Cloud SDK
 * install-azurecli.yml
    * install Azure SDK
+* install-k8s.yml
+   * install upstream kubernetes
 
