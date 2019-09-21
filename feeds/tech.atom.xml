@@ -1,5 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-09-14T15:01:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Stray Sheep - OpenShift and CloudFoundry</title><link href="https://thatsdone.github.io/junkbox/openshift_and_cloudfoundry.html" rel="alternate"></link><published>2019-09-14T15:01:00+09:00</published><updated>2019-09-14T15:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-14:/junkbox/openshift_and_cloudfoundry.html</id><summary type="html">&lt;p&gt;Stray Sheep - OpenShift and Cloud Foundry (again?)&lt;/p&gt;</summary><content type="html">&lt;p&gt;こんな記事が話題になっているようだ。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-09-21T20:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] BGP in the Data Center</title><link href="https://thatsdone.github.io/junkbox/bgp_in_the_datacenter.html" rel="alternate"></link><published>2019-09-21T20:00:00+09:00</published><updated>2019-09-21T20:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-21:/junkbox/bgp_in_the_datacenter.html</id><summary type="html">&lt;p&gt;BGP in the Data Center&lt;/p&gt;</summary><content type="html">&lt;p&gt;一部で話題の O'reily の "BGP in the Data Center" を読んだ。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;[https://www.oreilly.com/library/view/bgp-in-the/9781491983416/(https://www.oreilly.com/library/view/bgp-in-the/9781491983416/)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;これは面白い…というか、自分が今やってること的にとても勉強になったのでメモ。&lt;/p&gt;
+&lt;p&gt;日本語の他の方の記事もけっこうあるようだ。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://foobaron.hatenablog.com/entry/bgp-in-the-data-center-01"&gt;https://foobaron.hatenablog.com/entry/bgp-in-the-data-center-01&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://blog.bobuhiro11.net/2019/03-21-bgp-in-the-data-center.html"&gt;https://blog.bobuhiro11.net/2019/03-21-bgp-in-the-data-center.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;遡ると'14の JANOG33 で Microsoft の人が講演していたりとか。(時期はこの本よりも早い)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.janog.gr.jp/meeting/janog33/program/bgp.html"&gt;https://www.janog.gr.jp/meeting/janog33/program/bgp.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;1. Introduction to Data Center Networks&lt;/h3&gt;
+&lt;p&gt;物理構成の話。L3 Leaf-Spine 型のNWの構成のベストプラクティスの解説。&lt;/p&gt;
+&lt;h3&gt;2. How BGP Has Benn Adapted to the Data Center&lt;/h3&gt;
+&lt;p&gt;物理構成ができたら、その上の routing をどうやるのか？の話。BGP話。&lt;/p&gt;
+&lt;h3&gt;3. Building an Automatable BGP Configuration&lt;/h3&gt;
+&lt;p&gt;各router (というか、TOR/Leaf/Spine等スイッチ)の BGP 設定は、
+愚直に書くと機器ごとに個別の設定や、個別の機器内でも重複した記述が多数出てくるわけだが、
+これを自動化のためにカイゼンできるか？の解説。&lt;/p&gt;
+&lt;p&gt;Spine側のASNの割り当てはちょっと誤解していたところがあった...&lt;/p&gt;
+&lt;h3&gt;4. Reimaging BGP Configuration&lt;/h3&gt;
+&lt;p&gt;3章の解説でもろもろ設定を単純化したとして、まだ以下のような pain point がある。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;NW機器間(というか、ホストも含むかな...)のインターフェースに付与して管理するのは大変。&lt;/li&gt;
+&lt;li&gt;隣(neighbour)のASの定義をいちいち書くのも大変。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一つ目の問題の解決として、(IPv6) Un-Numbered の解説。&lt;/p&gt;
+&lt;p&gt;二つめの問題の解決として、remote-as 構文の拡張の external / internal を使う方法の解説。&lt;/p&gt;
+&lt;p&gt;ちな、僕が読んだバージョンの p58 の Figure 4-2 の下半分の図は 10.1.1.0/24 じゃなくて、10.1.2.0/24 だと思う。&lt;/p&gt;
+&lt;h3&gt;5. BGP Life Cycle Mamagement&lt;/h3&gt;
+&lt;p&gt;状態表示でよく使うコマンドのほか、メンテのために停止させたい時の常套手段と、デバッグのやりかた。&lt;/p&gt;
+&lt;p&gt;デバッグ用の機能を使って、経路計算のロジックを勉強する…というのもあるのか。&lt;/p&gt;
+&lt;h3&gt;6. BGP on the Host&lt;/h3&gt;
+&lt;p&gt;この構成で本格的に動かす場合、ホストも BGP をしゃべることになるわけで、
+今までのSEとNEという境界もあいまいになるよね…という話。&lt;/p&gt;
+&lt;p&gt;そのほか、Anycast 話とか、Dynamic Neighbour とか。&lt;/p&gt;
+&lt;p&gt;そういえば、題材に使われている &lt;a href="https://frrouting.org/"&gt;FRR&lt;/a&gt; を使い込む…
+というタスクもあったのだが、再開せねば...(とおいめ&lt;/p&gt;</content></entry><entry><title>[ja] Stray Sheep - OpenShift and CloudFoundry</title><link href="https://thatsdone.github.io/junkbox/openshift_and_cloudfoundry.html" rel="alternate"></link><published>2019-09-14T15:01:00+09:00</published><updated>2019-09-14T15:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-14:/junkbox/openshift_and_cloudfoundry.html</id><summary type="html">&lt;p&gt;Stray Sheep - OpenShift and Cloud Foundry (again?)&lt;/p&gt;</summary><content type="html">&lt;p&gt;こんな記事が話題になっているようだ。&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://techcrunch.com/2019/09/12/together-at-last-ibm-brings-cloud-foundry-to-red-hat-openshift/"&gt;IBM brings Cloud Foundry and Red Hat OpenShift together&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;オレPaaSはこれだぜ…といって始まったはずが、kubernetes 使うならOpenShift…に言うことが全然変わり、そしてまた Cloud Foundry ですか…迷える子羊さんだなー…というのが第一印象。&lt;/p&gt;
 &lt;p&gt;とはいえ、API(と、それで制御されるざっくりした構造も…かな)だけ維持して、既存のk8sベースのインフラでCF用に作られたアプリケーションを収容できるようにするというのは自然な発想と言えるかなと思うのだが、この動きって最初から計画されていたのか、それとも Cloud Foundry に大々的に投資していたIBMの意向なのか、どちらなんでしょう？

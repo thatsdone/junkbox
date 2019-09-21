@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] BGP in the Data Center | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/bgp_in_the_datacenter.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="BGP in the Data Center">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] BGP in the Data Center
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2019-09-21T20:00:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Sat 21 September 2019
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>一部で話題の O'reily の "BGP in the Data Center" を読んだ。</p>
+<ul>
+<li>[https://www.oreilly.com/library/view/bgp-in-the/9781491983416/(https://www.oreilly.com/library/view/bgp-in-the/9781491983416/)</li>
+</ul>
+<p>これは面白い…というか、自分が今やってること的にとても勉強になったのでメモ。</p>
+<p>日本語の他の方の記事もけっこうあるようだ。</p>
+<ul>
+<li><a href="https://foobaron.hatenablog.com/entry/bgp-in-the-data-center-01">https://foobaron.hatenablog.com/entry/bgp-in-the-data-center-01</a></li>
+<li><a href="https://blog.bobuhiro11.net/2019/03-21-bgp-in-the-data-center.html">https://blog.bobuhiro11.net/2019/03-21-bgp-in-the-data-center.html</a></li>
+</ul>
+<p>遡ると'14の JANOG33 で Microsoft の人が講演していたりとか。(時期はこの本よりも早い)</p>
+<ul>
+<li><a href="https://www.janog.gr.jp/meeting/janog33/program/bgp.html">https://www.janog.gr.jp/meeting/janog33/program/bgp.html</a></li>
+</ul>
+<h3>1. Introduction to Data Center Networks</h3>
+<p>物理構成の話。L3 Leaf-Spine 型のNWの構成のベストプラクティスの解説。</p>
+<h3>2. How BGP Has Benn Adapted to the Data Center</h3>
+<p>物理構成ができたら、その上の routing をどうやるのか？の話。BGP話。</p>
+<h3>3. Building an Automatable BGP Configuration</h3>
+<p>各router (というか、TOR/Leaf/Spine等スイッチ)の BGP 設定は、
+愚直に書くと機器ごとに個別の設定や、個別の機器内でも重複した記述が多数出てくるわけだが、
+これを自動化のためにカイゼンできるか？の解説。</p>
+<p>Spine側のASNの割り当てはちょっと誤解していたところがあった...</p>
+<h3>4. Reimaging BGP Configuration</h3>
+<p>3章の解説でもろもろ設定を単純化したとして、まだ以下のような pain point がある。</p>
+<ul>
+<li>NW機器間(というか、ホストも含むかな...)のインターフェースに付与して管理するのは大変。</li>
+<li>隣(neighbour)のASの定義をいちいち書くのも大変。</li>
+</ul>
+<p>一つ目の問題の解決として、(IPv6) Un-Numbered の解説。</p>
+<p>二つめの問題の解決として、remote-as 構文の拡張の external / internal を使う方法の解説。</p>
+<p>ちな、僕が読んだバージョンの p58 の Figure 4-2 の下半分の図は 10.1.1.0/24 じゃなくて、10.1.2.0/24 だと思う。</p>
+<h3>5. BGP Life Cycle Mamagement</h3>
+<p>状態表示でよく使うコマンドのほか、メンテのために停止させたい時の常套手段と、デバッグのやりかた。</p>
+<p>デバッグ用の機能を使って、経路計算のロジックを勉強する…というのもあるのか。</p>
+<h3>6. BGP on the Host</h3>
+<p>この構成で本格的に動かす場合、ホストも BGP をしゃべることになるわけで、
+今までのSEとNEという境界もあいまいになるよね…という話。</p>
+<p>そのほか、Anycast 話とか、Dynamic Neighbour とか。</p>
+<p>そういえば、題材に使われている <a href="https://frrouting.org/">FRR</a> を使い込む…
+というタスクもあったのだが、再開せねば...(とおいめ</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
