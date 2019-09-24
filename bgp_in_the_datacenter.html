@@ -81,6 +81,60 @@
 <p>物理構成の話。L3 Leaf-Spine 型のNWの構成のベストプラクティスの解説。</p>
 <h3>2. How BGP Has Benn Adapted to the Data Center</h3>
 <p>物理構成ができたら、その上の routing をどうやるのか？の話。BGP話。</p>
+<p>しかし、BGPの Best Path Algorithm が参照する metric が8つあって、それを覚えるのにこんなのがあるとは知らなかったw
+Cisco(当時?)の Denise Fishburne さんが考えたらしい。</p>
+<table>
+<thead>
+<tr>
+<th>mnemonic</th>
+<th>-</th>
+<th>BGP metric</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wise</td>
+<td>W</td>
+<td>Weight</td>
+</tr>
+<tr>
+<td>Lisp</td>
+<td>L</td>
+<td>LOCAL_PREFERENCE</td>
+</tr>
+<tr>
+<td>Lovers</td>
+<td>L</td>
+<td>Locally Originated</td>
+</tr>
+<tr>
+<td>Apply</td>
+<td>A</td>
+<td>AS_PATH</td>
+</tr>
+<tr>
+<td>Oral</td>
+<td>O</td>
+<td>ORIGIN</td>
+</tr>
+<tr>
+<td>Medication</td>
+<td>M</td>
+<td>MED</td>
+</tr>
+<tr>
+<td>Every</td>
+<td>E</td>
+<td>eBGP over iBGP</td>
+</tr>
+<tr>
+<td>Night</td>
+<td>N</td>
+<td>NextHop IGP Cost</td>
+</tr>
+</tbody>
+</table>
+<p>(うー、Pelican の調整がまだ不完全で border が出ないな...)</p>
 <h3>3. Building an Automatable BGP Configuration</h3>
 <p>各router (というか、TOR/Leaf/Spine等スイッチ)の BGP 設定は、
 愚直に書くと機器ごとに個別の設定や、個別の機器内でも重複した記述が多数出てくるわけだが、
