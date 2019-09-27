@@ -15,6 +15,7 @@ func generate() chan int {
 
 func filter(in chan int, prime int) chan int {
     out := make(chan int)
+    // function literal / anonymous function / closure
     go func() {
         for {
             if i := <-in; i%prime != 0 {
@@ -22,12 +23,14 @@ func filter(in chan int, prime int) chan int {
             }
         }
     }()
+    // As this is a closure, the () above is required to say no argument.
+    // If the func takes arguments, need to be specified above.
     return out
 }
 
 func sieve() chan int {
     out := make(chan int)
-    // function literal / anonymous function
+    // function literal / anonymous function / closure
     go func() {
         ch := generate()
         for {
@@ -36,6 +39,8 @@ func sieve() chan int {
             ch = filter(ch, prime)
         }
     }()
+    // As this is a closure, the () above is required to say no argument.
+    // If the func takes arguments, need to be specified above.
     return out
 }
 
