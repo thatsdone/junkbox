@@ -1,5 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-09-21T20:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] BGP in the Data Center</title><link href="https://thatsdone.github.io/junkbox/bgp_in_the_datacenter.html" rel="alternate"></link><published>2019-09-21T20:00:00+09:00</published><updated>2019-09-21T20:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-21:/junkbox/bgp_in_the_datacenter.html</id><summary type="html">&lt;p&gt;BGP in the Data Center&lt;/p&gt;</summary><content type="html">&lt;p&gt;一部で話題の O'reily の "BGP in the Data Center" を読んだ。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-10-03T14:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] SRECon19 EMEA</title><link href="https://thatsdone.github.io/junkbox/srecon19emea.html" rel="alternate"></link><published>2019-10-03T14:30:00+09:00</published><updated>2019-10-03T14:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-03:/junkbox/srecon19emea.html</id><summary type="html">&lt;p&gt;SRECon19EMEA&lt;/p&gt;</summary><content type="html">&lt;p&gt;アイルランドのダブリンで開催中の &lt;a href="https://www.usenix.org/conference/srecon19emea/"&gt;SRECon19EMEA&lt;/a&gt; に来ています。&lt;/p&gt;
+&lt;p&gt;ダブリンは初めてで、気温をみて寒そう…とは思っていたのですが、10月頭でもう冬みたいな恰好をしている人が多いとは想像しておらず、
+正直、外は寒いです(苦笑)&lt;/p&gt;
+&lt;p&gt;初日で一番面白かったのはGoogleの Todd Underwood さんの以下のセッションでしょうか。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.usenix.org/conference/srecon19emea/presentation/underwood"&gt;All of Our ML Ideas Are Bad (and We Should Feel Bad)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;MLを使って運用をラクにしたい…というのはけっこう誰でも考える話で、適用対象としては例えば以下のようなものがあるでしょう&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Categorizing/Prioritizing Tickets&lt;/li&gt;
+&lt;li&gt;Root Cause Analysis&lt;/li&gt;
+&lt;li&gt;Canary Analysis&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;しかし、実際に使ってみると...&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;(MLよりも)もっといい方法ある&lt;/li&gt;
+&lt;li&gt;データが足りない&lt;/li&gt;
+&lt;li&gt;ラベル付きのデータが足りない&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;といった理由でうまくいかないことがよくあります。&lt;/p&gt;
+&lt;p&gt;Todd さんは、これは、流行りのやり方を、深く考えずにそのまま使おうとするからだ…と言います。
+よく言われる ML というのは、Marketing ML だと。&lt;/p&gt;
+&lt;p&gt;Todd さんのおすすめはこんなふうにまとめられます。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Think&lt;ul&gt;
+&lt;li&gt;あなたのアプリ、インフラ、お客さんをよく知る人に話を聞きましょう。&lt;/li&gt;
+&lt;li&gt;そして、それらを理解するためのアイデアを出すためにブレストをしましょう。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Gather&lt;ul&gt;
+&lt;li&gt;まずはデータを一か所にあつめる。&lt;/li&gt;
+&lt;li&gt;整理してみないとなにもできないので、とにかく整理する。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Learn&lt;ul&gt;
+&lt;li&gt;まずは基本を押さえましょう。&lt;/li&gt;
+&lt;li&gt;MLワークロードを動かすプラットフォームは既にたくさんあるので、こういうものを知りましょう。&lt;/li&gt;
+&lt;li&gt;そして、集めたデータを使ってプロトタイプをやってみましょう。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;もっと先まで踏み込む場合は&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Ontology&lt;/li&gt;
+&lt;li&gt;Epistemology&lt;/li&gt;
+&lt;li&gt;Metaphysics&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;の３点を挙げていました。用語は難しいですが、一言で言うと「自分の頭で本質をよく考えろ」ってことですね。 :)
+具体的にこうしたらうまくいっているよ…という事例紹介ではありませんが、考え方として、私にはとても参考になったtalkでした。&lt;/p&gt;
+&lt;p&gt;Day1 だけでも他にもいろいろ興味深い講演がありました。
+例えば、Network trouble の解析の紹介で、よく聞いてみたら eBPF でがんばってCloud Providerにも認めさせたぜ...という
+「よくある」話だったりとか(笑)
+ぼちぼち更新しようかと思います。&lt;/p&gt;
+&lt;p&gt;Stay Tuned ! :)&lt;/p&gt;</content></entry><entry><title>[ja] BGP in the Data Center</title><link href="https://thatsdone.github.io/junkbox/bgp_in_the_datacenter.html" rel="alternate"></link><published>2019-09-21T20:00:00+09:00</published><updated>2019-09-21T20:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-21:/junkbox/bgp_in_the_datacenter.html</id><summary type="html">&lt;p&gt;BGP in the Data Center&lt;/p&gt;</summary><content type="html">&lt;p&gt;一部で話題の O'reily の "BGP in the Data Center" を読んだ。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;[https://www.oreilly.com/library/view/bgp-in-the/9781491983416/(https://www.oreilly.com/library/view/bgp-in-the/9781491983416/)&lt;/li&gt;
 &lt;/ul&gt;
