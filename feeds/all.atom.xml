@@ -17,7 +17,7 @@
 &lt;li&gt;ラベル付きのデータが足りない&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;といった理由でうまくいかないことがよくあります。&lt;/p&gt;
-&lt;p&gt;Todd さんは、これは、流行りのやり方を、深く考えずにそのまま使おうとするからだ…と言います。
+&lt;p&gt;Todd さんは、これは流行りのやり方を、深く考えずにそのまま使おうとするからだ…と言います。
 よく言われる ML というのは、Marketing ML だと。&lt;/p&gt;
 &lt;p&gt;Todd さんのおすすめはこんなふうにまとめられます。&lt;/p&gt;
 &lt;ol&gt;
@@ -50,7 +50,18 @@
 例えば、Network trouble の解析の紹介で、よく聞いてみたら eBPF でがんばってCloud Providerにも認めさせたぜ...という
 「よくある」話だったりとか(笑)
 ぼちぼち更新しようかと思います。&lt;/p&gt;
-&lt;p&gt;Stay Tuned ! :)&lt;/p&gt;</content></entry><entry><title>[ja] Light Novels</title><link href="https://thatsdone.github.io/junkbox/light_novel.html" rel="alternate"></link><published>2019-09-29T18:00:00+09:00</published><updated>2019-09-29T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-29:/junkbox/light_novel.html</id><summary type="html">&lt;p&gt;Light Novels, so called La-Nobe in Japan / ラノベ話(その１)&lt;/p&gt;</summary><content type="html">&lt;p&gt;ここ１年ほど、隙間時間はラノベを読んでいることが多いです。&lt;/p&gt;
+&lt;p&gt;Stay Tuned ! :)&lt;/p&gt;
+&lt;p&gt;2019/10/04 (Dublin現地時間)追記&lt;/p&gt;
+&lt;p&gt;SRECon19EMEA、無事に終了しました。
+ハリケーンが来ていてアイルランド直撃が予測されいたのですが、大した影響なく済んでよかったです。&lt;/p&gt;
+&lt;p&gt;closing での主催者の話によると、今回の出席者は約700名とのこと。3月のNorth Americaでは4桁に届くでしょうか。&lt;/p&gt;
+&lt;p&gt;3日間終わってみての所感は、初日のkeynoteのLeverson教授の Systems Theory からはじまり、
+Control Theory (制御理論)、Fault Tree Analysis といった、数十年前に確立された理論を振り返る話が多かったことです。
+果ては一番最後のセッションが Formal Verification Method...ということで、Program Committee の心意気を感じたように思います。&lt;/p&gt;
+&lt;p&gt;私は主に Core Principle の Track に出ていました。具体的にこの手法でうまくいったよ…という話もあることはありましたが、
+むしろ Silver Bullet はない。利用者のことをよく知り、自分の頭で考えるべし。ついてはその指針は…という話を多く聞くことができました。
+現状の私には非常に参考になる話でした。&lt;/p&gt;
+&lt;p&gt;3月の SRECon '20 North America はスケジュールの都合で出席できないのですが、来年度もどれかのSREConに顔を出したいと思います。 :)&lt;/p&gt;</content></entry><entry><title>[ja] Light Novels</title><link href="https://thatsdone.github.io/junkbox/light_novel.html" rel="alternate"></link><published>2019-09-29T18:00:00+09:00</published><updated>2019-09-29T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-29:/junkbox/light_novel.html</id><summary type="html">&lt;p&gt;Light Novels, so called La-Nobe in Japan / ラノベ話(その１)&lt;/p&gt;</summary><content type="html">&lt;p&gt;ここ１年ほど、隙間時間はラノベを読んでいることが多いです。&lt;/p&gt;
 &lt;p&gt;その昔は、ラノベは敬遠していたのですが、幼女戦記のアニメをチラ見した後、原作を読み、他にも…といろいろ読みはじめたらハマってしまいました(笑)&lt;/p&gt;
 &lt;p&gt;これまで読んだものはけっこうな量になるのですが、以下はとりあえず印象に残ったもののリストです。そのうちもっと増やすかも(笑)&lt;/p&gt;
 &lt;ul&gt;
