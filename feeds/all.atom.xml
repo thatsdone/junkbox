@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-10-06T01:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Schengen Agreement and Ireland/UK</title><link href="https://thatsdone.github.io/junkbox/schengen_aggement_and_ireland.html" rel="alternate"></link><published>2019-10-06T01:30:00+09:00</published><updated>2019-10-06T01:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-06:/junkbox/schengen_aggement_and_ireland.html</id><summary type="html">&lt;p&gt;SRECon19EMEA&lt;/p&gt;</summary><content type="html">&lt;p&gt;さて、Ireland の Dublin で開催された &lt;a href="https://www.usenix.org/conference/srecon19emea"&gt;USENIX SRECon19 EMEA&lt;/a&gt;に参加していたわけですが、今回、行きは Frankfurt 乗り継ぎ、帰りは Dusseldorf の乗り継ぎでした。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-10-07T23:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Film: Yesterday</title><link href="https://thatsdone.github.io/junkbox/movie_yesterday.html" rel="alternate"></link><published>2019-10-07T23:00:00+09:00</published><updated>2019-10-07T23:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-07:/junkbox/movie_yesterday.html</id><summary type="html">&lt;p&gt;Yesterday - 映画よもやま話&lt;/p&gt;</summary><content type="html">&lt;p&gt;Dublinへ行き返りの飛行機の中で久しぶりにゆっくり映画を観ました。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.imdb.com/title/tt8079248/"&gt;Yesterday&lt;/a&gt; という映画ですが、これ、なかなかいいですね。&lt;/p&gt;
+&lt;p&gt;改変世界…というか、普通に現代世界なのですが、あるとき突然世界中が12秒間 blackout する…という超常現象(?)が発生します。&lt;/p&gt;
+&lt;p&gt;この超常現象の最中に交通事故にあった主人公は、周りの人が覚えていないナニカを自分だけが覚えていることに気づきます。&lt;/p&gt;
+&lt;p&gt;実は「ナニカ」はたくさんあるのですが、売れないシンガーソングライターだった主人公にとっては
+ビートルズが自分の記憶の中にしか残っていない…というのは重大なことでした。&lt;/p&gt;
+&lt;p&gt;紆余曲折を経て、スターダムにのしあがる...けど、永らく応援してくれていた恋人とも離れ...苦悩する主人公の
+前に現れたのは、他にもビートルズの記憶を残している夫婦だったのです。&lt;/p&gt;
+&lt;p&gt;さてこの後どうなるか？…というような話です。&lt;/p&gt;
+&lt;p&gt;主演の Himesh Patel さんの歌唱力もあいまって、オススメです。 :)&lt;/p&gt;
+&lt;p&gt;ちなみに、この世界、ビートルズ以外にも消えた存在がいくつかあります。
+例えば、Coca Cola は存在しないので、コーラを飲みたい時は "Pepsi ちょうだい" と言わないといけません。
+そのほか、Harry Potter も存在しないのですが、ヒロインを演じた女優さんが &lt;strong&gt;Lily&lt;/strong&gt; &lt;strong&gt;James&lt;/strong&gt; さんだと知った時、
+「あっ！」と思ってしまったのは私だけでしょうか(謎)&lt;/p&gt;</content></entry><entry><title>[ja] Schengen Agreement and Ireland/UK</title><link href="https://thatsdone.github.io/junkbox/schengen_aggement_and_ireland.html" rel="alternate"></link><published>2019-10-06T01:30:00+09:00</published><updated>2019-10-06T01:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-06:/junkbox/schengen_aggement_and_ireland.html</id><summary type="html">&lt;p&gt;SRECon19EMEA&lt;/p&gt;</summary><content type="html">&lt;p&gt;さて、Ireland の Dublin で開催された &lt;a href="https://www.usenix.org/conference/srecon19emea"&gt;USENIX SRECon19 EMEA&lt;/a&gt;に参加していたわけですが、今回、行きは Frankfurt 乗り継ぎ、帰りは Dusseldorf の乗り継ぎでした。&lt;/p&gt;
 &lt;p&gt;前に、Air France の CDG 乗り継ぎで Barcelona に行ったことがあるのですが、あの時はCDGで入国審査だったので、今回も同じ…とおもいきや、
 Dublin で入国審査だったので(?_?)状態でした。&lt;/p&gt;
 &lt;p&gt;知人と話していたところ、実は、アイルランドとイギリスはシェンゲン協定に参加していないため、他のEUの国どうしのように
