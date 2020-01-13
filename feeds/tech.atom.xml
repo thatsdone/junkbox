@@ -1,5 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2019-10-03T14:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] SRECon19 EMEA</title><link href="https://thatsdone.github.io/junkbox/srecon19emea.html" rel="alternate"></link><published>2019-10-03T14:30:00+09:00</published><updated>2019-10-03T14:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-03:/junkbox/srecon19emea.html</id><summary type="html">&lt;p&gt;SRECon19EMEA&lt;/p&gt;</summary><content type="html">&lt;p&gt;アイルランドのダブリンで開催中の &lt;a href="https://www.usenix.org/conference/srecon19emea/"&gt;SRECon19EMEA&lt;/a&gt; に来ています。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2020-01-13T12:21:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] back to basics - SRECon19 EMEA revisited, and beyond</title><link href="https://thatsdone.github.io/junkbox/backtobasics_srecon19emea_revisited.html" rel="alternate"></link><published>2020-01-13T12:21:00+09:00</published><updated>2020-01-13T12:21:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-13:/junkbox/backtobasics_srecon19emea_revisited.html</id><summary type="html">&lt;p&gt;SRE Methodologies&lt;/p&gt;</summary><content type="html">&lt;p&gt;さて、SRECon (や、USENIX LISA)では、ここしばらくCore Principles トラックという形で、
+SREのチームの作り方やSREチームの運営のしかた…等といった話を多数聞くことができるわけですが、
+&lt;a href="https://thatsdone.github.io/junkbox/srecon19emea.html"&gt;前に書いた記事&lt;/a&gt;で少し触れたように、
+&lt;a href="https://www.usenix.org/conference/srecon19emea/"&gt;SRECon19EMEA&lt;/a&gt;の特徴だった、
+運用まわりで使える確立した方法論の話をもう一回振り返ってみます。&lt;/p&gt;
+&lt;h2&gt;まえおき&lt;/h2&gt;
+&lt;p&gt;この記事はあと３回更新します。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;まずはポインタの一覧だけ(DONE)&lt;/li&gt;
+&lt;li&gt;それぞれ解説(みたいなの)を追加&lt;/li&gt;
+&lt;li&gt;SRECon の本筋の Core Princilple の話を追加&lt;/li&gt;
+&lt;li&gt;日本発のback to basicな話の事例ということでTPSの話(これは別記事にするかも)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;運用まわりで使える back to basic な方法論&lt;/h2&gt;
+&lt;p&gt;とりあえず、私が現地で聞いたセッションの中で気づいたものの一覧だけ。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Systems Theory -システム理論&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://ja.wikipedia.org/wiki/%E5%88%B6%E5%BE%A1%E7%90%86%E8%AB%96"&gt;wikipedia(ja)&lt;/a&gt; &lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.usenix.org/conference/srecon19emea/presentation/leveson"&gt;SRECon19EMEA セッション&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;Speaker : Prof. Leveson, MIT&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Control Theory - 制御理論&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://ja.wikipedia.org/wiki/%E5%88%B6%E5%BE%A1%E7%90%86%E8%AB%96"&gt;wikipedia(ja)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.usenix.org/conference/srecon19emea/presentation/hahn"&gt;SRECon19EMEA セッション&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;Speaker : Ted Hahn, TCB Technologies, and Mark Hahn, Ciber Global&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Incident Command System - 現場指揮システム&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://ja.wikipedia.org/wiki/%E3%82%A4%E3%83%B3%E3%82%B7%E3%83%87%E3%83%B3%E3%83%88%E3%83%BB%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89%E3%83%BB%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0"&gt;wikipedia(ja)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.usenix.org/conference/srecon19emea/presentation/hidalgo"&gt;SRECon19EMEA セッション&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;Speaker : Alex Hidalgo and Alex Lee, Squarespace&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Fault Tree Analysis - 故障木解析&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://ja.wikipedia.org/wiki/%E3%83%95%E3%82%A9%E3%83%AB%E3%83%88%E3%83%84%E3%83%AA%E3%83%BC%E8%A7%A3%E6%9E%90"&gt;wikipedia(ja)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.usenix.org/conference/srecon19emea/presentation/falko"&gt;SRECon19EMEA セッション&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;Speaker : Andrey Falko, Lyft&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Formal Verification Method - 形式的検証手法&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://ja.wikipedia.org/wiki/%E5%BD%A2%E5%BC%8F%E7%9A%84%E6%A4%9C%E8%A8%BC"&gt;wikipedia(ja)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.usenix.org/conference/srecon19emea/presentation/khlaaf"&gt;SRECon19EMEA セッション&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;Speaker : Heidy Khlaaf, Adelard LLP&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;</content><category term="tech"></category></entry><entry><title>[ja] SRECon19 EMEA</title><link href="https://thatsdone.github.io/junkbox/srecon19emea.html" rel="alternate"></link><published>2019-10-03T14:30:00+09:00</published><updated>2019-10-03T14:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-03:/junkbox/srecon19emea.html</id><summary type="html">&lt;p&gt;SRECon19EMEA&lt;/p&gt;</summary><content type="html">&lt;p&gt;アイルランドのダブリンで開催中の &lt;a href="https://www.usenix.org/conference/srecon19emea/"&gt;SRECon19EMEA&lt;/a&gt; に来ています。&lt;/p&gt;
 &lt;p&gt;ダブリンは初めてで、気温をみて寒そう…とは思っていたのですが、10月頭でもう冬みたいな恰好をしている人が多いとは想像しておらず、
 正直、外は寒いです(苦笑)&lt;/p&gt;
 &lt;p&gt;初日で一番面白かったのはGoogleの Todd Underwood さんの以下のセッションでしょうか。&lt;/p&gt;
