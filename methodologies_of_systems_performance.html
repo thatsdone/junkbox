@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] Methodologies of Systems Performance - Brendan Gregg | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Methodologies of Peformance Analysis">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] Methodologies of Systems Performance - Brendan Gregg
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-01-14T00:01:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Tue 14 January 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>Brendan Gregg の "<a href="https://www.amazon.co.jp/dp/0133390098">Systems Performance: Enterprise and the Cloud</a>" という本があります。
+(翻訳は<a href="https://www.amazon.co.jp/dp/4873117909/">こちら</a>) 言わずと知れた DTrace の作者が書いた本で、
+全体的な考え方から、CPU・メモリ…等と、具体的な観点ごとに包括的かつ詳細に解説されているので非常によい本です。
+軽い勉強会みたいなやつで使おうと思って、まずは方法論(Methodology)が書いてある2章のまとめを作っています。
+…が、書いてみたら、結局ほぼ目次に沿って説明するのがいいのかなー…という結論に（笑）</p>
+<p>なお、昨年末に"<a href="https://www.amazon.co.jp/dp/0136554822/">BPF Performance Tools</a>"という新しい本も出ていて、
+私は発送待ちで待たされていて、いつ日本に来るんだろう？と思っているところだったりします。(苦笑)
+まあ、eBPF/XDPについては
+<a href="https://www.amazon.co.jp/Linux-Observability-Bpf-Programming-Performance/dp/1492050202/">これ</a>
+も読んだので、まあぼちぼちでいいっちゃいいのですが。(笑)</p>
+<h2>一番大事なところ - 方法論の章(2章)の構成</h2>
+<p>方法論(Methodology)は2章になります。
+この章だけでけっこうな分量になる、まずは、全体を俯瞰するという意味で、目次構成を眺めるだけでも意味があるでしょう。
+下のほうに目次の構成をそのまま引用します。少し長いですが、落ち着いて眺めてみると頭が整理できると思います。</p>
+<p>なお、著者本人は、冒頭でこの章をざっくりまとめると以下の３点であると書いています。
+2.5節の具体的な方法論と、これらを使うときに使う具体的な Metric の２点が大事なのであって、
+他はみんなこの２点に対する背景知識なのだというわけです。</p>
+<p>1) Background
+2) Methodology
+3) Metrics</p>
+<ol>
+<li>Methodology<ol>
+<li>Terminology<ul>
+<li>まずは用語定義</li>
+</ul>
+</li>
+<li>Models<ol>
+<li>Systems Under Test<ul>
+<li>評価・分析するシステム自体のモデル化</li>
+</ul>
+</li>
+<li>Queueing System<ul>
+<li>待ち行列理論 = 数理モデルの基本</li>
+<li>ちなみにこんな本もありますね。<a href="https://www.amazon.co.jp/Performance-Modeling-Design-Computer-Systems/dp/1107027500">Performance Modeling and Design of Computer Systems: Queueing Theory in Action</a></li>
+</ul>
+</li>
+</ol>
+</li>
+<li>Concepts ＃ 基本概念<ol>
+<li>Latency<ul>
+<li>一言で「通信遅延」と言っても測定する場所によって、例えばコネクション接続+データ転送+処理時間…等分解されるのに注意。</li>
+</ul>
+</li>
+<li>Time-Scales<ul>
+<li>CPUの命令サイクル、メモリアクセス、DISKアクセス…等ものによってかかる時間のスケールが違うのに注意。</li>
+</ul>
+</li>
+<li>Trade-offs<ul>
+<li>例えば、I/OサイズとI/O性能・I/Oパターンの関係等、両立しないものの間のトレードオフを知ること。</li>
+</ul>
+</li>
+<li>Tuning Efforts<ul>
+<li>アプリ～MW～OS～ハードのどのレイヤで性能チューニングを施すのか？一般論としては(アプリに近い)上のレイヤで実施するほど効果は高い。</li>
+</ul>
+</li>
+<li>Level of Appropriateness<ul>
+<li>性能分析、チューニングにどこまでコストをかけて深堀りするのかは組織としての投資対効果による。</li>
+</ul>
+</li>
+<li>Point-in-Time Recommendations<ul>
+<li>チューニングパラメータの推奨値は、条件によって変わるものなので「その時点のもの」(point-in-time)と思うべし。</li>
+</ul>
+</li>
+<li>Load versus Architecture<ul>
+<li>システムの性能に影響するのは個々のソフトの「設定値」だけでなく、システムの構造（アーキテクチャ）に由来することもある。</li>
+</ul>
+</li>
+<li>Scalability<ul>
+<li>スケーラビリティ＝負荷量に対する性能値のふるまい。ふるまいの変化は、スループットの場合はリニアな伸びが変わるところ、レスポンスは一定値（≒リニア）から徐々に劣化が始まるところで見える。典型的な理由は、(なんらかの)リソースの utilization が 100%に達すること(saturation)。</li>
+</ul>
+</li>
+<li>Known-Unknowns<ul>
+<li>いわゆるknown-known/known-unknown/unknown-unknown。性能評価を進めるにしたがって、unknown-unknownに気づいていくのに注意。</li>
+</ul>
+</li>
+<li>Metrics<ul>
+<li>実際に見る具体的な指標。例としては、IOPS、troughput、utilization、latenc等々。忘れてはいけない大事な点として、1) metricの採取自体にもコストがかかること、2) metricの定義や実装そのものに信頼がないようなケースもあること。</li>
+</ul>
+</li>
+<li>Utilization<ul>
+<li>利用率には「時間(time)ベース」と「容量(capacity)ベース」の２つがある。前者は単位時間あたりに仕事をしていた時間(busy率)で、後者は処理可能な容量に対する割合。特に前者のbusy率の場合、リソースによっては多重処理が可能なケースもあるので、utilization が100%であっても限界とは限らないのに注意が必要。</li>
+<li>cloud (というか、仮想化)環境の場合には、non-idle time という見方をしたほうがよいという考え方もある。</li>
+</ul>
+</li>
+<li>Saturation <ul>
+<li>saturation (飽和)状態とは、処理可能な量を超えて、どの程度のリクエスト(仕事)量が流入しているかを示す程度。処理しきれないリクエストは、待ち行列につながることになる。</li>
+</ul>
+</li>
+<li>Profiling<ul>
+<li>一般論としては、対象を研究して理解できるような描像を得ること。実際のシステムの Profiling では、典型的にはサンプリングが基本であって、(サンプル間隔しだいだが)得られる描像は荒い（疎な）ものになる。</li>
+</ul>
+</li>
+<li>Caching<ul>
+<li>xxx</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>Perspectives<ul>
+<li>性能分析には、大きく、1. Resource Analysis と 2. Workload Analysis ２つの側面がある。</li>
+</ul>
+</li>
+<li>Methodology<ol>
+<li>Streetlight Anti-Method</li>
+<li>Random Change Anti-Method</li>
+<li>Blame-Someone-Else Anti-Method</li>
+<li>Ad Hoc Checklist Method</li>
+<li>Problem Statement</li>
+<li>Scientific Method</li>
+<li>Diagnosis Cycle</li>
+<li>Tools Method</li>
+<li>The USE Method<ul>
+<li>リソースの状況を見るときに Utilization, Saturation, Error の3点をチェックするという有名なやつ。</li>
+</ul>
+</li>
+<li>Workload Characterization</li>
+<li>Drill-Down Analysis<ul>
+<li>Five Whys</li>
+</ul>
+</li>
+<li>Latency Analysis</li>
+<li>Method R (by Oracle)</li>
+<li>Event Tracing</li>
+<li>Baseline Statistics</li>
+<li>Static Peformance Tuning</li>
+<li>Cache Tuning</li>
+<li>Micro-Benchmarking</li>
+</ol>
+</li>
+<li>Modeling</li>
+<li>Enterprise versus Cloud</li>
+<li>Visual Identification</li>
+<li>Linear scalability</li>
+<li>Contention</li>
+<li>Coherence</li>
+<li>Knee point</li>
+<li>Scalability Ceiling</li>
+<li>Amdahl's Law of Scalability</li>
+<li>C(N) = N/(1 + α(N-1))  (C: relative capacity)</li>
+<li>Universal Scalability Law</li>
+<li>C(N) = N/(α(N-1) + βN(N-1))</li>
+<li>Queueing Theory </li>
+<li>M/M/1, M/M/c, M/G/1, M/D/1</li>
+</ol>
+</li>
+<li>Capacity Planning<ol>
+<li>Resource Limits</li>
+<li>Factor Analysis</li>
+<li>Scaling Solutions</li>
+</ol>
+</li>
+<li>Statistics<ol>
+<li>Quantifying Performance</li>
+<li>Averages</li>
+<li>Arithmetric, Geometric, Harmonic, Averages over Time, Decayed</li>
+<li>Standard Deviationos, Percentiles, Median</li>
+<li>Coefficient of Variation</li>
+<li>Multimodal Distributions</li>
+<li>Outliers<ul>
+<li>Anomaly???</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>Monitoring<ol>
+<li>Time-Based Patterns</li>
+<li>Monitoring Products</li>
+<li>Summary-since Boot</li>
+</ol>
+</li>
+<li>Visualizations<ol>
+<li>Line Chart</li>
+<li>Scatter Plots</li>
+<li>Heat Maps</li>
+<li>Surface Plot</li>
+<li>Visualization Tools</li>
+</ol>
+</li>
+<li>Exercises</li>
+<li>References</li>
+</ol>
+<h2>性能解析の方法論</h2>
+<ol>
+<li>Terminology</li>
+<li>Models<ol>
+<li>Systems Under Test</li>
+<li>Queueing System</li>
+</ol>
+</li>
+<li>
+<p>Concepts
+    性能解析で必要になる概念を列挙して説明しています。
+    レイテンシ、スループット</p>
+<ol>
+<li>Latency</li>
+<li>Time-Scales</li>
+<li>Trade-offs</li>
+<li>Tuning Efforts</li>
+<li>Level of Appropriateness</li>
+<li>Point-in Time Recommendations</li>
+<li>Load versus Architecture</li>
+<li>Scalability</li>
+<li>Known-Unknowns</li>
+<li>
+<p>Metrics</p>
+</li>
+<li>
+<p>Utilization</p>
+</li>
+<li>Saturation</li>
+<li>Profiling</li>
+<li>Caching</li>
+</ol>
+</li>
+<li>
+<p>Perspectives</p>
+<ol>
+<li>Resource Analysis</li>
+<li>Workload Analysis</li>
+</ol>
+</li>
+<li>
+<p>Methodology</p>
+<ol>
+<li>Streetlight Anti-Method</li>
+<li>Random Change Anti-Method</li>
+<li>Blame-Someone-Else Anti-Method</li>
+<li>Ad Hoc Checklist Method</li>
+<li>Problem Statement</li>
+<li>Scientific Method</li>
+<li>Diagnosis Cycle</li>
+<li>Tools Method</li>
+<li>The USE Method</li>
+<li>Workload Characterization</li>
+<li>Drill-Down Analysis</li>
+<li>Five Whys</li>
+<li>Latency Analysis</li>
+<li>Method R (by Oracle)</li>
+<li>Event Tracing</li>
+<li>Baseline Statistics</li>
+<li>Static Peformance Tuning</li>
+<li>Cache Tuning</li>
+<li>Micro-Benchmarking</li>
+</ol>
+</li>
+<li>
+<p>Modeling</p>
+<ol>
+<li>Enterprise versus Cloud</li>
+<li>Visual Identification</li>
+<li>Linear scalability</li>
+<li>Contention<ol>
+<li>Coherence</li>
+<li>Knee point</li>
+<li>Scalability Ceiling</li>
+</ol>
+</li>
+<li>Amdahl's Law of Scalability</li>
+<li>Universal Scalability Law</li>
+<li>C(N) = N/1 + α(N-1) ??? (C: relative capacity)</li>
+<li>Queueing Theory★</li>
+<li>M/M/1, M/M/c, M/G/1, M/D/1</li>
+</ol>
+</li>
+<li>
+<p>Capacity Planning★</p>
+<ol>
+<li>Resource Limits</li>
+<li>Factor Analysis</li>
+<li>Scaling Solutions</li>
+</ol>
+</li>
+<li>
+<p>Statistics</p>
+<ol>
+<li>Quantifying Performance</li>
+<li>Averages</li>
+<li>Arithmetric, Geometric, Harmonic, Averages over Time, Decayed</li>
+<li>Standard Deviationos, Percentiles, Median</li>
+<li>Coefficient of Variation</li>
+<li>Multimodal Distributions</li>
+<li>Outliers<ul>
+<li>Anomaly???</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>
+<p>Monitoring</p>
+<ol>
+<li>Time-Based Patterns</li>
+<li>Monitoring Products</li>
+<li>Summary-since Boot</li>
+</ol>
+</li>
+<li>
+<p>Visualizations</p>
+<ol>
+<li>Line Chart</li>
+<li>Scatter Plots</li>
+<li>Heat Maps</li>
+<li>Surface Plot</li>
+<li>Visualization Tools</li>
+</ol>
+</li>
+<li>
+<p>Exercises</p>
+</li>
+<li>References</li>
+</ol>
+<h2>Case Study : むかーし、Redis がなにかも知らなかった頃の話</h2>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
