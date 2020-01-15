@@ -67,313 +67,213 @@
 (翻訳は<a href="https://www.amazon.co.jp/dp/4873117909/">こちら</a>) 言わずと知れた DTrace の作者が書いた本で、
 全体的な考え方から、CPU・メモリ…等と、具体的な観点ごとに包括的かつ詳細に解説されているので非常によい本です。
 軽い勉強会みたいなやつで使おうと思って、まずは方法論(Methodology)が書いてある2章のまとめを作っています。
-…が、書いてみたら、結局ほぼ目次に沿って説明するのがいいのかなー…という結論に（笑）</p>
-<p>なお、昨年末に"<a href="https://www.amazon.co.jp/dp/0136554822/">BPF Performance Tools</a>"という新しい本も出ていて、
-私は発送待ちで待たされていて、いつ日本に来るんだろう？と思っているところだったりします。(苦笑)
-まあ、eBPF/XDPについては
-<a href="https://www.amazon.co.jp/Linux-Observability-Bpf-Programming-Performance/dp/1492050202/">これ</a>
+…が、書いてみたら、結局、目次を追っていくのが一番いいのかなー…という結論に（笑）</p>
+<p>なお、昨年末に"<a href="https://www.amazon.co.jp/dp/0136554822/">BPF Performance Tools</a>"という新しい本も出ていて買ったのですが、
+私は発送待ち状態です。いつ日本に来るんでしょうか？(苦笑)
+まあ、eBPF/XDPについては<a href="https://www.amazon.co.jp/Linux-Observability-Bpf-Programming-Performance/dp/1492050202/">これ</a>
 も読んだので、まあぼちぼちでいいっちゃいいのですが。(笑)</p>
 <h2>一番大事なところ - 方法論の章(2章)の構成</h2>
 <p>方法論(Methodology)は2章になります。
-この章だけでけっこうな分量になる、まずは、全体を俯瞰するという意味で、目次構成を眺めるだけでも意味があるでしょう。
-下のほうに目次の構成をそのまま引用します。少し長いですが、落ち着いて眺めてみると頭が整理できると思います。</p>
+この章だけでけっこうな分量になるので、まずは全体を俯瞰するという意味で、目次構成を眺めるだけでも意味があるでしょう。
+目次の構成をそのまま引用しながらまとめていきます。少し長いですが、落ち着いて眺めてみると頭が整理できると思います。</p>
 <p>なお、著者本人は、冒頭でこの章をざっくりまとめると以下の３点であると書いています。
 2.5節の具体的な方法論と、これらを使うときに使う具体的な Metric の２点が大事なのであって、
-他はみんなこの２点に対する背景知識なのだというわけです。</p>
+他はみんなこの２点を使うための背景知識なのだというわけです。</p>
 <p>1) Background
 2) Methodology
 3) Metrics</p>
-<ol>
-<li>Methodology<ol>
-<li>Terminology<ul>
-<li>まずは用語定義</li>
-</ul>
-</li>
-<li>Models<ol>
-<li>Systems Under Test<ul>
+<p>以下、２章の目次にしたがって見ていきます。(ただし、まだ書きかけ)</p>
+<h3>2. Methodology ★一番大事な章★</h3>
+<h4>2.1 Terminology ＃ まずは用語定義</h4>
+<h4>2.2 Models ＃ モデル</h4>
+<h5>2.2.1 Systems Under Test</h5>
+<ul>
 <li>評価・分析するシステム自体のモデル化</li>
 </ul>
-</li>
-<li>Queueing System<ul>
+<h5>2.2.2 Queueing System</h5>
+<ul>
 <li>待ち行列理論 = 数理モデルの基本</li>
 <li>ちなみにこんな本もありますね。<a href="https://www.amazon.co.jp/Performance-Modeling-Design-Computer-Systems/dp/1107027500">Performance Modeling and Design of Computer Systems: Queueing Theory in Action</a></li>
 </ul>
-</li>
-</ol>
-</li>
-<li>Concepts ＃ 基本概念<ol>
-<li>Latency<ul>
+<h3>2.3 Concepts ＃ 基本概念</h3>
+<h4>2.3.1 Latency</h4>
+<ul>
 <li>一言で「通信遅延」と言っても測定する場所によって、例えばコネクション接続+データ転送+処理時間…等分解されるのに注意。</li>
 </ul>
-</li>
-<li>Time-Scales<ul>
+<h4>2.3.2 Time-Scales</h4>
+<ul>
 <li>CPUの命令サイクル、メモリアクセス、DISKアクセス…等ものによってかかる時間のスケールが違うのに注意。</li>
 </ul>
-</li>
-<li>Trade-offs<ul>
+<h4>2.3.3 Trade-offs</h4>
+<ul>
 <li>例えば、I/OサイズとI/O性能・I/Oパターンの関係等、両立しないものの間のトレードオフを知ること。</li>
 </ul>
-</li>
-<li>Tuning Efforts<ul>
+<h4>2.3.4 Tuning Efforts</h4>
+<ul>
 <li>アプリ～MW～OS～ハードのどのレイヤで性能チューニングを施すのか？一般論としては(アプリに近い)上のレイヤで実施するほど効果は高い。</li>
 </ul>
-</li>
-<li>Level of Appropriateness<ul>
+<h4>2.3.5 Level of Appropriateness</h4>
+<ul>
 <li>性能分析、チューニングにどこまでコストをかけて深堀りするのかは組織としての投資対効果による。</li>
 </ul>
-</li>
-<li>Point-in-Time Recommendations<ul>
+<h4>2.3.6 Point-in-Time Recommendations</h4>
+<ul>
 <li>チューニングパラメータの推奨値は、条件によって変わるものなので「その時点のもの」(point-in-time)と思うべし。</li>
 </ul>
-</li>
-<li>Load versus Architecture<ul>
+<h4>2.3.7 Load versus Architecture</h4>
+<ul>
 <li>システムの性能に影響するのは個々のソフトの「設定値」だけでなく、システムの構造（アーキテクチャ）に由来することもある。</li>
 </ul>
-</li>
-<li>Scalability<ul>
+<h4>2.3.8 Scalability</h4>
+<ul>
 <li>スケーラビリティ＝負荷量に対する性能値のふるまい。ふるまいの変化は、スループットの場合はリニアな伸びが変わるところ、レスポンスは一定値（≒リニア）から徐々に劣化が始まるところで見える。典型的な理由は、(なんらかの)リソースの utilization が 100%に達すること(saturation)。</li>
 </ul>
-</li>
-<li>Known-Unknowns<ul>
+<h4>2.3.9 Known-Unknowns</h4>
+<ul>
 <li>いわゆるknown-known/known-unknown/unknown-unknown。性能評価を進めるにしたがって、unknown-unknownに気づいていくのに注意。</li>
 </ul>
-</li>
-<li>Metrics<ul>
+<h4>2.3.10 Metrics</h4>
+<ul>
 <li>実際に見る具体的な指標。例としては、IOPS、troughput、utilization、latenc等々。忘れてはいけない大事な点として、1) metricの採取自体にもコストがかかること、2) metricの定義や実装そのものに信頼がないようなケースもあること。</li>
 </ul>
-</li>
-<li>Utilization<ul>
+<h4>2.3.11 Utilization</h4>
+<ul>
 <li>利用率には「時間(time)ベース」と「容量(capacity)ベース」の２つがある。前者は単位時間あたりに仕事をしていた時間(busy率)で、後者は処理可能な容量に対する割合。特に前者のbusy率の場合、リソースによっては多重処理が可能なケースもあるので、utilization が100%であっても限界とは限らないのに注意が必要。</li>
 <li>cloud (というか、仮想化)環境の場合には、non-idle time という見方をしたほうがよいという考え方もある。</li>
 </ul>
-</li>
-<li>Saturation <ul>
+<h4>2.3.12 Saturation</h4>
+<ul>
 <li>saturation (飽和)状態とは、処理可能な量を超えて、どの程度のリクエスト(仕事)量が流入しているかを示す程度。処理しきれないリクエストは、待ち行列につながることになる。</li>
 </ul>
-</li>
-<li>Profiling<ul>
+<h4>2.3.13 Profiling</h4>
+<ul>
 <li>一般論としては、対象を研究して理解できるような描像を得ること。実際のシステムの Profiling では、典型的にはサンプリングが基本であって、(サンプル間隔しだいだが)得られる描像は荒い（疎な）ものになる。</li>
 </ul>
-</li>
-<li>Caching<ul>
-<li>xxx</li>
+<h4>2.3.14 Caching</h4>
+<ul>
+<li>本書では後ろの方でキャッシングとバッファリングの違いの話も出てきますが、ここではキャッシュのヒット率と性能の関係、キャッシュのアルゴリズム(MRU/LRU/MFU/LFU)や、キャッシュされたデータのCold/Hot/Warmという分類(と、キャッシュ暖かさ(Warmth)という用語)が出てきます。</li>
+</ul>
+<h3>2.4 Perspectives ＃ 全体像</h3>
+<ul>
+<li>性能分析には、大きく、1. Resource Analysis と 2. Workload Analysis の2つの側面がある。
+1.の Resource Analysisには文字通りリソースの利用状況の分析であり、さらに a) 性能問題の調査と、b) Capacity Planning が含まる。
+2.の Workload Analysisはアプリケーションの構造を鑑みて指標(SLIかな)をどう定義するのか？という話で、典型的には Latency(Response)とThroughputが含まれる。</li>
+</ul>
+<h3>2.5 Methodology ＃ 方法論（★一番大事なところ★）</h3>
+<h4>2.5.1 Streetlight Anti-Method</h4>
+<ul>
+<li>Anti-Method(やっちゃダメ)な例。意図的な方法論がないケースのこと。適当に探してなんとなく見つかったツールで測定した指標を使うということで、検出された問題は実際のところは問題なこともあるし問題でないこともある。</li>
+</ul>
+<h4>2.5.2 Random Change Anti-Method</h4>
+<ul>
+<li>これも Anti-Method。原因になっていそうポイントをランダムに想定し、その条件を問題が消えるまで変え続けるということ。</li>
+</ul>
+<h4>2.5.3. Blame-Someone-Else Anti-Method</h4>
+<ul>
+<li>同じく Anti-Method。自分の担当範囲外の部分を見つけて、そこに原因があるという仮説を立てて担当チームに押し付ける。(ごくまれによく採用される方法論...gkbr)</li>
+</ul>
+<h4>2.5.4 Ad Hoc Checklist Method</h4>
+<ul>
+<li>定型のチェックリストにしたがう方法。チェックリスト自体は最短時間で多くの範囲をカバーできるが、あくまでその時点での推奨であって、頻繁に更新する必要があるのに注意。</li>
+</ul>
+<h4>2.5.5 Problem Statement</h4>
+<ul>
+<li>1)性能問題があると考えた理由、2)今まで想定どおりに動いていたか？、3)最近何か変えたか？、4)問題点はlatencyかthroughputの指標で表せるか？…といった手順で、問題点を具体的に書き下す。★新しい問題に取り組むときには最初にとるべき方法。</li>
+</ul>
+<h4>2.5.6 Scientific Method</h4>
+<ul>
+<li>課題設定(Question) → 仮説を立てる(Hypothetis) → 予想をたてる(Prediction) → テスト(Test) → 分析(Analysis)という、通常の自然科学の研究でとるアプローチ。最初の 'Question' は前述の Problem Statement であって、これが出発点になる。</li>
+</ul>
+<h4>2.5.7 Diagnosis Cycle</h4>
+<ul>
+<li>Scientific Method と似ているが。仮説をたてる → 計測する → 分析する →　新しい仮説をたてる…という分析的なアプローチ。</li>
+</ul>
+<h4>2.5.8 Tools Method</h4>
+<ul>
+<li>手順は「使えるツールのリストを作る → 各ツールで得られる有用なmetricの一覧を作る → 各metricの解釈のルールを作る」。これが完璧というわけではないし、十分とは言えないこともあるが、現実的にはこの方法でリソースのボトルネックやエラー等の問題を検出できる。</li>
+</ul>
+<h4>2.5.9 The USE Method</h4>
+<ul>
+<li>まず特定のリソースに着目、当該リソース関連のErrorがあるか？、Utilization は高いか？Saturationが発生しているか？の十番で事象の発生有無をチェックし、検出した事象が原因なのかどうか検討する。原因でなければ次のリソースに着目するという手順をとる。</li>
+<li>着目すべきリソースは、リソースの一覧表を使う(CPU/Memory/Network/Storage/Controller等)、機能ブロック図(例として図2.13)から考える方法がある。</li>
+<li>リソースの種別ごとに様々な metric がある。(表2.5と表2.6)手元のツールで取得できない metric は known-unknownとして意識しておくべき。</li>
+<li>CPUのようなハードウェアリソース以外に「ソフトウェアリソース」がある。例えば、mutex lock の衝突数等、thread poolの空き状況等。</li>
+<li>解釈<ul>
+<li>Utilization : </li>
+<li>Saturation : </li>
+<li>Error :  </li>
 </ul>
 </li>
-</ol>
-</li>
-<li>Perspectives<ul>
-<li>性能分析には、大きく、1. Resource Analysis と 2. Workload Analysis ２つの側面がある。</li>
 </ul>
-</li>
-<li>Methodology<ol>
-<li>Streetlight Anti-Method</li>
-<li>Random Change Anti-Method</li>
-<li>Blame-Someone-Else Anti-Method</li>
-<li>Ad Hoc Checklist Method</li>
-<li>Problem Statement</li>
-<li>Scientific Method</li>
-<li>Diagnosis Cycle</li>
-<li>Tools Method</li>
-<li>The USE Method<ul>
-<li>リソースの状況を見るときに Utilization, Saturation, Error の3点をチェックするという有名なやつ。</li>
-</ul>
-</li>
-<li>Workload Characterization</li>
-<li>Drill-Down Analysis<ul>
+<h4>2.5.10 Workload Characterization</h4>
+<h4>2.5.11 Drill-Down Analysis</h4>
+<ul>
 <li>Five Whys</li>
 </ul>
-</li>
-<li>Latency Analysis</li>
-<li>Method R (by Oracle)</li>
-<li>Event Tracing</li>
-<li>Baseline Statistics</li>
-<li>Static Peformance Tuning</li>
-<li>Cache Tuning</li>
-<li>Micro-Benchmarking</li>
-</ol>
-</li>
-<li>Modeling</li>
-<li>Enterprise versus Cloud</li>
-<li>Visual Identification</li>
+<h4>2.5.12 Latency Analysis</h4>
+<h4>2.5.13 Method R (by Oracle)</h4>
+<ul>
+<li>Oracleのツール固有の方法。(なんで挙がっているんだろう...)</li>
+</ul>
+<h4>2.5.14 Event Tracing</h4>
+<h4>2.5.15 Baseline Statistics</h4>
+<h4>2.5.16 Static Peformance Tuning</h4>
+<h4>2.5.17 Cache Tuning</h4>
+<h4>2.5.18 Micro-Benchmarking</h4>
+<h3>2.6. Modeling</h3>
+<h4>2.6.1 Enterprise versus Cloud</h4>
+<h4>2.6.2 Visual Identification</h4>
+<ul>
 <li>Linear scalability</li>
 <li>Contention</li>
 <li>Coherence</li>
 <li>Knee point</li>
 <li>Scalability Ceiling</li>
-<li>Amdahl's Law of Scalability</li>
+</ul>
+<h4>2.6.3 Amdahl's Law of Scalability</h4>
+<ul>
 <li>C(N) = N/(1 + α(N-1))  (C: relative capacity)</li>
-<li>Universal Scalability Law</li>
+</ul>
+<h4>2.6.4 Universal Scalability Law</h4>
+<ul>
 <li>C(N) = N/(α(N-1) + βN(N-1))</li>
-<li>Queueing Theory </li>
+</ul>
+<h4>2.6.5 Queueing Theory - 待ち行列理論</h4>
+<ul>
 <li>M/M/1, M/M/c, M/G/1, M/D/1</li>
-</ol>
-</li>
-<li>Capacity Planning<ol>
-<li>Resource Limits</li>
-<li>Factor Analysis</li>
-<li>Scaling Solutions</li>
-</ol>
-</li>
-<li>Statistics<ol>
-<li>Quantifying Performance</li>
-<li>Averages</li>
+</ul>
+<h3>2.7 Capacity Planning</h3>
+<h4>2.7.1. Resource Limits</h4>
+<h4>2.7.2 Factor Analysis</h4>
+<h4>2.7.3 Scaling Solutions</h4>
+<h3>2.8 Statistics</h3>
+<h4>2.8.1 Quantifying Performance</h4>
+<h4>2.8.2 Averages</h4>
+<ul>
 <li>Arithmetric, Geometric, Harmonic, Averages over Time, Decayed</li>
-<li>Standard Deviationos, Percentiles, Median</li>
-<li>Coefficient of Variation</li>
-<li>Multimodal Distributions</li>
-<li>Outliers<ul>
+</ul>
+<h4>2.8.3 Standard Deviationos, Percentiles, Median</h4>
+<h4>2.8.4 Coefficient of Variation</h4>
+<h4>2.8.5 Multimodal Distributions</h4>
+<h4>2.8.6 Outliers</h4>
+<ul>
 <li>Anomaly???</li>
 </ul>
-</li>
-</ol>
-</li>
-<li>Monitoring<ol>
-<li>Time-Based Patterns</li>
-<li>Monitoring Products</li>
+<h3>2.9 Monitoring</h3>
+<h4>2.9.1 Time-Based Patterns</h4>
+<h4>2.9.2 Monitoring Products</h4>
+<ul>
 <li>Summary-since Boot</li>
-</ol>
-</li>
-<li>Visualizations<ol>
-<li>Line Chart</li>
-<li>Scatter Plots</li>
-<li>Heat Maps</li>
-<li>Surface Plot</li>
-<li>Visualization Tools</li>
-</ol>
-</li>
-<li>Exercises</li>
-<li>References</li>
-</ol>
-<h2>性能解析の方法論</h2>
-<ol>
-<li>Terminology</li>
-<li>Models<ol>
-<li>Systems Under Test</li>
-<li>Queueing System</li>
-</ol>
-</li>
-<li>
-<p>Concepts
-    性能解析で必要になる概念を列挙して説明しています。
-    レイテンシ、スループット</p>
-<ol>
-<li>Latency</li>
-<li>Time-Scales</li>
-<li>Trade-offs</li>
-<li>Tuning Efforts</li>
-<li>Level of Appropriateness</li>
-<li>Point-in Time Recommendations</li>
-<li>Load versus Architecture</li>
-<li>Scalability</li>
-<li>Known-Unknowns</li>
-<li>
-<p>Metrics</p>
-</li>
-<li>
-<p>Utilization</p>
-</li>
-<li>Saturation</li>
-<li>Profiling</li>
-<li>Caching</li>
-</ol>
-</li>
-<li>
-<p>Perspectives</p>
-<ol>
-<li>Resource Analysis</li>
-<li>Workload Analysis</li>
-</ol>
-</li>
-<li>
-<p>Methodology</p>
-<ol>
-<li>Streetlight Anti-Method</li>
-<li>Random Change Anti-Method</li>
-<li>Blame-Someone-Else Anti-Method</li>
-<li>Ad Hoc Checklist Method</li>
-<li>Problem Statement</li>
-<li>Scientific Method</li>
-<li>Diagnosis Cycle</li>
-<li>Tools Method</li>
-<li>The USE Method</li>
-<li>Workload Characterization</li>
-<li>Drill-Down Analysis</li>
-<li>Five Whys</li>
-<li>Latency Analysis</li>
-<li>Method R (by Oracle)</li>
-<li>Event Tracing</li>
-<li>Baseline Statistics</li>
-<li>Static Peformance Tuning</li>
-<li>Cache Tuning</li>
-<li>Micro-Benchmarking</li>
-</ol>
-</li>
-<li>
-<p>Modeling</p>
-<ol>
-<li>Enterprise versus Cloud</li>
-<li>Visual Identification</li>
-<li>Linear scalability</li>
-<li>Contention<ol>
-<li>Coherence</li>
-<li>Knee point</li>
-<li>Scalability Ceiling</li>
-</ol>
-</li>
-<li>Amdahl's Law of Scalability</li>
-<li>Universal Scalability Law</li>
-<li>C(N) = N/1 + α(N-1) ??? (C: relative capacity)</li>
-<li>Queueing Theory★</li>
-<li>M/M/1, M/M/c, M/G/1, M/D/1</li>
-</ol>
-</li>
-<li>
-<p>Capacity Planning★</p>
-<ol>
-<li>Resource Limits</li>
-<li>Factor Analysis</li>
-<li>Scaling Solutions</li>
-</ol>
-</li>
-<li>
-<p>Statistics</p>
-<ol>
-<li>Quantifying Performance</li>
-<li>Averages</li>
-<li>Arithmetric, Geometric, Harmonic, Averages over Time, Decayed</li>
-<li>Standard Deviationos, Percentiles, Median</li>
-<li>Coefficient of Variation</li>
-<li>Multimodal Distributions</li>
-<li>Outliers<ul>
-<li>Anomaly???</li>
 </ul>
-</li>
-</ol>
-</li>
-<li>
-<p>Monitoring</p>
-<ol>
-<li>Time-Based Patterns</li>
-<li>Monitoring Products</li>
-<li>Summary-since Boot</li>
-</ol>
-</li>
-<li>
-<p>Visualizations</p>
-<ol>
-<li>Line Chart</li>
-<li>Scatter Plots</li>
-<li>Heat Maps</li>
-<li>Surface Plot</li>
-<li>Visualization Tools</li>
-</ol>
-</li>
-<li>
-<p>Exercises</p>
-</li>
-<li>References</li>
-</ol>
-<h2>Case Study : むかーし、Redis がなにかも知らなかった頃の話</h2>
+<h3>2.10 Visualizations</h3>
+<h4>2.10.1 Line Chart</h4>
+<h4>2.10.2 Scatter Plots</h4>
+<h4>2.10.3 Heat Maps</h4>
+<h4>2.10.4 Surface Plot</h4>
+<h4>2.10.5 Visualization Tools</h4>
+<h3>2.11 Exercises</h3>
+<h3>2.12 References</h3>
+<h2>13. Case Study : むかーし、Redis がなにかも知らなかった頃の話</h2>
     </div>
   </article>
     </div>
