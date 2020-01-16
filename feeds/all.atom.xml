@@ -8,185 +8,191 @@
 私は発送待ち状態です。いつ日本に来るんでしょうか？(苦笑)
 まあ、eBPF/XDPについては&lt;a href="https://www.amazon.co.jp/Linux-Observability-Bpf-Programming-Performance/dp/1492050202/"&gt;これ&lt;/a&gt;
 も読んだので、まあぼちぼちでいいっちゃいいのですが。(笑)&lt;/p&gt;
-&lt;h2&gt;一番大事なところ - 方法論の章(2章)の構成&lt;/h2&gt;
+&lt;h1&gt;一番大事なところ - 方法論の章(2章)の構成&lt;/h1&gt;
 &lt;p&gt;方法論(Methodology)は2章になります。
 この章だけでけっこうな分量になるので、まずは全体を俯瞰するという意味で、目次構成を眺めるだけでも意味があるでしょう。
 目次の構成をそのまま引用しながらまとめていきます。少し長いですが、落ち着いて眺めてみると頭が整理できると思います。&lt;/p&gt;
 &lt;p&gt;なお、著者本人は、冒頭でこの章をざっくりまとめると以下の３点であると書いています。
 2.5節の具体的な方法論と、これらを使うときに使う具体的な Metric の２点が大事なのであって、
 他はみんなこの２点を使うための背景知識なのだというわけです。&lt;/p&gt;
-&lt;p&gt;1) Background
-2) Methodology
-3) Metrics&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Background&lt;/li&gt;
+&lt;li&gt;Methodology&lt;/li&gt;
+&lt;li&gt;Metrics&lt;/li&gt;
+&lt;/ol&gt;
 &lt;p&gt;以下、２章の目次にしたがって見ていきます。(ただし、まだ書きかけ)&lt;/p&gt;
-&lt;h3&gt;2. Methodology ★一番大事な章★&lt;/h3&gt;
-&lt;h4&gt;2.1 Terminology ＃ まずは用語定義&lt;/h4&gt;
-&lt;h4&gt;2.2 Models ＃ モデル&lt;/h4&gt;
-&lt;h5&gt;2.2.1 Systems Under Test&lt;/h5&gt;
-&lt;ul&gt;
-&lt;li&gt;評価・分析するシステム自体のモデル化&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h5&gt;2.2.2 Queueing System&lt;/h5&gt;
-&lt;ul&gt;
-&lt;li&gt;待ち行列理論 = 数理モデルの基本&lt;/li&gt;
-&lt;li&gt;ちなみにこんな本もありますね。&lt;a href="https://www.amazon.co.jp/Performance-Modeling-Design-Computer-Systems/dp/1107027500"&gt;Performance Modeling and Design of Computer Systems: Queueing Theory in Action&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
+&lt;h2&gt;2. Methodology ★一番大事な章★&lt;/h2&gt;
+&lt;h3&gt;2.1 Terminology ＃ まずは用語定義&lt;/h3&gt;
+&lt;h3&gt;2.2 Models ＃ モデル&lt;/h3&gt;
+&lt;h4&gt;2.2.1 Systems Under Test&lt;/h4&gt;
+&lt;p&gt;評価・分析するシステム自体のモデル化しておく。いわゆるSUT。&lt;/p&gt;
+&lt;h4&gt;2.2.2 Queueing System&lt;/h4&gt;
+&lt;p&gt;待ち行列理論 = 数理モデルの基本&lt;/p&gt;
+&lt;p&gt;ちなみにこんな本もありますね。&lt;a href="https://www.amazon.co.jp/Performance-Modeling-Design-Computer-Systems/dp/1107027500"&gt;Performance Modeling and Design of Computer Systems: Queueing Theory in Action&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;2.3 Concepts ＃ 基本概念&lt;/h3&gt;
+&lt;p&gt;この節、個人的には項目の選択とか並びが ad hoc すぎるのではないか？という感がありますが、それは別途整理するとして、並んでいる順番に見ていきます。&lt;/p&gt;
 &lt;h4&gt;2.3.1 Latency&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;一言で「通信遅延」と言っても測定する場所によって、例えばコネクション接続+データ転送+処理時間…等分解されるのに注意。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;一言で「通信遅延」と言っても、測定する場所によって、例えばコネクション接続+データ転送+処理時間…等分解されるのに注意。&lt;/p&gt;
 &lt;h4&gt;2.3.2 Time-Scales&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;CPUの命令サイクル、メモリアクセス、DISKアクセス…等ものによってかかる時間のスケールが違うのに注意。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;CPUの命令サイクル、メモリアクセス、DISKアクセス…等、モノによってかかる時間のスケールが違うのに注意。&lt;/p&gt;
 &lt;h4&gt;2.3.3 Trade-offs&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;例えば、I/OサイズとI/O性能・I/Oパターンの関係等、両立しないものの間のトレードオフを知ること。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;例えば、I/OサイズとI/O性能・I/Oパターンの関係等、両立しないものの間のトレードオフを知ること。&lt;/p&gt;
 &lt;h4&gt;2.3.4 Tuning Efforts&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;アプリ～MW～OS～ハードのどのレイヤで性能チューニングを施すのか？一般論としては(アプリに近い)上のレイヤで実施するほど効果は高い。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;アプリ～MW～OS～ハードのどのレイヤで性能チューニングを施すのか？一般論としては(アプリに近い)上のレイヤで実施するほど効果は高い。&lt;/p&gt;
 &lt;h4&gt;2.3.5 Level of Appropriateness&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;性能分析、チューニングにどこまでコストをかけて深堀りするのかは組織としての投資対効果による。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;性能分析、チューニングにどこまでコストをかけて深堀りするのかは組織としての投資対効果による。&lt;/p&gt;
 &lt;h4&gt;2.3.6 Point-in-Time Recommendations&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;チューニングパラメータの推奨値は、条件によって変わるものなので「その時点のもの」(point-in-time)と思うべし。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;チューニングパラメータの推奨値は、条件によって変わるものなので「その時点のもの」(point-in-time)と思うべし。&lt;/p&gt;
 &lt;h4&gt;2.3.7 Load versus Architecture&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;システムの性能に影響するのは個々のソフトの「設定値」だけでなく、システムの構造（アーキテクチャ）に由来することもある。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;システムの性能に影響するのは個々のソフトの「設定値」だけでなく、システムの構造（アーキテクチャ）に由来することもある。&lt;/p&gt;
 &lt;h4&gt;2.3.8 Scalability&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;スケーラビリティ＝負荷量に対する性能値のふるまい。ふるまいの変化は、スループットの場合はリニアな伸びが変わるところ、レスポンスは一定値（≒リニア）から徐々に劣化が始まるところで見える。典型的な理由は、(なんらかの)リソースの utilization が 100%に達すること(saturation)。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;スケーラビリティ＝負荷量に対する性能値のふるまい。ふるまいの変化は、スループットの場合はリニアな伸びが変わるところ、レスポンスは一定値（≒リニア）から徐々に劣化が始まるところで見える。典型的な理由は、(なんらかの)リソースの utilization が 100%に達すること(saturation)。&lt;/p&gt;
 &lt;h4&gt;2.3.9 Known-Unknowns&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;いわゆるknown-known/known-unknown/unknown-unknown。性能評価を進めるにしたがって、unknown-unknownに気づいていくのに注意。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;いわゆるknown-known/known-unknown/unknown-unknown。性能評価を進めるにしたがって、unknown-unknownに気づいていくのに注意。&lt;/p&gt;
 &lt;h4&gt;2.3.10 Metrics&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;実際に見る具体的な指標。例としては、IOPS、troughput、utilization、latenc等々。忘れてはいけない大事な点として、1) metricの採取自体にもコストがかかること、2) metricの定義や実装そのものに信頼がないようなケースもあること。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;実際に見る具体的な指標。例としては、IOPS、troughput、utilization、latenc等々。忘れてはいけない大事な点として、1) metricの採取自体にもコストがかかること、2) metricの定義や実装そのものに信頼がないようなケースもあること。&lt;/p&gt;
 &lt;h4&gt;2.3.11 Utilization&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;利用率には「時間(time)ベース」と「容量(capacity)ベース」の２つがある。前者は単位時間あたりに仕事をしていた時間(busy率)で、後者は処理可能な容量に対する割合。特に前者のbusy率の場合、リソースによっては多重処理が可能なケースもあるので、utilization が100%であっても限界とは限らないのに注意が必要。&lt;/li&gt;
-&lt;li&gt;cloud (というか、仮想化)環境の場合には、non-idle time という見方をしたほうがよいという考え方もある。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;利用率には「時間(time)ベース」と「容量(capacity)ベース」の２つがある。前者は単位時間あたりに仕事をしていた時間(busy率)で、後者は処理可能な容量に対する割合。特に前者のbusy率の場合、リソースによっては多重処理が可能なケースもあるので、utilization が100%であっても限界とは限らないのに注意が必要。&lt;/p&gt;
+&lt;p&gt;cloud (というか、仮想化)環境の場合には、non-idle time という見方をしたほうがよいという考え方もある。&lt;/p&gt;
 &lt;h4&gt;2.3.12 Saturation&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;saturation (飽和)状態とは、処理可能な量を超えて、どの程度のリクエスト(仕事)量が流入しているかを示す程度。処理しきれないリクエストは、待ち行列につながることになる。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;saturation (飽和)状態とは、処理可能な量を超えて、どの程度のリクエスト(仕事)量が流入しているかを示す程度。処理しきれないリクエストは、待ち行列につながることになる。&lt;/p&gt;
 &lt;h4&gt;2.3.13 Profiling&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;一般論としては、対象を研究して理解できるような描像を得ること。実際のシステムの Profiling では、典型的にはサンプリングが基本であって、(サンプル間隔しだいだが)得られる描像は荒い（疎な）ものになる。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;一般論としては、調べて理解できるような対象システムの「描像」を得ること。実際のシステムの Profiling では、典型的にはサンプリングが基本であって、(サンプル間隔しだいだが)得られる描像は荒い（疎な）ものになるの注意。&lt;/p&gt;
 &lt;h4&gt;2.3.14 Caching&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;本書では後ろの方でキャッシングとバッファリングの違いの話も出てきますが、ここではキャッシュのヒット率と性能の関係、キャッシュのアルゴリズム(MRU/LRU/MFU/LFU)や、キャッシュされたデータのCold/Hot/Warmという分類(と、キャッシュ暖かさ(Warmth)という用語)が出てきます。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;本書では後ろの方でキャッシングとバッファリングの違いの話も出てきますが、ここではキャッシュのヒット率と性能の関係、キャッシュのアルゴリズム(MRU/LRU/MFU/LFU)や、キャッシュされたデータのCold/Hot/Warmという分類(と、キャッシュ暖かさ(Warmth)という用語)が出てきます。&lt;/p&gt;
 &lt;h3&gt;2.4 Perspectives ＃ 全体像&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;性能分析には、大きく、1. Resource Analysis と 2. Workload Analysis の2つの側面がある。
-1.の Resource Analysisには文字通りリソースの利用状況の分析であり、さらに a) 性能問題の調査と、b) Capacity Planning が含まる。
-2.の Workload Analysisはアプリケーションの構造を鑑みて指標(SLIかな)をどう定義するのか？という話で、典型的には Latency(Response)とThroughputが含まれる。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;性能分析には、大きく、1. Resource Analysis と 2. Workload Analysis の2つの側面がある。&lt;/p&gt;
+&lt;p&gt;1.の Resource Analysisには文字通りリソースの利用状況の分析であり、さらに a) 性能問題の調査と、b) Capacity Planning が含まれる。&lt;/p&gt;
+&lt;p&gt;2.の Workload Analysisはアプリケーションの構造を鑑みて指標(SLIかな)をどう定義するのか？という話で、典型的には Latency(Response)とThroughputが含まれる。&lt;/p&gt;
 &lt;h3&gt;2.5 Methodology ＃ 方法論（★一番大事なところ★）&lt;/h3&gt;
+&lt;p&gt;この節は一番大事なところなのですが、2.3 Concepts と同様に、並んでいる順番が少し ad hoc すぎないか？という気がしています。&lt;/p&gt;
 &lt;h4&gt;2.5.1 Streetlight Anti-Method&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Anti-Method(やっちゃダメ)な例。意図的な方法論がないケースのこと。適当に探してなんとなく見つかったツールで測定した指標を使うということで、検出された問題は実際のところは問題なこともあるし問題でないこともある。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;Anti-Method(やっちゃダメ)な例。意図的な方法論がないケースのこと。適当に探してなんとなく見つかったツールで測定した指標を使うということで、検出された問題は実際のところは問題なこともあるし問題でないこともある。&lt;/p&gt;
 &lt;h4&gt;2.5.2 Random Change Anti-Method&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;これも Anti-Method。原因になっていそうポイントをランダムに想定し、その条件を問題が消えるまで変え続けるということ。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;これも Anti-Method。原因になっていそうポイントをランダムに想定し、その条件を問題が消えるまで変え続けるということ。&lt;/p&gt;
 &lt;h4&gt;2.5.3. Blame-Someone-Else Anti-Method&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;同じく Anti-Method。自分の担当範囲外の部分を見つけて、そこに原因があるという仮説を立てて担当チームに押し付ける。(ごくまれによく採用される方法論...gkbr)&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;同じく Anti-Method。自分の担当範囲外の部分を見つけて、そこに原因があるという仮説を立てて担当チームに押し付ける。(ごくまれによく採用される方法論...gkbr)&lt;/p&gt;
 &lt;h4&gt;2.5.4 Ad Hoc Checklist Method&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;定型のチェックリストにしたがう方法。チェックリスト自体は最短時間で多くの範囲をカバーできるが、あくまでその時点での推奨であって、頻繁に更新する必要があるのに注意。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;2.5.5 Problem Statement&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;1)性能問題があると考えた理由、2)今まで想定どおりに動いていたか？、3)最近何か変えたか？、4)問題点はlatencyかthroughputの指標で表せるか？…といった手順で、問題点を具体的に書き下す。★新しい問題に取り組むときには最初にとるべき方法。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;2.5.6 Scientific Method&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;課題設定(Question) → 仮説を立てる(Hypothetis) → 予想をたてる(Prediction) → テスト(Test) → 分析(Analysis)という、通常の自然科学の研究でとるアプローチ。最初の 'Question' は前述の Problem Statement であって、これが出発点になる。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;2.5.7 Diagnosis Cycle&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Scientific Method と似ているが。仮説をたてる → 計測する → 分析する →　新しい仮説をたてる…という分析的なアプローチ。&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;定型のチェックリストにしたがう方法。チェックリスト自体は最短時間で多くの範囲をカバーできるが、あくまでその時点での推奨であって、頻繁に更新する必要があるのに注意。&lt;/p&gt;
+&lt;h4&gt;2.5.5 Problem Statement ★最重要★&lt;/h4&gt;
+&lt;p&gt;新しい問題に取り組むときには最初にとるべき方法。以下のような手順で、問題を具体的に書き下して定義していきます。これによって、問題点がわかることも多いです。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;性能問題があると考えた理由は何か？&lt;/li&gt;
+&lt;li&gt;今まで想定どおりに動いていたか？&lt;/li&gt;
+&lt;li&gt;最近何か変えたか？&lt;/li&gt;
+&lt;li&gt;問題はlatencyかthroughputの指標で表せるか？&lt;/li&gt;
+&lt;li&gt;その問題は、他の人やアプリケーションに影響を及ぼしているのか？それとも自分だけか？&lt;/li&gt;
+&lt;li&gt;環境は？どんなソフトとハードを使っているのか？バージョンは？設定は？&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4&gt;2.5.6 Scientific Method ★重要★&lt;/h4&gt;
+&lt;p&gt;通常の自然科学の研究でとるアプローチ。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;課題設定(Question)&lt;/li&gt;
+&lt;li&gt;仮説を立てる(Hypothetis)&lt;/li&gt;
+&lt;li&gt;予想をたてる(Prediction)&lt;/li&gt;
+&lt;li&gt;テスト(Test)&lt;/li&gt;
+&lt;li&gt;分析(Analysis)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;最初の 'Question' は 2.5.5の Problem Statement であって、これが出発点になる。&lt;/p&gt;
+&lt;h4&gt;2.5.7 Diagnosis Cycle  ★重要★&lt;/h4&gt;
+&lt;p&gt;Scientific Method と似ているが。仮説をたてる → 計測する → 分析する →　新しい仮説をたてる…という分析的なアプローチ。&lt;/p&gt;
 &lt;h4&gt;2.5.8 Tools Method&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;手順は「使えるツールのリストを作る → 各ツールで得られる有用なmetricの一覧を作る → 各metricの解釈のルールを作る」。これが完璧というわけではないし、十分とは言えないこともあるが、現実的にはこの方法でリソースのボトルネックやエラー等の問題を検出できる。&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;2.5.9 The USE Method&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;まず特定のリソースに着目、当該リソース関連のErrorがあるか？、Utilization は高いか？Saturationが発生しているか？の十番で事象の発生有無をチェックし、検出した事象が原因なのかどうか検討する。原因でなければ次のリソースに着目するという手順をとる。&lt;/li&gt;
-&lt;li&gt;着目すべきリソースは、リソースの一覧表を使う(CPU/Memory/Network/Storage/Controller等)、機能ブロック図(例として図2.13)から考える方法がある。&lt;/li&gt;
-&lt;li&gt;リソースの種別ごとに様々な metric がある。(表2.5と表2.6)手元のツールで取得できない metric は known-unknownとして意識しておくべき。&lt;/li&gt;
-&lt;li&gt;CPUのようなハードウェアリソース以外に「ソフトウェアリソース」がある。例えば、mutex lock の衝突数等、thread poolの空き状況等。&lt;/li&gt;
-&lt;li&gt;解釈&lt;ul&gt;
-&lt;li&gt;Utilization : &lt;/li&gt;
-&lt;li&gt;Saturation : &lt;/li&gt;
-&lt;li&gt;Error :  &lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;手順は「使えるツールのリストを作る → 各ツールで得られる有用なmetricの一覧を作る → 各metricの解釈のルールを作る」。これが完璧というわけではないし、十分とは言えないこともあるが、現実的にはこの方法でリソースのボトルネックやエラー等の問題を検出できる。&lt;/p&gt;
+&lt;h4&gt;2.5.9 The USE Method ★重要★&lt;/h4&gt;
+&lt;p&gt;まず特定のリソースに着目、当該リソース関連のErrorがあるか？、Utilization は高いか？Saturationが発生しているか？の十番で事象の発生有無をチェックし、検出した事象が原因なのかどうか検討する。原因でなければ次のリソースに着目するという手順をとる。&lt;/p&gt;
+&lt;p&gt;着目すべきリソースは、リソースの一覧表を使う(CPU/Memory/Network/Storage/Controller等)、機能ブロック図(例として図2.13)から考える方法がある。&lt;/p&gt;
+&lt;p&gt;リソースの種別ごとに様々な metric がある。(表2.5と表2.6)手元のツールで取得できない metric は known-unknownとして意識しておくべき。&lt;/p&gt;
+&lt;p&gt;CPUのようなハードウェアリソース以外に「ソフトウェアリソース」がある。例えば、mutex lock の衝突数等、thread poolの空き状況等。&lt;/p&gt;
+&lt;p&gt;解釈の例
+    * Utilization
+        * きちんと評価するには、待ち行列を使って考えるべし。
+    * Saturation
+        * 飽和状態が発生しているということは問題な可能性がある。待ちキューの長さ滞留時間を調べる。
+    * Error
+        * エラーのカウンタが0でなく、数値が増え続けているのであれば調べる価値がある。&lt;/p&gt;
 &lt;h4&gt;2.5.10 Workload Characterization&lt;/h4&gt;
+&lt;p&gt;「ワークロードの説明」をしておくのは、問題点を明らかにするための良い方法。以下の4つを問うことによって説明できる。
+    1. Who : 誰が負荷を発生させているのか？ PID？UID？remote IP address？
+    2. Why : なぜその負荷が発生しているのか？code pathをstack traceで調べる？
+    3. What : その負荷の特徴は？IOPS？throughput？方向(read/write) ？分散(や標準偏差)も込みで。
+    4. How : その負荷には時間に依存したパターンがあるか？日時など。&lt;/p&gt;
 &lt;h4&gt;2.5.11 Drill-Down Analysis&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Five Whys&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;いわゆる段階的詳細化。以下の３段階がある。
+    1. Monitoring
+        * 継続的にリソースの監視を行う。
+    2. Identification
+        * 特定のリソースの挙動によって、ありうるボトルネックを特定する。
+    3. Analysis
+        * 根本原因の特定と問題の定量化を試みる。
+* 「なぜは５回くりかえせ」…って、某自動車メーカーでも言っていますね。
+   * ただし「５回」自体にはあまり意味はなくて、例えば "human error" で「なぜ」の追及をやめるな…等、あります。&lt;/p&gt;
 &lt;h4&gt;2.5.12 Latency Analysis&lt;/h4&gt;
+&lt;p&gt;１つのリクエストの処理を細かい部分処理に分解・分析していく。根本原因を特定・定量化できるように、最も時間のかかっている部分処理を調べる。&lt;/p&gt;
 &lt;h4&gt;2.5.13 Method R (by Oracle)&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Oracleのツール固有の方法。(なんで挙がっているんだろう...)&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;Oracleのツール固有の話。SQL Query の 2.5.12 Latency Analysisに相当する。&lt;/p&gt;
 &lt;h4&gt;2.5.14 Event Tracing&lt;/h4&gt;
+&lt;p&gt;システムの動きは離散的なイベントの処理ということができる。ここでいうイベントとは、CPU命令とか、DISKコマンドとか、Networkパケットのような低レイヤのものから、SQLクエリなどもイベントとみなせる。&lt;/p&gt;
+&lt;p&gt;性能分析とは、これらのイベントのサマリを検討することであり、例えば、単位時間あたりの操作、単位時間当たりのデータ量などが含まれるが、
+サマリ（集計値）に詳細が埋もれてしまうこともある。&lt;/p&gt;
+&lt;p&gt;例として、systemcallのトレース(strace)、I/Oトレース(Solarisのiosnoop)、パケットダンプ(tcpdump)が挙げられている。
+…が、perf (というか BPF/eBPFや、昔は systemtap)を使うことによって、多彩な種類のイベントをイベント単位で知らべることもできる。&lt;/p&gt;
 &lt;h4&gt;2.5.15 Baseline Statistics&lt;/h4&gt;
+&lt;p&gt;基準になる性能値とその時の各種リソースの値等を採取しておくこと。&lt;/p&gt;
+&lt;p&gt;これはまあPOCするときの基本ですね。&lt;/p&gt;
 &lt;h4&gt;2.5.16 Static Peformance Tuning&lt;/h4&gt;
+&lt;p&gt;静的性能チューニングは、例えば、NICのportが意図のリンク速度でLINK UPしているか？等の設定、状態を確認していくこと。&lt;/p&gt;
 &lt;h4&gt;2.5.17 Cache Tuning&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;そもそもキャッシュ機能が有効になっているか？&lt;/li&gt;
+&lt;li&gt;キャッシュのヒット率/ミス率&lt;/li&gt;
+&lt;li&gt;キャッシュサイズが動的に変わる場合の現在のサイズ&lt;/li&gt;
+&lt;li&gt;複数レイヤにキャッシュがある場合、処理をしている一番近くでキャッシュが効いているか？&lt;/li&gt;
+&lt;li&gt;CPUキャッシュ(L1/L2/L3)の場合、レイヤごとに削れるレイテンシと効果が異なってくる。&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h4&gt;2.5.18 Micro-Benchmarking&lt;/h4&gt;
-&lt;h3&gt;2.6. Modeling&lt;/h3&gt;
+&lt;p&gt;アプリケーションレベルだと負荷自体が複雑になりすぎて問題点がわかりにくいことも多いが、「ピンポン通信」等の、これ以上分解できないくらい細かい視点でのベンチマーク。&lt;/p&gt;
+&lt;h3&gt;2.6 Modeling&lt;/h3&gt;
 &lt;h4&gt;2.6.1 Enterprise versus Cloud&lt;/h4&gt;
+&lt;p&gt;TBD&lt;/p&gt;
 &lt;h4&gt;2.6.2 Visual Identification&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Linear scalability&lt;/li&gt;
-&lt;li&gt;Contention&lt;/li&gt;
-&lt;li&gt;Coherence&lt;/li&gt;
-&lt;li&gt;Knee point&lt;/li&gt;
-&lt;li&gt;Scalability Ceiling&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;性能特性をグラフにしてみると、特徴的なパターンがいくつかある。
+* Linear scalability (線形)
+* Contention (競合)
+* Coherence　(干渉)
+* Knee point (適切な日本語が見つからないのだが、まあ折れているということ)
+* Scalability Ceiling (天井にあたったように水平になってしまうこと)&lt;/p&gt;
 &lt;h4&gt;2.6.3 Amdahl's Law of Scalability&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;C(N) = N/(1 + α(N-1))  (C: relative capacity)&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;いわゆるアムダールの法則。&lt;/p&gt;
+&lt;p&gt;C(N) = N/(1 + α(N-1))&lt;/p&gt;
 &lt;h4&gt;2.6.4 Universal Scalability Law&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;C(N) = N/(α(N-1) + βN(N-1))&lt;/li&gt;
-&lt;/ul&gt;
+&lt;p&gt;C(N) = N/(α(N-1) + βN(N-1))&lt;/p&gt;
 &lt;h4&gt;2.6.5 Queueing Theory - 待ち行列理論&lt;/h4&gt;
+&lt;p&gt;待ち行列大事。典型的には以下くらい？&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;M/M/1, M/M/c, M/G/1, M/D/1&lt;/li&gt;
+&lt;li&gt;M/M/1&lt;/li&gt;
+&lt;li&gt;M/M/c&lt;/li&gt;
+&lt;li&gt;M/G/1&lt;/li&gt;
+&lt;li&gt;M/D/1    &lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3&gt;2.7 Capacity Planning&lt;/h3&gt;
+&lt;p&gt;TBD&lt;/p&gt;
 &lt;h4&gt;2.7.1. Resource Limits&lt;/h4&gt;
 &lt;h4&gt;2.7.2 Factor Analysis&lt;/h4&gt;
 &lt;h4&gt;2.7.3 Scaling Solutions&lt;/h4&gt;
 &lt;h3&gt;2.8 Statistics&lt;/h3&gt;
+&lt;p&gt;統計も大事。だが、TBD。&lt;/p&gt;
 &lt;h4&gt;2.8.1 Quantifying Performance&lt;/h4&gt;
 &lt;h4&gt;2.8.2 Averages&lt;/h4&gt;
+&lt;p&gt;「平均値」って何種類もあるって意識していただろうか？&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Arithmetric, Geometric, Harmonic, Averages over Time, Decayed&lt;/li&gt;
+&lt;li&gt;アルキメデスの3平均&lt;ul&gt;
+&lt;li&gt;Arithmetric&lt;/li&gt;
+&lt;li&gt;Geometric&lt;/li&gt;
+&lt;li&gt;Harmonic&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Averages over Time&lt;/li&gt;
+&lt;li&gt;Decayed Average&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h4&gt;2.8.3 Standard Deviationos, Percentiles, Median&lt;/h4&gt;
 &lt;h4&gt;2.8.4 Coefficient of Variation&lt;/h4&gt;
@@ -204,12 +210,13 @@
 &lt;h3&gt;2.10 Visualizations&lt;/h3&gt;
 &lt;h4&gt;2.10.1 Line Chart&lt;/h4&gt;
 &lt;h4&gt;2.10.2 Scatter Plots&lt;/h4&gt;
+&lt;p&gt;散布図の有用性をちゃんと意識している人って少ないような気がする。&lt;/p&gt;
 &lt;h4&gt;2.10.3 Heat Maps&lt;/h4&gt;
 &lt;h4&gt;2.10.4 Surface Plot&lt;/h4&gt;
 &lt;h4&gt;2.10.5 Visualization Tools&lt;/h4&gt;
 &lt;h3&gt;2.11 Exercises&lt;/h3&gt;
 &lt;h3&gt;2.12 References&lt;/h3&gt;
-&lt;h2&gt;13. Case Study : むかーし、Redis がなにかも知らなかった頃の話&lt;/h2&gt;</content><category term="tech"></category></entry><entry><title>[ja] back to basics - SRECon19 EMEA revisited, and beyond</title><link href="https://thatsdone.github.io/junkbox/backtobasics_srecon19emea_revisited.html" rel="alternate"></link><published>2020-01-13T12:21:00+09:00</published><updated>2020-01-13T12:21:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-13:/junkbox/backtobasics_srecon19emea_revisited.html</id><summary type="html">&lt;p&gt;SRE Methodologies&lt;/p&gt;</summary><content type="html">&lt;p&gt;さて、SRECon (や、USENIX LISA)では、ここしばらくCore Principles トラックという形で、
+&lt;h2&gt;13. Case Study : むかーし、Redis がナニモノかも知らなかった頃の話&lt;/h2&gt;</content><category term="tech"></category></entry><entry><title>[ja] back to basics - SRECon19 EMEA revisited, and beyond</title><link href="https://thatsdone.github.io/junkbox/backtobasics_srecon19emea_revisited.html" rel="alternate"></link><published>2020-01-13T12:21:00+09:00</published><updated>2020-01-13T12:21:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-13:/junkbox/backtobasics_srecon19emea_revisited.html</id><summary type="html">&lt;p&gt;SRE Methodologies&lt;/p&gt;</summary><content type="html">&lt;p&gt;さて、SRECon (や、USENIX LISA)では、ここしばらくCore Principles トラックという形で、
 SREのチームの作り方やSREチームの運営のしかた…等といった話を多数聞くことができるわけですが、
 &lt;a href="https://thatsdone.github.io/junkbox/srecon19emea.html"&gt;前に書いた記事&lt;/a&gt;で少し触れたように、
 &lt;a href="https://www.usenix.org/conference/srecon19emea/"&gt;SRECon19EMEA&lt;/a&gt;の特徴だった、
