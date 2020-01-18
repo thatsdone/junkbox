@@ -282,7 +282,25 @@ SREのチームの作り方やSREチームの運営のしかた…等といっ�
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;/ol&gt;</content><category term="tech"></category></entry><entry><title>[ja] SRECon19 EMEA</title><link href="https://thatsdone.github.io/junkbox/srecon19emea.html" rel="alternate"></link><published>2019-10-03T14:30:00+09:00</published><updated>2019-10-03T14:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-03:/junkbox/srecon19emea.html</id><summary type="html">&lt;p&gt;SRECon19EMEA&lt;/p&gt;</summary><content type="html">&lt;p&gt;アイルランドのダブリンで開催中の &lt;a href="https://www.usenix.org/conference/srecon19emea/"&gt;SRECon19EMEA&lt;/a&gt; に来ています。&lt;/p&gt;
+&lt;/ol&gt;
+&lt;h2&gt;SRE Core Principles&lt;/h2&gt;
+&lt;p&gt;TBD&lt;/p&gt;
+&lt;h2&gt;TPS : Toyota Production System - トヨタ生産方式&lt;/h2&gt;
+&lt;p&gt;まずはとりあえず、関連情報のリンクだけ。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;『トヨタ生産方式』ー脱規模の経営をめざしてー (大野耐一・著)&lt;/li&gt;
+&lt;li&gt;https://www.amazon.co.jp/dp/4478460019/&lt;/li&gt;
+&lt;li&gt;ISBN-10: 4478460019&lt;/li&gt;
+&lt;li&gt;ISBN-13: 978-4478460016&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;1978年5月25日 初版発行&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;参考&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;トヨタ生産方式のかんばん&lt;a href="https://ja.wikipedia.org/wiki/%E3%82%AB%E3%83%B3%E3%83%90%E3%83%B3"&gt;ja&lt;/a&gt;/&lt;a href="https://en.wikipedia.org/wiki/Kanban"&gt;en&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;ソフト開発のカンバン&lt;a href="https://ja.wikipedia.org/wiki/%E3%81%8B%E3%82%93%E3%81%B0%E3%82%93_(%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E9%96%8B%E7%99%BA)"&gt;ja&lt;/a&gt;/&lt;a href="https://en.wikipedia.org/wiki/Kanban_(development)"&gt;en&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] SRECon19 EMEA</title><link href="https://thatsdone.github.io/junkbox/srecon19emea.html" rel="alternate"></link><published>2019-10-03T14:30:00+09:00</published><updated>2019-10-03T14:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-03:/junkbox/srecon19emea.html</id><summary type="html">&lt;p&gt;SRECon19EMEA&lt;/p&gt;</summary><content type="html">&lt;p&gt;アイルランドのダブリンで開催中の &lt;a href="https://www.usenix.org/conference/srecon19emea/"&gt;SRECon19EMEA&lt;/a&gt; に来ています。&lt;/p&gt;
 &lt;p&gt;ダブリンは初めてで、気温をみて寒そう…とは思っていたのですが、10月頭でもう冬みたいな恰好をしている人が多いとは想像しておらず、
 正直、外は寒いです(苦笑)&lt;/p&gt;
 &lt;p&gt;初日で一番面白かったのはGoogleの Todd Underwood さんの以下のセッションでしょうか。&lt;/p&gt;
