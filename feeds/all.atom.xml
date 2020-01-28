@@ -103,29 +103,47 @@
 &lt;p&gt;着目すべきリソースは、リソースの一覧表を使う(CPU/Memory/Network/Storage/Controller等)、機能ブロック図(例として図2.13)から考える方法がある。&lt;/p&gt;
 &lt;p&gt;リソースの種別ごとに様々な metric がある。(表2.5と表2.6)手元のツールで取得できない metric は known-unknownとして意識しておくべき。&lt;/p&gt;
 &lt;p&gt;CPUのようなハードウェアリソース以外に「ソフトウェアリソース」がある。例えば、mutex lock の衝突数等、thread poolの空き状況等。&lt;/p&gt;
-&lt;p&gt;解釈の例
-    * Utilization
-        * きちんと評価するには、待ち行列を使って考えるべし。
-    * Saturation
-        * 飽和状態が発生しているということは問題な可能性がある。待ちキューの長さ滞留時間を調べる。
-    * Error
-        * エラーのカウンタが0でなく、数値が増え続けているのであれば調べる価値がある。&lt;/p&gt;
+&lt;p&gt;解釈の例&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Utilization&lt;ul&gt;
+&lt;li&gt;きちんと評価するには、待ち行列を使って考えるべし。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Saturation&lt;ul&gt;
+&lt;li&gt;飽和状態が発生しているということは問題な可能性がある。待ちキューの長さ滞留時間を調べる。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Error&lt;ul&gt;
+&lt;li&gt;エラーのカウンタが0でなく、数値が増え続けているのであれば調べる価値がある。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h4&gt;2.5.10 Workload Characterization&lt;/h4&gt;
-&lt;p&gt;「ワークロードの説明」をしておくのは、問題点を明らかにするための良い方法。以下の4つを問うことによって説明できる。
-    1. Who : 誰が負荷を発生させているのか？ PID？UID？remote IP address？
-    2. Why : なぜその負荷が発生しているのか？code pathをstack traceで調べる？
-    3. What : その負荷の特徴は？IOPS？throughput？方向(read/write) ？分散(や標準偏差)も込みで。
-    4. How : その負荷には時間に依存したパターンがあるか？日時など。&lt;/p&gt;
+&lt;p&gt;「ワークロードの説明」をしておくのは、問題点を明らかにするための良い方法。以下の4つを問うことによって説明できる。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Who : 誰が負荷を発生させているのか？ PID？UID？remote IP address？&lt;/li&gt;
+&lt;li&gt;Why : なぜその負荷が発生しているのか？code pathをstack traceで調べる？&lt;/li&gt;
+&lt;li&gt;What : その負荷の特徴は？IOPS？throughput？方向(read/write) ？分散(や標準偏差)も込みで。&lt;/li&gt;
+&lt;li&gt;How : その負荷には時間に依存したパターンがあるか？日時など。&lt;/li&gt;
+&lt;/ol&gt;
 &lt;h4&gt;2.5.11 Drill-Down Analysis&lt;/h4&gt;
-&lt;p&gt;いわゆる段階的詳細化。以下の３段階がある。
-    1. Monitoring
-        * 継続的にリソースの監視を行う。
-    2. Identification
-        * 特定のリソースの挙動によって、ありうるボトルネックを特定する。
-    3. Analysis
-        * 根本原因の特定と問題の定量化を試みる。
-* 「なぜは５回くりかえせ」…って、某自動車メーカーでも言っていますね。
-   * ただし「５回」自体にはあまり意味はなくて、例えば "human error" で「なぜ」の追及をやめるな…等、あります。&lt;/p&gt;
+&lt;p&gt;いわゆる段階的詳細化。以下の３段階がある。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Monitoring&lt;ul&gt;
+&lt;li&gt;継続的にリソースの監視を行う。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Identification&lt;ul&gt;
+&lt;li&gt;特定のリソースの挙動によって、ありうるボトルネックを特定する。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Analysis&lt;ul&gt;
+&lt;li&gt;根本原因の特定と問題の定量化を試みる。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;「なぜは５回くりかえせ」…って、某自動車メーカーでも言っていますね。
+ただし「５回」自体にはあまり意味はなくて、例えば "human error" で「なぜ」の追及をやめるな…等、あります。&lt;/p&gt;
 &lt;h4&gt;2.5.12 Latency Analysis&lt;/h4&gt;
 &lt;p&gt;１つのリクエストの処理を細かい部分処理に分解・分析していく。根本原因を特定・定量化できるように、最も時間のかかっている部分処理を調べる。&lt;/p&gt;
 &lt;h4&gt;2.5.13 Method R (by Oracle)&lt;/h4&gt;
@@ -155,12 +173,14 @@
 &lt;h4&gt;2.6.1 Enterprise versus Cloud&lt;/h4&gt;
 &lt;p&gt;TBD&lt;/p&gt;
 &lt;h4&gt;2.6.2 Visual Identification&lt;/h4&gt;
-&lt;p&gt;性能特性をグラフにしてみると、特徴的なパターンがいくつかある。
-* Linear scalability (線形)
-* Contention (競合)
-* Coherence　(干渉)
-* Knee point (適切な日本語が見つからないのだが、まあ折れているということ)
-* Scalability Ceiling (天井にあたったように水平になってしまうこと)&lt;/p&gt;
+&lt;p&gt;性能特性をグラフにしてみると、特徴的なパターンがいくつかある。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Linear scalability (線形)&lt;/li&gt;
+&lt;li&gt;Contention (競合)&lt;/li&gt;
+&lt;li&gt;Coherence　(干渉)&lt;/li&gt;
+&lt;li&gt;Knee point (適切な日本語が見つからないのだが、まあ折れているということ)&lt;/li&gt;
+&lt;li&gt;Scalability Ceiling (天井にあたったように水平になってしまうこと)&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h4&gt;2.6.3 Amdahl's Law of Scalability&lt;/h4&gt;
 &lt;p&gt;いわゆるアムダールの法則。&lt;/p&gt;
 &lt;p&gt;C(N) = N/(1 + α(N-1))&lt;/p&gt;
@@ -186,9 +206,9 @@
 &lt;p&gt;「平均値」って何種類もあるって意識していただろうか？&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;アルキメデスの3平均&lt;ul&gt;
-&lt;li&gt;Arithmetric&lt;/li&gt;
-&lt;li&gt;Geometric&lt;/li&gt;
-&lt;li&gt;Harmonic&lt;/li&gt;
+&lt;li&gt;Arithmetric - 算術平均(一番普通に使うやつ)&lt;/li&gt;
+&lt;li&gt;Geometric - 幾何平均&lt;/li&gt;
+&lt;li&gt;Harmonic 調和平均(Fの定義で出てきますね)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;Averages over Time&lt;/li&gt;

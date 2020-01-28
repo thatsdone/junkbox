@@ -167,29 +167,47 @@
 <p>着目すべきリソースは、リソースの一覧表を使う(CPU/Memory/Network/Storage/Controller等)、機能ブロック図(例として図2.13)から考える方法がある。</p>
 <p>リソースの種別ごとに様々な metric がある。(表2.5と表2.6)手元のツールで取得できない metric は known-unknownとして意識しておくべき。</p>
 <p>CPUのようなハードウェアリソース以外に「ソフトウェアリソース」がある。例えば、mutex lock の衝突数等、thread poolの空き状況等。</p>
-<p>解釈の例
-    * Utilization
-        * きちんと評価するには、待ち行列を使って考えるべし。
-    * Saturation
-        * 飽和状態が発生しているということは問題な可能性がある。待ちキューの長さ滞留時間を調べる。
-    * Error
-        * エラーのカウンタが0でなく、数値が増え続けているのであれば調べる価値がある。</p>
+<p>解釈の例</p>
+<ul>
+<li>Utilization<ul>
+<li>きちんと評価するには、待ち行列を使って考えるべし。</li>
+</ul>
+</li>
+<li>Saturation<ul>
+<li>飽和状態が発生しているということは問題な可能性がある。待ちキューの長さ滞留時間を調べる。</li>
+</ul>
+</li>
+<li>Error<ul>
+<li>エラーのカウンタが0でなく、数値が増え続けているのであれば調べる価値がある。</li>
+</ul>
+</li>
+</ul>
 <h4>2.5.10 Workload Characterization</h4>
-<p>「ワークロードの説明」をしておくのは、問題点を明らかにするための良い方法。以下の4つを問うことによって説明できる。
-    1. Who : 誰が負荷を発生させているのか？ PID？UID？remote IP address？
-    2. Why : なぜその負荷が発生しているのか？code pathをstack traceで調べる？
-    3. What : その負荷の特徴は？IOPS？throughput？方向(read/write) ？分散(や標準偏差)も込みで。
-    4. How : その負荷には時間に依存したパターンがあるか？日時など。</p>
+<p>「ワークロードの説明」をしておくのは、問題点を明らかにするための良い方法。以下の4つを問うことによって説明できる。</p>
+<ol>
+<li>Who : 誰が負荷を発生させているのか？ PID？UID？remote IP address？</li>
+<li>Why : なぜその負荷が発生しているのか？code pathをstack traceで調べる？</li>
+<li>What : その負荷の特徴は？IOPS？throughput？方向(read/write) ？分散(や標準偏差)も込みで。</li>
+<li>How : その負荷には時間に依存したパターンがあるか？日時など。</li>
+</ol>
 <h4>2.5.11 Drill-Down Analysis</h4>
-<p>いわゆる段階的詳細化。以下の３段階がある。
-    1. Monitoring
-        * 継続的にリソースの監視を行う。
-    2. Identification
-        * 特定のリソースの挙動によって、ありうるボトルネックを特定する。
-    3. Analysis
-        * 根本原因の特定と問題の定量化を試みる。
-* 「なぜは５回くりかえせ」…って、某自動車メーカーでも言っていますね。
-   * ただし「５回」自体にはあまり意味はなくて、例えば "human error" で「なぜ」の追及をやめるな…等、あります。</p>
+<p>いわゆる段階的詳細化。以下の３段階がある。</p>
+<ol>
+<li>Monitoring<ul>
+<li>継続的にリソースの監視を行う。</li>
+</ul>
+</li>
+<li>Identification<ul>
+<li>特定のリソースの挙動によって、ありうるボトルネックを特定する。</li>
+</ul>
+</li>
+<li>Analysis<ul>
+<li>根本原因の特定と問題の定量化を試みる。</li>
+</ul>
+</li>
+</ol>
+<p>「なぜは５回くりかえせ」…って、某自動車メーカーでも言っていますね。
+ただし「５回」自体にはあまり意味はなくて、例えば "human error" で「なぜ」の追及をやめるな…等、あります。</p>
 <h4>2.5.12 Latency Analysis</h4>
 <p>１つのリクエストの処理を細かい部分処理に分解・分析していく。根本原因を特定・定量化できるように、最も時間のかかっている部分処理を調べる。</p>
 <h4>2.5.13 Method R (by Oracle)</h4>
@@ -219,12 +237,14 @@
 <h4>2.6.1 Enterprise versus Cloud</h4>
 <p>TBD</p>
 <h4>2.6.2 Visual Identification</h4>
-<p>性能特性をグラフにしてみると、特徴的なパターンがいくつかある。
-* Linear scalability (線形)
-* Contention (競合)
-* Coherence　(干渉)
-* Knee point (適切な日本語が見つからないのだが、まあ折れているということ)
-* Scalability Ceiling (天井にあたったように水平になってしまうこと)</p>
+<p>性能特性をグラフにしてみると、特徴的なパターンがいくつかある。</p>
+<ul>
+<li>Linear scalability (線形)</li>
+<li>Contention (競合)</li>
+<li>Coherence　(干渉)</li>
+<li>Knee point (適切な日本語が見つからないのだが、まあ折れているということ)</li>
+<li>Scalability Ceiling (天井にあたったように水平になってしまうこと)</li>
+</ul>
 <h4>2.6.3 Amdahl's Law of Scalability</h4>
 <p>いわゆるアムダールの法則。</p>
 <p>C(N) = N/(1 + α(N-1))</p>
@@ -250,9 +270,9 @@
 <p>「平均値」って何種類もあるって意識していただろうか？</p>
 <ul>
 <li>アルキメデスの3平均<ul>
-<li>Arithmetric</li>
-<li>Geometric</li>
-<li>Harmonic</li>
+<li>Arithmetric - 算術平均(一番普通に使うやつ)</li>
+<li>Geometric - 幾何平均</li>
+<li>Harmonic 調和平均(Fの定義で出てきますね)</li>
 </ul>
 </li>
 <li>Averages over Time</li>
