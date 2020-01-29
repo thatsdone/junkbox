@@ -1,5 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2020-01-14T00:01:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Methodologies of Systems Performance - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html" rel="alternate"></link><published>2020-01-14T00:01:00+09:00</published><updated>2020-01-14T00:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-14:/junkbox/methodologies_of_systems_performance.html</id><summary type="html">&lt;p&gt;Methodologies of Peformance Analysis&lt;/p&gt;</summary><content type="html">&lt;p&gt;Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;Systems Performance: Enterprise and the Cloud&lt;/a&gt;" という本があります。
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2020-01-29T22:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] BPF Performance Tools - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/bpf_performance_tools.html" rel="alternate"></link><published>2020-01-29T22:30:00+09:00</published><updated>2020-01-29T22:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-29:/junkbox/bpf_performance_tools.html</id><summary type="html">&lt;p&gt;Linux System and Application Observability by BPF&lt;/p&gt;</summary><content type="html">&lt;p&gt;海外出張しているうちに、Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF Performance Tools&lt;/a&gt;" が届いていました。:)&lt;/p&gt;
+&lt;p&gt;&lt;a href="(https://www.amazon.co.jp/dp/0133390098)"&gt;前著&lt;/a&gt;の&lt;a href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html"&gt;まとめ&lt;/a&gt;を書いている最中ではあるのですが、こっちもまとめようかと思います。(つまり、やっぱり書きかけ…)&lt;/p&gt;
+&lt;h2&gt;本書の構成&lt;/h2&gt;
+&lt;p&gt;まず、目次の章レベルの構成は以下のような感じになっています。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Part I : Technologies
+    1. Introduction
+    2. Technology Background
+    3. Performance Analysis
+    4. BCC
+    5. bpftrace
+Part II : Using BPF Tools
+    6. CPUs
+    7. Memory
+    8. Filesystems
+    9. Disk I/O
+    10. Networking
+    11. Security
+    12. Laguages
+    13. Applications
+    14. Kernel
+    15. Containers
+    16. Hypervisors
+Part III : Additional Topics
+    17. Other BPF Performance Tools
+    18. Tips, Tricks and Common Problems
+Part IV : Appendixes
+    A. BPF Trace One-Liners
+    B. BPF Trace Cheat Sheet
+    C. BCC Tool Development
+    D. C BPF
+    E. BPF Instructions&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Part Iで大事なのは3章の3.2節"Performance Methodologies"でしょうか。この3.2節に相当する内容は、前著では2章すべてをあててかなり包括的に性能解析の考え方を説明していたのですが、本書では必要最小限のかなりコンパクトな量におさえています。
+そのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。&lt;/p&gt;
+&lt;p&gt;Part IIは、前著でいうと5章以降の、"Application"や"CPU"といった具体的な切り口に即したBPF関連ツールの使い方の紹介です。なお、15章のContainersと16章のHypervisorsは、前著にも含まれないトピック自体新しい内容なので、最初は全体を流す人も読んだほうがいいかもしれません。(というか私もそうします(笑))&lt;/p&gt;
+&lt;p&gt;Part IIIの17章は "Other BPF Performance Tools" とはなっているのですが、Prometheus等のモニタリングツールとの組みあわせや、kubernetes との連携話もあり、読み飛ばせません。また、18章も "Tips, Tricks and Common Problems" というタイトルが示すように、実用上おさえておきたい勘所が載っているようです。&lt;/p&gt;
+&lt;p&gt;ところで、ここまであたかも読了したような書きぶりですが、読みながらメモっています。
+なので、当分は更新が続くと思います。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Methodologies of Systems Performance - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html" rel="alternate"></link><published>2020-01-14T00:01:00+09:00</published><updated>2020-01-14T00:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-14:/junkbox/methodologies_of_systems_performance.html</id><summary type="html">&lt;p&gt;Methodologies of Peformance Analysis&lt;/p&gt;</summary><content type="html">&lt;p&gt;Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;Systems Performance: Enterprise and the Cloud&lt;/a&gt;" という本があります。
 (翻訳は&lt;a href="https://www.amazon.co.jp/dp/4873117909/"&gt;こちら&lt;/a&gt;) 言わずと知れた DTrace の作者が書いた本で、
 全体的な考え方から、CPU・メモリ…等と、具体的な観点ごとに包括的かつ詳細に解説されているので非常によい本です。
 軽い勉強会みたいなやつで使おうと思って、まずは方法論(Methodology)が書いてある2章のまとめを作っています。

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] BPF Performance Tools - Brendan Gregg | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/bpf_performance_tools.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Linux System and Application Observability by BPF">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] BPF Performance Tools - Brendan Gregg
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-01-29T22:30:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Wed 29 January 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>海外出張しているうちに、Brendan Gregg の "<a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/">BPF Performance Tools</a>" が届いていました。:)</p>
+<p><a href="(https://www.amazon.co.jp/dp/0133390098)">前著</a>の<a href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html">まとめ</a>を書いている最中ではあるのですが、こっちもまとめようかと思います。(つまり、やっぱり書きかけ…)</p>
+<h2>本書の構成</h2>
+<p>まず、目次の章レベルの構成は以下のような感じになっています。</p>
+<p><code>Part I : Technologies
+    1. Introduction
+    2. Technology Background
+    3. Performance Analysis
+    4. BCC
+    5. bpftrace
+Part II : Using BPF Tools
+    6. CPUs
+    7. Memory
+    8. Filesystems
+    9. Disk I/O
+    10. Networking
+    11. Security
+    12. Laguages
+    13. Applications
+    14. Kernel
+    15. Containers
+    16. Hypervisors
+Part III : Additional Topics
+    17. Other BPF Performance Tools
+    18. Tips, Tricks and Common Problems
+Part IV : Appendixes
+    A. BPF Trace One-Liners
+    B. BPF Trace Cheat Sheet
+    C. BCC Tool Development
+    D. C BPF
+    E. BPF Instructions</code></p>
+<p>Part Iで大事なのは3章の3.2節"Performance Methodologies"でしょうか。この3.2節に相当する内容は、前著では2章すべてをあててかなり包括的に性能解析の考え方を説明していたのですが、本書では必要最小限のかなりコンパクトな量におさえています。
+そのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。</p>
+<p>Part IIは、前著でいうと5章以降の、"Application"や"CPU"といった具体的な切り口に即したBPF関連ツールの使い方の紹介です。なお、15章のContainersと16章のHypervisorsは、前著にも含まれないトピック自体新しい内容なので、最初は全体を流す人も読んだほうがいいかもしれません。(というか私もそうします(笑))</p>
+<p>Part IIIの17章は "Other BPF Performance Tools" とはなっているのですが、Prometheus等のモニタリングツールとの組みあわせや、kubernetes との連携話もあり、読み飛ばせません。また、18章も "Tips, Tricks and Common Problems" というタイトルが示すように、実用上おさえておきたい勘所が載っているようです。</p>
+<p>ところで、ここまであたかも読了したような書きぶりですが、読みながらメモっています。
+なので、当分は更新が続くと思います。</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
