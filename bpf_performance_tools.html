@@ -96,11 +96,47 @@ Part IV : Appendixes
     E BPF Instructions
 </code></pre>
 <p>Part Iで大事なのは3章の3.2節"Performance Methodologies"でしょうか。この3.2節に相当する内容は、前著では2章すべてをあててかなり包括的に性能解析の考え方を説明していたのですが、本書では必要最小限のかなりコンパクトな量におさえています。
-そのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。</p>
+Part Iではそのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。</p>
 <p>Part IIは、前著でいうと5章以降の、"Application"や"CPU"といった具体的な切り口に即したBPF関連ツールの使い方の紹介です。なお、15章のContainersと16章のHypervisorsは、前著にも含まれないトピック自体新しい内容なので、最初は全体を流す人も読んだほうがいいかもしれません。(というか私もそうします(笑))</p>
 <p>Part IIIの17章は "Other BPF Performance Tools" とはなっているのですが、Prometheus等のモニタリングツールとの組みあわせや、kubernetes との連携話もあり、読み飛ばせません。また、18章も "Tips, Tricks and Common Problems" というタイトルが示すように、実用上おさえておきたい勘所が載っているようです。</p>
 <p>ところで、ここまであたかも読了したような書きぶりですが、読みながらメモっています。
 なので、当分は更新が続くと思います。</p>
+<h2>留意事項:Ubuntu 18.04(Bionic)でのインストール</h2>
+<p>本書も<a href="https://www.amazon.co.jp/dp/477419607X">武内さんの本</a>と同じように「試して理解」するのが重要だと思いますが、現時点でUbuntuで使いたい人に、インストールで一点留意事項があります。</p>
+<p>まず、インストール方法は4.3節の"BCC Installation"で各種distroでのインストール方法が解説されています。</p>
+<p>Ubuntuの場合はuniverseにbpfcc-toolsというパッケージ名で入っているのでこれを入れてもよいのですが、特に 18.04(Bionic)付属のものは古いので、できれば新しいものを使いたいところです。4.3.2 節のUbuntu用の説明では、https://repo.iovisor.org/ の apt-line が紹介されているのですが、'20/2時点でメンテナンスが止まっているようです。</p>
+<p>調べてみたところ、Colin Ian Kingさんがメンテしているppaから最新版が入れられるようなので、どうしても自前でビルドしたい人以外はこちらを使うとよいでしょう。</p>
+<p><a href="https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports">https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports</a></p>
+<p>以下の手順でインストールできます。(bpftraceも一緒に入れてください)</p>
+<p>```bash
+sudo add-apt-repository ppa:colin-king/bpftrace-backports
+sudo apt-get update</p>
+<p>sudo apt-get install bpfcc-tools bpftrace
+```</p>
+<h2>性能分析の方法論</h2>
+<p>一番大事なところ(だと私は思う)、性能分析の方法論は3.2節で解説されています。</p>
+<p>具体的には以下の通りですが、1) 問題を定義する、2) 段階的詳細化、3) 構造の理解の上でリソースの状態の分析…と、もっともな内容になっています。</p>
+<ul>
+<li>3.2.1節 Workload Characterization</li>
+<li>3.2.2節 Drill-Analysis</li>
+<li>3.2.3節 USE Method</li>
+<li>3.2.4節 Checklists</li>
+</ul>
+<p>チェックリストで定型化するのはサポート部隊等でよく取られる手段ですが、直後の3.3節ではLinuxの場合に1分でできるチェックリストの実例ということで以下のようなコマンドが挙がっています。</p>
+<ol>
+<li><code>uptime</code></li>
+<li><code>dmesg | tail</code></li>
+<li><code>vmstat 1</code></li>
+<li><code>mpstat -P ALL 1</code></li>
+<li><code>pidstat 1</code></li>
+<li><code>iostat -xz 1</code></li>
+<li><code>free -m</code></li>
+<li><code>sar -n DEV 1</code></li>
+<li><code>sar -n TCP,ETCP 1</code></li>
+<li><code>top</code></li>
+</ol>
+<p>本書で詳細に解説される bpfcc-tools 付属の各種スクリプトやツールで同等のことはできるのですが、
+上記は大体どんな環境にも入っていますし、併用するのも有益でしょう…という記述もあります。</p>
     </div>
   </article>
     </div>

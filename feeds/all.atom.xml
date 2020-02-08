@@ -32,11 +32,47 @@ Part IV : Appendixes
     E BPF Instructions
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Part Iで大事なのは3章の3.2節"Performance Methodologies"でしょうか。この3.2節に相当する内容は、前著では2章すべてをあててかなり包括的に性能解析の考え方を説明していたのですが、本書では必要最小限のかなりコンパクトな量におさえています。
-そのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。&lt;/p&gt;
+Part Iではそのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。&lt;/p&gt;
 &lt;p&gt;Part IIは、前著でいうと5章以降の、"Application"や"CPU"といった具体的な切り口に即したBPF関連ツールの使い方の紹介です。なお、15章のContainersと16章のHypervisorsは、前著にも含まれないトピック自体新しい内容なので、最初は全体を流す人も読んだほうがいいかもしれません。(というか私もそうします(笑))&lt;/p&gt;
 &lt;p&gt;Part IIIの17章は "Other BPF Performance Tools" とはなっているのですが、Prometheus等のモニタリングツールとの組みあわせや、kubernetes との連携話もあり、読み飛ばせません。また、18章も "Tips, Tricks and Common Problems" というタイトルが示すように、実用上おさえておきたい勘所が載っているようです。&lt;/p&gt;
 &lt;p&gt;ところで、ここまであたかも読了したような書きぶりですが、読みながらメモっています。
-なので、当分は更新が続くと思います。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Methodologies of Systems Performance - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html" rel="alternate"></link><published>2020-01-14T00:01:00+09:00</published><updated>2020-01-14T00:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-14:/junkbox/methodologies_of_systems_performance.html</id><summary type="html">&lt;p&gt;Methodologies of Peformance Analysis&lt;/p&gt;</summary><content type="html">&lt;p&gt;Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;Systems Performance: Enterprise and the Cloud&lt;/a&gt;" という本があります。
+なので、当分は更新が続くと思います。&lt;/p&gt;
+&lt;h2&gt;留意事項:Ubuntu 18.04(Bionic)でのインストール&lt;/h2&gt;
+&lt;p&gt;本書も&lt;a href="https://www.amazon.co.jp/dp/477419607X"&gt;武内さんの本&lt;/a&gt;と同じように「試して理解」するのが重要だと思いますが、現時点でUbuntuで使いたい人に、インストールで一点留意事項があります。&lt;/p&gt;
+&lt;p&gt;まず、インストール方法は4.3節の"BCC Installation"で各種distroでのインストール方法が解説されています。&lt;/p&gt;
+&lt;p&gt;Ubuntuの場合はuniverseにbpfcc-toolsというパッケージ名で入っているのでこれを入れてもよいのですが、特に 18.04(Bionic)付属のものは古いので、できれば新しいものを使いたいところです。4.3.2 節のUbuntu用の説明では、https://repo.iovisor.org/ の apt-line が紹介されているのですが、'20/2時点でメンテナンスが止まっているようです。&lt;/p&gt;
+&lt;p&gt;調べてみたところ、Colin Ian Kingさんがメンテしているppaから最新版が入れられるようなので、どうしても自前でビルドしたい人以外はこちらを使うとよいでしょう。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports"&gt;https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;以下の手順でインストールできます。(bpftraceも一緒に入れてください)&lt;/p&gt;
+&lt;p&gt;```bash
+sudo add-apt-repository ppa:colin-king/bpftrace-backports
+sudo apt-get update&lt;/p&gt;
+&lt;p&gt;sudo apt-get install bpfcc-tools bpftrace
+```&lt;/p&gt;
+&lt;h2&gt;性能分析の方法論&lt;/h2&gt;
+&lt;p&gt;一番大事なところ(だと私は思う)、性能分析の方法論は3.2節で解説されています。&lt;/p&gt;
+&lt;p&gt;具体的には以下の通りですが、1) 問題を定義する、2) 段階的詳細化、3) 構造の理解の上でリソースの状態の分析…と、もっともな内容になっています。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;3.2.1節 Workload Characterization&lt;/li&gt;
+&lt;li&gt;3.2.2節 Drill-Analysis&lt;/li&gt;
+&lt;li&gt;3.2.3節 USE Method&lt;/li&gt;
+&lt;li&gt;3.2.4節 Checklists&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;チェックリストで定型化するのはサポート部隊等でよく取られる手段ですが、直後の3.3節ではLinuxの場合に1分でできるチェックリストの実例ということで以下のようなコマンドが挙がっています。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;uptime&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dmesg | tail&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;vmstat 1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;mpstat -P ALL 1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;pidstat 1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;iostat -xz 1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;free -m&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sar -n DEV 1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sar -n TCP,ETCP 1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;top&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;本書で詳細に解説される bpfcc-tools 付属の各種スクリプトやツールで同等のことはできるのですが、
+上記は大体どんな環境にも入っていますし、併用するのも有益でしょう…という記述もあります。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Methodologies of Systems Performance - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html" rel="alternate"></link><published>2020-01-14T00:01:00+09:00</published><updated>2020-01-14T00:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-14:/junkbox/methodologies_of_systems_performance.html</id><summary type="html">&lt;p&gt;Methodologies of Peformance Analysis&lt;/p&gt;</summary><content type="html">&lt;p&gt;Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;Systems Performance: Enterprise and the Cloud&lt;/a&gt;" という本があります。
 (翻訳は&lt;a href="https://www.amazon.co.jp/dp/4873117909/"&gt;こちら&lt;/a&gt;) 言わずと知れた DTrace の作者が書いた本で、
 全体的な考え方から、CPU・メモリ…等と、具体的な観点ごとに包括的かつ詳細に解説されているので非常によい本です。
 軽い勉強会みたいなやつで使おうと思って、まずは方法論(Methodology)が書いてある2章のまとめを作っています。
