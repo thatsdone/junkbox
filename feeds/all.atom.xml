@@ -1,6 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2020-01-29T22:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] BPF Performance Tools - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/bpf_performance_tools.html" rel="alternate"></link><published>2020-01-29T22:30:00+09:00</published><updated>2020-01-29T22:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-29:/junkbox/bpf_performance_tools.html</id><summary type="html">&lt;p&gt;Linux System and Application Observability by BPF&lt;/p&gt;</summary><content type="html">&lt;p&gt;海外出張しているうちに、Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF Performance Tools&lt;/a&gt;" が届いていました。:)&lt;/p&gt;
-&lt;p&gt;&lt;a href="(https://www.amazon.co.jp/dp/0133390098)"&gt;前著&lt;/a&gt;の&lt;a href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html"&gt;まとめ&lt;/a&gt;を書いている最中ではあるのですが、こっちもまとめようかと思います。(つまり、やっぱり書きかけ…)&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2020-02-11T21:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Kubernetes Patterns</title><link href="https://thatsdone.github.io/junkbox/book_kubernetes_patterns.html" rel="alternate"></link><published>2020-02-11T21:00:00+09:00</published><updated>2020-02-11T21:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-11:/junkbox/book_kubernetes_patterns.html</id><summary type="html">&lt;p&gt;Kubernetes Patterns - Reusable Elements for Designing Cloud-Native Applications&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF本&lt;/a&gt;の話も書きかけなのですが、そういえば同僚がSan Diego でもらってきた本の中に&lt;a href="https://www.amazon.co.jp/dp/1492050288"&gt;Kubernetes Patterns: Reusable Elements for Designing Cloud-Native Applications&lt;/a&gt;もありました。&lt;/p&gt;
+&lt;p&gt;同じく章構成はこんな感じになっています。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;    1. Introduction
+
+Part I : Foundation Patterns
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まずは基本パターン…というよりは、見てわかる通り、k8s を使いこなすにあたって押さえておくべき基本概念ですね。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;    2 Predcitable Dememands
+    3 Declarative Deployments
+    4 Health Probe
+    5 Managed Lifecycle
+    6 Automated Placement
+
+Part II : Behavioral Patterns
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;プログラムやサービスの挙動に応じたパターン分類。だいたい名が体を表しているように思いますが、ぱっと見て11のStateful Serviceと13のSelf Awarenessの違いって何よ？と思ったのですが、Self Awarenessのほうは、コンテナが自分が動ているpodを意識する必要があるようなケースのためのものです。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;    7 Batch Job
+    8 Periodic Job
+    9 Daemon Service
+    10 Singleton Service
+    11 Stateful Service
+    12 Service Discovery
+    13 Self Awareness
+
+Part III : Structural Patterns
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Part IIIはプログラムやサービスの構造に基づいたパターン分類。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;    14 Init Container
+    15 Side Car
+    16 Adapter
+    17 Ambasaddor
+
+Part IV : Configuration Patterns
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;プログラムやサービスの設定情報をどう持ってまわるか？に基づいたパターン分類。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;    18 EnvVar Configuration
+    19 Confiuration Resource
+    20 Immutable Configuration
+    21 Configuration Template
+
+Part V : Advanced Patterns
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;進んだトピック。22のControllerと23のOperatorは、いわゆる kubernetes のController/Operatorの解説、24はkubernetesによってアプリケーションをスケールさせる方法、最後の25はここまでの話題とは少し毛色が変わってkubernetes clusterの中でイメージを維持管理する方法論です。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;    22 Controller
+    23 Operator
+    24 Elastic Scale
+    25 Image Builder
+
+    Aferword
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;まとめ。&lt;/p&gt;
+&lt;p&gt;さて、ここまでざっと本の構造を眺めただけなので、ちゃんと読まなくては(笑)&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] BPF Performance Tools - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/book_bpf_performance_tools.html" rel="alternate"></link><published>2020-01-29T22:30:00+09:00</published><updated>2020-01-29T22:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-29:/junkbox/book_bpf_performance_tools.html</id><summary type="html">&lt;p&gt;Linux System and Application Observability by BPF&lt;/p&gt;</summary><content type="html">&lt;p&gt;海外出張しているうちに、Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF Performance Tools&lt;/a&gt;" が届いていました。:)&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;前著&lt;/a&gt;の&lt;a href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html"&gt;まとめ&lt;/a&gt;を書いている最中ではあるのですが、こっちもまとめようかと思います。(つまり、やっぱり書きかけ…)&lt;/p&gt;
 &lt;h2&gt;本書の構成&lt;/h2&gt;
 &lt;p&gt;まず、目次の章レベルの構成は以下のような感じになっています。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;Part I : Technologies
@@ -72,7 +123,7 @@ sudo apt-get update&lt;/p&gt;
 &lt;li&gt;&lt;code&gt;top&lt;/code&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;本書で詳細に解説される bpfcc-tools 付属の各種スクリプトやツールで同等のことはできるのですが、
-上記は大体どんな環境にも入っていますし、併用するのも有益でしょう…という記述もあります。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Methodologies of Systems Performance - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html" rel="alternate"></link><published>2020-01-14T00:01:00+09:00</published><updated>2020-01-14T00:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-14:/junkbox/methodologies_of_systems_performance.html</id><summary type="html">&lt;p&gt;Methodologies of Peformance Analysis&lt;/p&gt;</summary><content type="html">&lt;p&gt;Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;Systems Performance: Enterprise and the Cloud&lt;/a&gt;" という本があります。
+上記は大体どんな環境にも入っていますし、併用するのも有益でしょう…という記述もあります。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Methodologies of Systems Performance - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/book_methodologies_of_systems_performance.html" rel="alternate"></link><published>2020-01-14T00:01:00+09:00</published><updated>2020-01-14T00:01:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-14:/junkbox/book_methodologies_of_systems_performance.html</id><summary type="html">&lt;p&gt;Methodologies of Peformance Analysis&lt;/p&gt;</summary><content type="html">&lt;p&gt;Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;Systems Performance: Enterprise and the Cloud&lt;/a&gt;" という本があります。
 (翻訳は&lt;a href="https://www.amazon.co.jp/dp/4873117909/"&gt;こちら&lt;/a&gt;) 言わずと知れた DTrace の作者が書いた本で、
 全体的な考え方から、CPU・メモリ…等と、具体的な観点ごとに包括的かつ詳細に解説されているので非常によい本です。
 軽い勉強会みたいなやつで使おうと思って、まずは方法論(Methodology)が書いてある2章のまとめを作っています。
@@ -397,7 +448,7 @@ SREのチームの作り方やSREチームの運営のしかた…等といっ�
 &lt;li&gt;ソフト開発のカンバン&lt;a href="https://ja.wikipedia.org/wiki/%E3%81%8B%E3%82%93%E3%81%B0%E3%82%93_(%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E9%96%8B%E7%99%BA)"&gt;ja&lt;/a&gt;/&lt;a href="https://en.wikipedia.org/wiki/Kanban_(development)"&gt;en&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] Light Novels - Princess Marines</title><link href="https://thatsdone.github.io/junkbox/light_novel2.html" rel="alternate"></link><published>2019-10-29T22:30:00+09:00</published><updated>2019-10-29T22:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-29:/junkbox/light_novel2.html</id><summary type="html">&lt;p&gt;Light Novels - 公爵家令嬢が海兵隊の新兵教育を受けたら!?&lt;/p&gt;</summary><content type="html">&lt;p&gt;さて、私が読んでいるラノベも、例にもれず異世界ファンタジーものが多いのですが、
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] Light Novels - Princess Marines</title><link href="https://thatsdone.github.io/junkbox/book_light_novel2.html" rel="alternate"></link><published>2019-10-29T22:30:00+09:00</published><updated>2019-10-29T22:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-10-29:/junkbox/book_light_novel2.html</id><summary type="html">&lt;p&gt;Light Novels - 公爵家令嬢が海兵隊の新兵教育を受けたら!?&lt;/p&gt;</summary><content type="html">&lt;p&gt;さて、私が読んでいるラノベも、例にもれず異世界ファンタジーものが多いのですが、
 このジャンルはパターン化したものがとても^2多いのも事実。&lt;/p&gt;
 &lt;p&gt;一部の文章が軽妙で読みやすいものや設定が面白いもの以外は、さすがに食傷気味だったのですが、
 ひさしぶりに面白いのを見つけました。&lt;/p&gt;
@@ -495,7 +546,7 @@ Control Theory (制御理論)、Fault Tree Analysis といった、数十年前�
 &lt;p&gt;私は主に Core Principle の Track に出ていました。具体的にこの手法でうまくいったよ…という話もあることはありましたが、
 むしろ Silver Bullet はない。利用者のことをよく知り、自分の頭で考えるべし。ついてはその指針は…という話を多く聞くことができました。
 現状の私には非常に参考になる話でした。&lt;/p&gt;
-&lt;p&gt;3月の SRECon '20 North America はスケジュールの都合で出席できないのですが、来年度もどれかのSREConに顔を出したいと思います。 :)&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Light Novels</title><link href="https://thatsdone.github.io/junkbox/light_novel.html" rel="alternate"></link><published>2019-09-29T18:00:00+09:00</published><updated>2019-09-29T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-29:/junkbox/light_novel.html</id><summary type="html">&lt;p&gt;Light Novels, so called La-Nobe in Japan / ラノベ話(その１)&lt;/p&gt;</summary><content type="html">&lt;p&gt;ここ１年ほど、隙間時間はラノベを読んでいることが多いです。&lt;/p&gt;
+&lt;p&gt;3月の SRECon '20 North America はスケジュールの都合で出席できないのですが、来年度もどれかのSREConに顔を出したいと思います。 :)&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Light Novels</title><link href="https://thatsdone.github.io/junkbox/book_light_novel.html" rel="alternate"></link><published>2019-09-29T18:00:00+09:00</published><updated>2019-09-29T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-29:/junkbox/book_light_novel.html</id><summary type="html">&lt;p&gt;Light Novels, so called La-Nobe in Japan / ラノベ話(その１)&lt;/p&gt;</summary><content type="html">&lt;p&gt;ここ１年ほど、隙間時間はラノベを読んでいることが多いです。&lt;/p&gt;
 &lt;p&gt;その昔は、ラノベは敬遠していたのですが、幼女戦記のアニメをチラ見した後、原作を読み、他にも…といろいろ読みはじめたらハマってしまいました(笑)&lt;/p&gt;
 &lt;p&gt;これまで読んだものはけっこうな量になるのですが、以下はとりあえず印象に残ったもののリストです。そのうちもっと増やすかも(笑)&lt;/p&gt;
 &lt;ul&gt;
@@ -567,7 +618,7 @@ Control Theory (制御理論)、Fault Tree Analysis といった、数十年前�
 &lt;li&gt;異世界ファンタジー。転生なし。この世界観、とても好き。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;/ul&gt;</content><category term="novel"></category></entry><entry><title>[ja] BGP in the Data Center</title><link href="https://thatsdone.github.io/junkbox/bgp_in_the_datacenter.html" rel="alternate"></link><published>2019-09-21T20:00:00+09:00</published><updated>2019-09-21T20:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-21:/junkbox/bgp_in_the_datacenter.html</id><summary type="html">&lt;p&gt;BGP in the Data Center&lt;/p&gt;</summary><content type="html">&lt;p&gt;一部で話題の O'reily の "BGP in the Data Center" を読んだ。&lt;/p&gt;
+&lt;/ul&gt;</content><category term="novel"></category></entry><entry><title>[ja] BGP in the Data Center</title><link href="https://thatsdone.github.io/junkbox/book_bgp_in_the_datacenter.html" rel="alternate"></link><published>2019-09-21T20:00:00+09:00</published><updated>2019-09-21T20:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2019-09-21:/junkbox/book_bgp_in_the_datacenter.html</id><summary type="html">&lt;p&gt;BGP in the Data Center&lt;/p&gt;</summary><content type="html">&lt;p&gt;一部で話題の O'reily の "BGP in the Data Center" を読んだ。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;[https://www.oreilly.com/library/view/bgp-in-the/9781491983416/(https://www.oreilly.com/library/view/bgp-in-the/9781491983416/)&lt;/li&gt;
 &lt;/ul&gt;

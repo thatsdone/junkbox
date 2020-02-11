@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] Kubernetes Patterns | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/book_kubernetes_patterns.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Kubernetes Patterns - Reusable Elements for Designing Cloud-Native Applications">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] Kubernetes Patterns
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2020-02-11T21:00:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Tue 11 February 2020
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p><a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/">BPF本</a>の話も書きかけなのですが、そういえば同僚がSan Diego でもらってきた本の中に<a href="https://www.amazon.co.jp/dp/1492050288">Kubernetes Patterns: Reusable Elements for Designing Cloud-Native Applications</a>もありました。</p>
+<p>同じく章構成はこんな感じになっています。</p>
+<pre><code>    1. Introduction
+
+Part I : Foundation Patterns
+</code></pre>
+<p>まずは基本パターン…というよりは、見てわかる通り、k8s を使いこなすにあたって押さえておくべき基本概念ですね。</p>
+<pre><code>    2 Predcitable Dememands
+    3 Declarative Deployments
+    4 Health Probe
+    5 Managed Lifecycle
+    6 Automated Placement
+
+Part II : Behavioral Patterns
+</code></pre>
+<p>プログラムやサービスの挙動に応じたパターン分類。だいたい名が体を表しているように思いますが、ぱっと見て11のStateful Serviceと13のSelf Awarenessの違いって何よ？と思ったのですが、Self Awarenessのほうは、コンテナが自分が動ているpodを意識する必要があるようなケースのためのものです。</p>
+<pre><code>    7 Batch Job
+    8 Periodic Job
+    9 Daemon Service
+    10 Singleton Service
+    11 Stateful Service
+    12 Service Discovery
+    13 Self Awareness
+
+Part III : Structural Patterns
+</code></pre>
+<p>Part IIIはプログラムやサービスの構造に基づいたパターン分類。</p>
+<pre><code>    14 Init Container
+    15 Side Car
+    16 Adapter
+    17 Ambasaddor
+
+Part IV : Configuration Patterns
+</code></pre>
+<p>プログラムやサービスの設定情報をどう持ってまわるか？に基づいたパターン分類。</p>
+<pre><code>    18 EnvVar Configuration
+    19 Confiuration Resource
+    20 Immutable Configuration
+    21 Configuration Template
+
+Part V : Advanced Patterns
+</code></pre>
+<p>進んだトピック。22のControllerと23のOperatorは、いわゆる kubernetes のController/Operatorの解説、24はkubernetesによってアプリケーションをスケールさせる方法、最後の25はここまでの話題とは少し毛色が変わってkubernetes clusterの中でイメージを維持管理する方法論です。</p>
+<pre><code>    22 Controller
+    23 Operator
+    24 Elastic Scale
+    25 Image Builder
+
+    Aferword
+</code></pre>
+<p>まとめ。</p>
+<p>さて、ここまでざっと本の構造を眺めただけなので、ちゃんと読まなくては(笑)</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
