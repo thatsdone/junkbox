@@ -1,5 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2020-02-12T23:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Light Novels (3)</title><link href="https://thatsdone.github.io/junkbox/book_light_novel3.html" rel="alternate"></link><published>2020-02-12T23:30:00+09:00</published><updated>2020-02-12T23:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-12:/junkbox/book_light_novel3.html</id><summary type="html">&lt;p&gt;Exceptionally Interesting Ideas - ラノベ話(その３) - その発想はなかったわー&lt;/p&gt;</summary><content type="html">&lt;p&gt;前にも書いた&lt;a href="https://thatsdone.github.io/junkbox/book_light_novel1.html"&gt;ラノベ話&lt;/a&gt;の続き。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2020-02-13T23:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Jupyter Notebook Dynamic Plot</title><link href="https://thatsdone.github.io/junkbox/jupyter_notebook_dynamic_plot.html" rel="alternate"></link><published>2020-02-13T23:00:00+09:00</published><updated>2020-02-13T23:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-13:/junkbox/jupyter_notebook_dynamic_plot.html</id><summary type="html">&lt;p&gt;Jupyter Notebookで動くグラフを描画したい&lt;/p&gt;</summary><content type="html">&lt;p&gt;Jupyter Notebookを使っていて、どんどんあたらしい結果が出てくる場合等、描画結果を動的に更新したいと思って調べたメモ。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/39658717/plot-dynamically-changing-graph-using-matplotlib-in-jupyter-notebook"&gt;Plot dynamically changing graph using matplotlib in Jupyter Notebook&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;このやりとりによると、自前でやる方法もいろいろあるようだが、matplotlib の animation を使うのが一番基本なのかな。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=rkBPgTL-D3Y"&gt;Developing Advanced Plots with Matplotlib : Interactive  Plots in the Jupyter Notebook | packtpub.com&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;ipywidgets　を入れて使う方法。すごく詳しいライブ解説。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://towardsdatascience.com/interactive-visualizations-in-jupyter-notebook-3be02ab2b8cd"&gt;Interactive Visualizations In Jupyter Notebook&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Plotly と ipywidgets　を入れる方法。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://github.com/matplotlib/matplotlib/issues/9606"&gt;Attempt to create a dynamically changing plot in console and notebook&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;こんな matplotlib の issueを見つけたのだが、まだopen状態のようだ...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</content><category term="novel"></category></entry><entry><title>[ja] Light Novels (3)</title><link href="https://thatsdone.github.io/junkbox/book_light_novel3.html" rel="alternate"></link><published>2020-02-12T23:30:00+09:00</published><updated>2020-02-12T23:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-12:/junkbox/book_light_novel3.html</id><summary type="html">&lt;p&gt;Exceptionally Interesting Ideas - ラノベ話(その３) - その発想はなかったわー&lt;/p&gt;</summary><content type="html">&lt;p&gt;前にも書いた&lt;a href="https://thatsdone.github.io/junkbox/book_light_novel1.html"&gt;ラノベ話&lt;/a&gt;の続き。&lt;/p&gt;
 &lt;p&gt;異世界ファンタジーものは、これでもか…と似たような話がてんこ盛りなわけですが、それでも「その発想はなかったわー」というのがけっこうあったりします。そういうものをいくつか。(再掲も含みます)&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://kakuyomu.jp/works/1177354054885338663"&gt;モニカの奇妙な相棒　～　最強スキルは、俺自身！？　～&lt;/a&gt;&lt;ul&gt;
