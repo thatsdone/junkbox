@@ -137,47 +137,50 @@ OrderedDict([('ARROW:schema', '/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAAC
 <p>確かに動くのですが、これで最適なのか、確認要。(TBD)</p>
 <h3>pyarrow.json では Objectのネストはできない</h3>
 <p>以下の例では "key4"の値はさらにObject(Pythonではdcit)になっていますが、これは<code>pyarrow.json.read_json()</code>に食わせるとエラーになるようです。</p>
-<p>{
+<pre><code>{
+  "key1": 1,
+  "key2": "value2-1",
+  "key3": [
+    "value3-1",
+    "value3-1"
+  ],
+  "key4": {
+    "key41": 4,
+    "key42": "value42"
+  }
+}
+</code></pre>
+<h3>JSONで許されているトップレベルの名無しArrayは通らない</h3>
+<p>JSONの規格上、以下のようなデータは許されているのですが、</p>
+<pre><code>[
+  {
     "key1": 1,
     "key2": "value2-1",
     "key3": [
       "value3-1",
       "value3-1"
-    ],
-    "key4": {
-      "key41": 4,
-      "key42": "value42"
-    }
-  }</p>
-<h3>JSONで許されているトップレベルの名無しArrayは通らない</h3>
-<p>JSONの規格上、以下のようなデータは許されているのですが、</p>
-<p>[
-    {
-      "key1": 1,
-      "key2": "value2-1",
-      "key3": [
-        "value3-1",
-        "value3-1"
       ] 
-    },
-    {
-      "key1": 2,
-      "key2": "value2-2",
-      "key3": [
-        "value3-2",
-        "value3-2"
-      ]
-    }
-  ]</p>
+  },
+  {
+    "key1": 2,
+    "key2": "value2-2",
+    "key3": [
+      "value3-2",
+      "value3-2"
+    ]
+  }
+]
+</code></pre>
 <p>しかし、こんな感じでエラーになります。
 これは、Arrayの要素を1つに減らしても同じです。</p>
-<p>$ python test.py
-  Traceback (most recent call last):
-    File "test.py", line 6, in <module>
-      table = pajson.read_json('test3.json')
-    File "pyarrow/_json.pyx", line 193, in pyarrow._json.read_json
-    File "pyarrow/error.pxi", line 84, in pyarrow.lib.check_status
-  pyarrow.lib.ArrowInvalid: JSON parse error: Column() changed from object to array in row 0</p>
+<pre><code>$ python test.py
+Traceback (most recent call last):
+  File "test.py", line 6, in &lt;module&gt;
+    table = pajson.read_json('test3.json')
+  File "pyarrow/_json.pyx", line 193, in pyarrow._json.read_json
+  File "pyarrow/error.pxi", line 84, in pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid: JSON parse error: Column() changed from object to array in row 0
+</code></pre>
 <p>続きます。</p>
     </div>
   </article>
