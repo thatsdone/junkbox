@@ -23,12 +23,12 @@ $ pip install pyarrow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h2&gt;とりあえずやってみたこと&lt;/h2&gt;
 &lt;p&gt;以下のようなテストデータを作って&lt;/p&gt;
-&lt;p&gt;~~~json
- {
+&lt;p&gt;~~~&lt;br /&gt;
+  {
     "key1": 1,
     "key2": "value2-1",
     "key3": ["value3-1", "value3-1"]
- }
+  }
 ~~~&lt;/p&gt;
 &lt;p&gt;以下のようなプログラムで試しました。&lt;/p&gt;
 &lt;p&gt;~~~python
