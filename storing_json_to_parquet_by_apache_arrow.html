@@ -93,36 +93,35 @@ $ pip install pyarrow
     "key3": ["value3-1", "value3-1"]
   }</p>
 <p>以下のようなプログラムで試しました。</p>
-<p>```python
-  import pyarrow.parquet as pq
-  from pyarrow import json as pajson</p>
-<p>table = pajson.read_json('test.json')</p>
-<p>print('==================write table')
-  pq.write_table(table, 'test.parquet')</p>
-<p>print('==================using parquet.read_schema')
-  schema = pq.read_schema('test.parquet')
-  print(schema)
-```</p>
+<pre><code>import pyarrow.parquet as pq
+from pyarrow import json as pajson
+
+table = pajson.read_json('test.json')
+
+print('==================write table')
+pq.write_table(table, 'test.parquet')
+
+print('==================using parquet.read_schema')
+schema = pq.read_schema('test.parquet')
+print(schema)
+</code></pre>
 <p>実行するとこんな感じになります。</p>
-<p>~~~shell
- $ python test.py
- ==================write table
- ==================using parquet.read_schema
- key1: int64
- key2: string
- key3: list<item: string>
-   child 0, item: string
- metadata</p>
-<hr />
-<p>OrderedDict([('ARROW:schema', '/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=')])
-~~~</p>
+<pre><code>$ python test.py
+==================write table
+==================using parquet.read_schema
+key1: int64
+key2: string
+key3: list&lt;item: string&gt;
+  child 0, item: string
+metadata
+--------
+OrderedDict([('ARROW:schema', '/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=')])
+</code></pre>
 <p>後述の通り、先にスキーマを作らなくても動くのかどうか確認したかったのですが、入力に従ったスキーマが作成されているようです。</p>
 <p>余談ですが、1レコードしかないので、サイズはこんな感じになりますね(苦笑)</p>
-<p>~~~shell
-$   du  -b  test.json test.parquet
-80      test.json
-1232    test.parquet
-~~~</p>
+<p>$ du  -b  test.json test.parquet
+  80        test.json
+  1232  test.parquet</p>
 <h2>TODO</h2>
 <ul>
 <li>圧縮を試す</li>
@@ -138,53 +137,47 @@ $   du  -b  test.json test.parquet
 <p>確かに動くのですが、これで最適なのか、確認要。(TBD)</p>
 <h3>pyarrow.json では Objectのネストはできない</h3>
 <p>以下の例では "key4"の値はさらにObject(Pythonではdcit)になっていますが、これは<code>pyarrow.json.read_json()</code>に食わせるとエラーになるようです。</p>
-<p>~~~json
-{
-  "key1": 1,
-  "key2": "value2-1",
-  "key3": [
-    "value3-1",
-    "value3-1"
-  ],
-  "key4": {
-    "key41": 4,
-    "key42": "value42"
-  }
-}
-~~~</p>
-<h3>JSONで許されているトップレベルの名無しArrayは通らない</h3>
-<p>JSONの規格上、以下のようなデータは許されているのですが、</p>
-<p>~~~json
-[
-  {
+<p>{
     "key1": 1,
     "key2": "value2-1",
     "key3": [
       "value3-1",
       "value3-1"
-    ]
-  },
-  {
-    "key1": 2,
-    "key2": "value2-2",
-    "key3": [
-      "value3-2",
-      "value3-2"
-    ]
-  }
-]
-~~~</p>
+    ],
+    "key4": {
+      "key41": 4,
+      "key42": "value42"
+    }
+  }</p>
+<h3>JSONで許されているトップレベルの名無しArrayは通らない</h3>
+<p>JSONの規格上、以下のようなデータは許されているのですが、</p>
+<p>[
+    {
+      "key1": 1,
+      "key2": "value2-1",
+      "key3": [
+        "value3-1",
+        "value3-1"
+      ] 
+    },
+    {
+      "key1": 2,
+      "key2": "value2-2",
+      "key3": [
+        "value3-2",
+        "value3-2"
+      ]
+    }
+  ]</p>
 <p>しかし、こんな感じでエラーになります。
 これは、Arrayの要素を1つに減らしても同じです。</p>
-<p>~~~shell
-$ python test.py
-Traceback (most recent call last):
-  File "test.py", line 6, in <module>
-    table = pajson.read_json('test3.json')
-  File "pyarrow/_json.pyx", line 193, in pyarrow._json.read_json
-  File "pyarrow/error.pxi", line 84, in pyarrow.lib.check_status
-pyarrow.lib.ArrowInvalid: JSON parse error: Column() changed from object to array in row 0
-~~~</p>
+<p>$ python test.py
+  Traceback (most recent call last):
+    File "test.py", line 6, in <module>
+      table = pajson.read_json('test3.json')
+    File "pyarrow/_json.pyx", line 193, in pyarrow._json.read_json
+    File "pyarrow/error.pxi", line 84, in pyarrow.lib.check_status
+  pyarrow.lib.ArrowInvalid: JSON parse error: Column() changed from object to array in row 0</p>
 <p>続きます。</p>
     </div>
   </article>
