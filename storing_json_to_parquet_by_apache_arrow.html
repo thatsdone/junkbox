@@ -81,11 +81,10 @@
 <h2>インストール</h2>
 <p>大人の事情でCentOS7系で動作確認したかったので、Pythonは(未だに)2.7系を使っています(苦笑)</p>
 <p>Apache Arrow自体は新しいものを使いたかったので、virtualenv を使って以下のようにお手軽に作成しました。</p>
-<p>~~~shell
-$ virtualenv venvs/arrow
+<pre><code>$ virtualenv venvs/arrow
 $ source venvs/arrow/bin/activate
 $ pip install pyarrow
-~~~</p>
+</code></pre>
 <h2>とりあえずやってみたこと</h2>
 <p>以下のようなテストデータを作って</p>
 <p>~~~json
@@ -179,8 +178,8 @@ $   du  -b  test.json test.parquet
 ~~~</p>
 <p>しかし、こんな感じでエラーになります。
 これは、Arrayの要素を1つに減らしても同じです。</p>
-<p>~~~shell</p>
-<p>$ python test.py
+<p>~~~shell
+$ python test.py
 Traceback (most recent call last):
   File "test.py", line 6, in <module>
     table = pajson.read_json('test3.json')
