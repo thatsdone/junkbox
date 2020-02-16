@@ -8,7 +8,11 @@
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;a href="https://arrow.apache.org/docs/index.html"&gt;Apache Arrow ドキュメント&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://dev.classmethod.jp/business/bigdata/20190614-apache-arrow-parquet/"&gt;Apache Arrow(PyArrow)を使って簡単かつ高速にParquetファイルに変換する&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Athena の CTAS (Create Table AS)では、デフォルトではParquetで保存されるらしい。&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://blog.amedama.jp/entry/2017/10/10/135331"&gt;Python: Apache Parquet フォーマットを扱ってみる&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://medium.com/@rajnishtiwari2010/conversion-of-json-to-parquet-format-using-apache-parquet-in-java-b694a0a7487d"&gt;Conversion of JSON to parquet format using Apache Parquet in JAVA&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Javaの場合&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2&gt;インストール&lt;/h2&gt;
 &lt;p&gt;大人の事情でCentOS7系で動作確認したかったので、Pythonは(未だに)2.7系を使っています(苦笑)&lt;/p&gt;
@@ -18,15 +22,16 @@ $ source venvs/arrow/bin/activate
 $ pip install pyarrow&lt;/code&gt;&lt;/p&gt;
 &lt;h2&gt;とりあえずやってみたこと&lt;/h2&gt;
 &lt;p&gt;以下のようなテストデータを作って&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;json
-{
+&lt;p&gt;```json&lt;/p&gt;
+&lt;p&gt;{
     "key1": 1,
     "key2": "value2-1",
     "key3": ["value3-1", "value3-1"]
-}&lt;/code&gt;&lt;/p&gt;
+}
+```&lt;/p&gt;
 &lt;p&gt;以下のようなプログラムで試しました。&lt;/p&gt;
-&lt;p&gt;```python
-import pyarrow.parquet as pq
+&lt;p&gt;```python&lt;/p&gt;
+&lt;p&gt;import pyarrow.parquet as pq
 from pyarrow import json as pajson&lt;/p&gt;
 &lt;p&gt;table = pajson.read_json('test.json')&lt;/p&gt;
 &lt;p&gt;print('==================write table')
@@ -36,8 +41,8 @@ schema = pq.read_schema('test.parquet')
 print(schema)
 ```&lt;/p&gt;
 &lt;p&gt;実行するとこんな感じになります。&lt;/p&gt;
-&lt;p&gt;```shell
-$ python test.py
+&lt;p&gt;```shell&lt;/p&gt;
+&lt;p&gt;$ python test.py
 ==================write table
 ==================using parquet.read_schema
 key1: int64
@@ -50,10 +55,11 @@ metadata&lt;/p&gt;
 ```&lt;/p&gt;
 &lt;p&gt;後述の通り、先にスキーマを作らなくても動くのかどうか確認したかったのですが、入力に従ったスキーマが作成されているようです。&lt;/p&gt;
 &lt;p&gt;余談ですが、1レコードしかないので、サイズはこんな感じになりますね(苦笑)&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;shell
-$   du  -b  test.json test.parquet
+&lt;p&gt;```shell&lt;/p&gt;
+&lt;p&gt;$   du  -b  test.json test.parquet
 80      test.json
-1232    test.parquet&lt;/code&gt;&lt;/p&gt;
+1232    test.parquet
+```&lt;/p&gt;
 &lt;h2&gt;TODO&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;圧縮を試す&lt;/li&gt;
@@ -69,8 +75,8 @@ $   du  -b  test.json test.parquet
 &lt;p&gt;確かに動くのですが、これで最適なのか、確認要。(TBD)&lt;/p&gt;
 &lt;h3&gt;pyarrow.json では Objectのネストはできない&lt;/h3&gt;
 &lt;p&gt;以下の例では "key4"の値はさらにObject(Pythonではdcit)になっていますが、これは&lt;code&gt;pyarrow.json.read_json()&lt;/code&gt;に食わせるとエラーになるようです。&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;json
-{
+&lt;p&gt;```json&lt;/p&gt;
+&lt;p&gt;{
   "key1": 1,
   "key2": "value2-1",
   "key3": [
@@ -81,11 +87,12 @@ $   du  -b  test.json test.parquet
     "key41": 4,
     "key42": "value42"
   }
-}&lt;/code&gt;&lt;/p&gt;
+}
+```&lt;/p&gt;
 &lt;h3&gt;JSONで許されているトップレベルの名無しArrayは通らない&lt;/h3&gt;
 &lt;p&gt;JSONの規格上、以下のようなデータは許されているのですが、&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;json
-[
+&lt;p&gt;```json&lt;/p&gt;
+&lt;p&gt;[
   {
     "key1": 1,
     "key2": "value2-1",
@@ -102,18 +109,42 @@ $   du  -b  test.json test.parquet
       "value3-2"
     ]
   }
-]&lt;/code&gt;&lt;/p&gt;
+]
+```&lt;/p&gt;
 &lt;p&gt;しかし、こんな感じでエラーになります。
 これは、Arrayの要素を1つに減らしても同じです。&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;shell
-$ python test.py
+&lt;p&gt;```shell&lt;/p&gt;
+&lt;p&gt;$ python test.py
 Traceback (most recent call last):
-  File "test.py", line 6, in &amp;lt;module&amp;gt;
+  File "test.py", line 6, in &lt;module&gt;
     table = pajson.read_json('test3.json')
   File "pyarrow/_json.pyx", line 193, in pyarrow._json.read_json
   File "pyarrow/error.pxi", line 84, in pyarrow.lib.check_status
-pyarrow.lib.ArrowInvalid: JSON parse error: Column() changed from object to array in row 0&lt;/code&gt;&lt;/p&gt;
-&lt;p&gt;続きます。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Kubernetes Patterns</title><link href="https://thatsdone.github.io/junkbox/book_kubernetes_patterns.html" rel="alternate"></link><published>2020-02-11T21:00:00+09:00</published><updated>2020-02-11T21:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-11:/junkbox/book_kubernetes_patterns.html</id><summary type="html">&lt;p&gt;Kubernetes Patterns - Reusable Elements for Designing Cloud-Native Applications&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF本&lt;/a&gt;の話も書きかけなのですが、そういえば同僚がSan Diego でもらってきた本の中に&lt;a href="https://www.amazon.co.jp/dp/1492050288"&gt;Kubernetes Patterns: Reusable Elements for Designing Cloud-Native Applications&lt;/a&gt;もありました。&lt;/p&gt;
+pyarrow.lib.ArrowInvalid: JSON parse error: Column() changed from object to array in row 0
+```&lt;/p&gt;
+&lt;p&gt;続きます。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Jupyter Notebook Dynamic Plot</title><link href="https://thatsdone.github.io/junkbox/jupyter_notebook_dynamic_plot.html" rel="alternate"></link><published>2020-02-13T23:00:00+09:00</published><updated>2020-02-13T23:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-13:/junkbox/jupyter_notebook_dynamic_plot.html</id><summary type="html">&lt;p&gt;Jupyter Notebookで動くグラフを描画したい&lt;/p&gt;</summary><content type="html">&lt;p&gt;Jupyter Notebookを使っていて、どんどんあたらしい結果が出てくる場合等、描画結果を動的に更新したいと思って調べたメモ。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/39658717/plot-dynamically-changing-graph-using-matplotlib-in-jupyter-notebook"&gt;Plot dynamically changing graph using matplotlib in Jupyter Notebook&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;このやりとりによると、自前でやる方法もいろいろあるようだが、matplotlib の animation を使うのが一番基本なのかな。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=rkBPgTL-D3Y"&gt;Developing Advanced Plots with Matplotlib : Interactive  Plots in the Jupyter Notebook | packtpub.com&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;ipywidgets　を入れて使う方法。すごく詳しいライブ解説。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://towardsdatascience.com/interactive-visualizations-in-jupyter-notebook-3be02ab2b8cd"&gt;Interactive Visualizations In Jupyter Notebook&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Plotly と ipywidgets　を入れる方法。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://github.com/matplotlib/matplotlib/issues/9606"&gt;Attempt to create a dynamically changing plot in console and notebook&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;こんな matplotlib の issueを見つけたのだが、まだopen状態のようだ...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] Kubernetes Patterns</title><link href="https://thatsdone.github.io/junkbox/book_kubernetes_patterns.html" rel="alternate"></link><published>2020-02-11T21:00:00+09:00</published><updated>2020-02-11T21:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-11:/junkbox/book_kubernetes_patterns.html</id><summary type="html">&lt;p&gt;Kubernetes Patterns - Reusable Elements for Designing Cloud-Native Applications&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF本&lt;/a&gt;の話も書きかけなのですが、そういえば同僚がSan Diego でもらってきた本の中に&lt;a href="https://www.amazon.co.jp/dp/1492050288"&gt;Kubernetes Patterns: Reusable Elements for Designing Cloud-Native Applications&lt;/a&gt;もありました。&lt;/p&gt;
 &lt;p&gt;同じく章構成はこんな感じになっています。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;    1. Introduction
 
