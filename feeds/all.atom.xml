@@ -23,24 +23,22 @@ $ pip install pyarrow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h2&gt;とりあえずやってみたこと&lt;/h2&gt;
 &lt;p&gt;以下のようなテストデータを作って&lt;/p&gt;
-&lt;p&gt;~~~&lt;br /&gt;
-  {
+&lt;p&gt;{
     "key1": 1,
     "key2": "value2-1",
     "key3": ["value3-1", "value3-1"]
-  }
-~~~&lt;/p&gt;
+  }&lt;/p&gt;
 &lt;p&gt;以下のようなプログラムで試しました。&lt;/p&gt;
-&lt;p&gt;~~~python
-import pyarrow.parquet as pq
-from pyarrow import json as pajson&lt;/p&gt;
+&lt;p&gt;```python
+  import pyarrow.parquet as pq
+  from pyarrow import json as pajson&lt;/p&gt;
 &lt;p&gt;table = pajson.read_json('test.json')&lt;/p&gt;
 &lt;p&gt;print('==================write table')
-pq.write_table(table, 'test.parquet')&lt;/p&gt;
+  pq.write_table(table, 'test.parquet')&lt;/p&gt;
 &lt;p&gt;print('==================using parquet.read_schema')
-schema = pq.read_schema('test.parquet')
-print(schema)
-~~~&lt;/p&gt;
+  schema = pq.read_schema('test.parquet')
+  print(schema)
+```&lt;/p&gt;
 &lt;p&gt;実行するとこんな感じになります。&lt;/p&gt;
 &lt;p&gt;~~~shell
  $ python test.py
