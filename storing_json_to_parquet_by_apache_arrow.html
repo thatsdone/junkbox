@@ -72,56 +72,72 @@
 </ul>
 </li>
 <li><a href="https://arrow.apache.org/docs/index.html">Apache Arrow ドキュメント</a></li>
-<li><a href="https://dev.classmethod.jp/business/bigdata/20190614-apache-arrow-parquet/">Apache Arrow(PyArrow)を使って簡単かつ高速にParquetファイルに変換する</a></li>
+<li><a href="https://dev.classmethod.jp/business/bigdata/20190614-apache-arrow-parquet/">Apache Arrow(PyArrow)を使って簡単かつ高速にParquetファイルに変換する</a><ul>
 <li>Athena の CTAS (Create Table AS)では、デフォルトではParquetで保存されるらしい。</li>
+</ul>
+</li>
 <li><a href="https://blog.amedama.jp/entry/2017/10/10/135331">Python: Apache Parquet フォーマットを扱ってみる</a></li>
-<li><a href="https://medium.com/@rajnishtiwari2010/conversion-of-json-to-parquet-format-using-apache-parquet-in-java-b694a0a7487d">Conversion of JSON to parquet format using Apache Parquet in JAVA</a></li>
+<li><a href="https://medium.com/@rajnishtiwari2010/conversion-of-json-to-parquet-format-using-apache-parquet-in-java-b694a0a7487d">Conversion of JSON to parquet format using Apache Parquet in JAVA</a><ul>
 <li>Javaの場合</li>
+</ul>
+</li>
 </ul>
 <h2>インストール</h2>
 <p>大人の事情でCentOS7系で動作確認したかったので、Pythonは(未だに)2.7系を使っています(苦笑)</p>
 <p>Apache Arrow自体は新しいものを使いたかったので、virtualenv を使って以下のようにお手軽に作成しました。</p>
-<pre><code>$ virtualenv venvs/arrow
-$ source venvs/arrow/bin/activate
+<div class="highlight"><pre><span></span><code>$ virtualenv venvs/arrow
+$ <span class="nb">source</span> venvs/arrow/bin/activate
 $ pip install pyarrow
-</code></pre>
+</code></pre></div>
+
+
 <h2>とりあえずやってみたこと</h2>
 <p>以下のようなテストデータを作って</p>
-<p>{
-    "key1": 1,
-    "key2": "value2-1",
-    "key3": ["value3-1", "value3-1"]
-  }</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
+     <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;value3-1&quot;</span><span class="p">,</span> <span class="s2">&quot;value3-1&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+
+
 <p>以下のようなプログラムで試しました。</p>
-<pre><code>import pyarrow.parquet as pq
-from pyarrow import json as pajson
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">pyarrow.parquet</span> <span class="kn">as</span> <span class="nn">pq</span>
+<span class="kn">from</span> <span class="nn">pyarrow</span> <span class="kn">import</span> <span class="n">json</span> <span class="k">as</span> <span class="n">pajson</span>
 
-table = pajson.read_json('test.json')
+<span class="n">table</span> <span class="o">=</span> <span class="n">pajson</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="s1">&#39;test.json&#39;</span><span class="p">)</span>
 
-print('==================write table')
-pq.write_table(table, 'test.parquet')
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;==================write table&#39;</span><span class="p">)</span>
+<span class="n">pq</span><span class="o">.</span><span class="n">write_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s1">&#39;test.parquet&#39;</span><span class="p">)</span>
 
-print('==================using parquet.read_schema')
-schema = pq.read_schema('test.parquet')
-print(schema)
-</code></pre>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;==================using parquet.read_schema&#39;</span><span class="p">)</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">read_schema</span><span class="p">(</span><span class="s1">&#39;test.parquet&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+</code></pre></div>
+
+
 <p>実行するとこんな感じになります。</p>
-<pre><code>$ python test.py
-==================write table
-==================using parquet.read_schema
+<div class="highlight"><pre><span></span><code>$ python test.py
+<span class="o">==================</span>write <span class="nv">table</span>
+<span class="o">==================</span>using parquet.read_schema
 key1: int64
 key2: string
 key3: list&lt;item: string&gt;
-  child 0, item: string
+  child <span class="m">0</span>, item: string
 metadata
 --------
-OrderedDict([('ARROW:schema', '/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=')])
-</code></pre>
+OrderedDict<span class="o">([(</span><span class="s1">&#39;ARROW:schema&#39;</span>, <span class="s1">&#39;/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=&#39;</span><span class="o">)])</span>
+</code></pre></div>
+
+
 <p>後述の通り、先にスキーマを作らなくても動くのかどうか確認したかったのですが、入力に従ったスキーマが作成されているようです。</p>
 <p>余談ですが、1レコードしかないので、サイズはこんな感じになりますね(苦笑)</p>
-<p>$ du  -b  test.json test.parquet
-  80        test.json
-  1232  test.parquet</p>
+<div class="highlight"><pre><span></span><code>$ du -b test.json test.parquet
+<span class="m">80</span>      test.json
+<span class="m">232</span> test.parquet
+</code></pre></div>
+
+
 <h2>TODO</h2>
 <ul>
 <li>圧縮を試す</li>
@@ -137,50 +153,56 @@ OrderedDict([('ARROW:schema', '/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAAC
 <p>確かに動くのですが、これで最適なのか、確認要。(TBD)</p>
 <h3>pyarrow.json では Objectのネストはできない</h3>
 <p>以下の例では "key4"の値はさらにObject(Pythonではdcit)になっていますが、これは<code>pyarrow.json.read_json()</code>に食わせるとエラーになるようです。</p>
-<pre><code>{
-  "key1": 1,
-  "key2": "value2-1",
-  "key3": [
-    "value3-1",
-    "value3-1"
-  ],
-  "key4": {
-    "key41": 4,
-    "key42": "value42"
-  }
-}
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+  <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;value3-1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;value3-1&quot;</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;key4&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;key41&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="nt">&quot;key42&quot;</span><span class="p">:</span> <span class="s2">&quot;value42&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+
 <h3>JSONで許されているトップレベルの名無しArrayは通らない</h3>
 <p>JSONの規格上、以下のようなデータは許されているのですが、</p>
-<pre><code>[
-  {
-    "key1": 1,
-    "key2": "value2-1",
-    "key3": [
-      "value3-1",
-      "value3-1"
-      ] 
-  },
-  {
-    "key1": 2,
-    "key2": "value2-2",
-    "key3": [
-      "value3-2",
-      "value3-2"
-    ]
-  }
-]
-</code></pre>
+<div class="highlight"><pre><span></span><code><span class="p">[</span>
+  <span class="p">{</span>
+    <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;value3-1&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;value3-1&quot;</span>
+      <span class="p">]</span> 
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-2&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;value3-2&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;value3-2&quot;</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+
+
 <p>しかし、こんな感じでエラーになります。
 これは、Arrayの要素を1つに減らしても同じです。</p>
-<pre><code>$ python test.py
-Traceback (most recent call last):
-  File "test.py", line 6, in &lt;module&gt;
-    table = pajson.read_json('test3.json')
-  File "pyarrow/_json.pyx", line 193, in pyarrow._json.read_json
-  File "pyarrow/error.pxi", line 84, in pyarrow.lib.check_status
-pyarrow.lib.ArrowInvalid: JSON parse error: Column() changed from object to array in row 0
-</code></pre>
+<div class="highlight"><pre><span></span><code>$ python test.py
+Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:
+  File <span class="s2">&quot;test.py&quot;</span>, line <span class="m">6</span>, in &lt;module&gt;
+    <span class="nv">table</span> <span class="o">=</span> pajson.read_json<span class="o">(</span><span class="s1">&#39;test3.json&#39;</span><span class="o">)</span>
+  File <span class="s2">&quot;pyarrow/_json.pyx&quot;</span>, line <span class="m">193</span>, in pyarrow._json.read_json
+  File <span class="s2">&quot;pyarrow/error.pxi&quot;</span>, line <span class="m">84</span>, in pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid: JSON parse error: Column<span class="o">()</span> changed from object to array in row <span class="m">0</span>
+</code></pre></div>
+
+
 <p>続きます。</p>
     </div>
   </article>
