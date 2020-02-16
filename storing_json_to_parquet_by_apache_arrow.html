@@ -86,7 +86,7 @@ $ source venvs/arrow/bin/activate
 $ pip install pyarrow</code></p>
 <h2>とりあえずやってみたこと</h2>
 <p>以下のようなテストデータを作って</p>
-<p>```json</p>
+<p>```</p>
 <p>{
     "key1": 1,
     "key2": "value2-1",
@@ -94,7 +94,7 @@ $ pip install pyarrow</code></p>
 }
 ```</p>
 <p>以下のようなプログラムで試しました。</p>
-<p>```python</p>
+<p>```</p>
 <p>import pyarrow.parquet as pq
 from pyarrow import json as pajson</p>
 <p>table = pajson.read_json('test.json')</p>
@@ -105,7 +105,7 @@ schema = pq.read_schema('test.parquet')
 print(schema)
 ```</p>
 <p>実行するとこんな感じになります。</p>
-<p>```shell</p>
+<p>```</p>
 <p>$ python test.py
 ==================write table
 ==================using parquet.read_schema
