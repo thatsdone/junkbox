@@ -18,38 +18,37 @@
 &lt;p&gt;大人の事情でCentOS7系で動作確認したかったので、Pythonは(未だに)2.7系を使っています(苦笑)&lt;/p&gt;
 &lt;p&gt;Apache Arrow自体は新しいものを使いたかったので、virtualenv を使って以下のようにお手軽に作成しました。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;$ virtualenv venvs/arrow
-$ source venvs/arrow/bin/activate
-$ pip install pyarrow&lt;/code&gt;&lt;/p&gt;
+ $ source venvs/arrow/bin/activate
+ $ pip install pyarrow&lt;/code&gt;&lt;/p&gt;
 &lt;h2&gt;とりあえずやってみたこと&lt;/h2&gt;
 &lt;p&gt;以下のようなテストデータを作って&lt;/p&gt;
-&lt;p&gt;```&lt;/p&gt;
-&lt;p&gt;{
+&lt;p&gt;&lt;code&gt;json
+ {
     "key1": 1,
     "key2": "value2-1",
     "key3": ["value3-1", "value3-1"]
-}
-```&lt;/p&gt;
+ }&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;以下のようなプログラムで試しました。&lt;/p&gt;
-&lt;p&gt;```&lt;/p&gt;
-&lt;p&gt;import pyarrow.parquet as pq
-from pyarrow import json as pajson&lt;/p&gt;
+&lt;p&gt;```python
+  import pyarrow.parquet as pq
+  from pyarrow import json as pajson&lt;/p&gt;
 &lt;p&gt;table = pajson.read_json('test.json')&lt;/p&gt;
 &lt;p&gt;print('==================write table')
-pq.write_table(table, 'test.parquet')&lt;/p&gt;
+  pq.write_table(table, 'test.parquet')&lt;/p&gt;
 &lt;p&gt;print('==================using parquet.read_schema')
-schema = pq.read_schema('test.parquet')
-print(schema)
+  schema = pq.read_schema('test.parquet')
+  print(schema)
 ```&lt;/p&gt;
 &lt;p&gt;実行するとこんな感じになります。&lt;/p&gt;
-&lt;p&gt;```&lt;/p&gt;
-&lt;p&gt;$ python test.py
-==================write table
-==================using parquet.read_schema
-key1: int64
-key2: string
-key3: list&lt;item: string&gt;
-  child 0, item: string
-metadata&lt;/p&gt;
+&lt;p&gt;```shell
+ $ python test.py
+ ==================write table
+ ==================using parquet.read_schema
+ key1: int64
+ key2: string
+ key3: list&lt;item: string&gt;
+   child 0, item: string
+ metadata&lt;/p&gt;
 &lt;hr /&gt;
 &lt;p&gt;OrderedDict([('ARROW:schema', '/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=')])
 ```&lt;/p&gt;
