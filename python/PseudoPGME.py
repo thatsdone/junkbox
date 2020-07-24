@@ -2,10 +2,12 @@
 # PseudoPGME : Yet another pgme running with just python3 and nvidia-smi.
 #
 # Description:
-#   This script returns with compatible output with  pgme
+#   This script returns compatible response with PGME
 #   (Prometheus GPU Metrics Exporter) available at:
 #     https://github.com/chhibber/pgme
 #
+# License:
+#   Apache License, Version 2.0
 # History:
 #   * 2020/07/24 v0.1 Initial version
 # Authour:
