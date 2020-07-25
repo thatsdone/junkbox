@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# PseudoPGME : Yet another pgme running with just python3 and nvidia-smi.
+# PyPGME : Yet another pgme running with just python3 and nvidia-smi.
 #
 # Description:
 #   This script returns compatible response with PGME
@@ -27,7 +27,7 @@ command =  ['nvidia-smi',
 #
 #
 #
-class PseudoPGME(BaseHTTPRequestHandler):
+class PyPGME(BaseHTTPRequestHandler):
 
     def do_GET(self):
 
@@ -80,6 +80,6 @@ if __name__ == "__main__":
         elif o == '-b':
             bind_address = a
 
-    httpd = HTTPServer((bind_address, port), PseudoPGME)
+    httpd = HTTPServer((bind_address, port), PyPGME)
 
     httpd.serve_forever()
