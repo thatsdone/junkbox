@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 #
 # PseudoPGME : Yet another pgme running with just python3 and nvidia-smi.
 #
@@ -52,12 +53,12 @@ class PseudoPGME(BaseHTTPRequestHandler):
              mem_free, mem_used) = l.decode('utf-8').split(',')
 
             gpu_index = int(gpu_index)
-            self.wfile.write(("temperature_gpu{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, gpu_temp)).encode('utf-8'))
-            self.wfile.write(("utilization_gpu{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, gpu_util)).encode('utf-8'))
-            self.wfile.write(("utilization_memory{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, mem_util)).encode('utf-8'))
-            self.wfile.write(("memory_total{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, mem_total)).encode('utf-8'))
-            self.wfile.write(("memory_free{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, mem_free)).encode('utf-8'))
-            self.wfile.write(("memory_used{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, mem_used)).encode('utf-8'))
+            self.wfile.write(("temperature_gpu{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(gpu_temp))).encode('utf-8'))
+            self.wfile.write(("utilization_gpu{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(gpu_util))).encode('utf-8'))
+            self.wfile.write(("utilization_memory{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_util))).encode('utf-8'))
+            self.wfile.write(("memory_total{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_total))).encode('utf-8'))
+            self.wfile.write(("memory_free{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_free))).encode('utf-8'))
+            self.wfile.write(("memory_used{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_used))).encode('utf-8'))
         return
 #
 #
