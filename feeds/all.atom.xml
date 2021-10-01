@@ -1,5 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2021-09-23T17:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[en/ja] Resuming Again/(ふたたび)再開します</title><link href="https://thatsdone.github.io/junkbox/resuming_again.html" rel="alternate"></link><published>2021-09-23T17:30:00+09:00</published><updated>2021-09-23T17:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-09-23:/junkbox/resuming_again.html</id><summary type="html">&lt;p&gt;resuming this page again&lt;/p&gt;</summary><content type="html">&lt;p&gt;It's been one and a half year since I posted the last article.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2021-10-01T18:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Object Storageのベンチマークについて(COSBench編)</title><link href="https://thatsdone.github.io/junkbox/object_storage_benchmark_cosbench.html" rel="alternate"></link><published>2021-10-01T18:00:00+09:00</published><updated>2021-10-01T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-10-01:/junkbox/object_storage_benchmark_cosbench.html</id><summary type="html">&lt;p&gt;Object Storage Benchmark(COSBench)&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、AWS S3のようなObject Storageの性能評価をせねばならん…という事情があり、
+「そういえば、COSBenchってかなり昔からあるよなー」と思いつつ、最近あれこれ調べていました。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/intel-cloud/cosbench/"&gt;COSBenchのリポジトリ&lt;/a&gt;
+とか、
+&lt;a href="https://www.semanticscholar.org/paper/COSBench%3A-A-Benchmark-Tool-for-Cloud-Object-Storage-Zheng-Chen/84665515d4dd5946743684e2f7236babb0901d10"&gt;論文&lt;/a&gt;
+とか、
+COSBenchの構造等の詳細は
+&lt;a href="https://www.snia.org/sites/default/files/files2/files2/SDC2013/presentations/Cloud/YaguangWang__COSBench_Final.pdf"&gt;開発者による2013年のSNIA SDCの講演の資料&lt;/a&gt;
+を見てもいいかもしれません。&lt;/p&gt;
+&lt;p&gt;上記のCOSBenchのリポジトリを眺めてみると、2018年でcommitが止まっているので
+死んでいるのかなー？と思いつつ、ちょっと調べてみたところ、
+やはり「COSBenchを使って〇〇を評価してみた」というような記事は日本語の記事もそれなりに出てくる
+のですが、2014~2016年くらいのものがほとんどです。&lt;/p&gt;
+&lt;p&gt;それでも、2019年にはSNIAの講演
+&lt;a href="https://www.snia.org/educational-library/object-storage-workload-testing-tools-2019"&gt;Object Storage Workload Testing Tools&lt;/a&gt;
+でRedHatのエンジニアが使いどころを紹介しているほか、2021年にはTencentが自社Object Storageサービスの性能チューニングのベストプラクティスの一環で&lt;a href="https://intl.cloud.tencent.com/document/product/436/38298"&gt;Working with COSBench&lt;/a&gt;
+という記事を出しているようで、まだ買われているようです。&lt;/p&gt;
+&lt;p&gt;さて、本題は'21/10初頭時点でのリポジトリ…とうか、コードの状態の話。
+(前置きのほうが長かったかも(苦笑))&lt;/p&gt;
+&lt;p&gt;ちょっと動かしてみた後、独自APIのObject Storageのドライバを追加しようかとビルドも試してみて気づいたことをいくつか。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Ubuntu 20.04だと素直に動かない&lt;ul&gt;
+&lt;li&gt;release版だと0.4.0.0まで戻せば動く&lt;ul&gt;
+&lt;li&gt;使っているeclipse.equinox.launcherが古いせい&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;EclipseのGUIから作ったままの設定情報があちこちに残っている&lt;/li&gt;
+&lt;li&gt;ライブラリの類を全部抱え込んでいる&lt;/li&gt;
+&lt;li&gt;テストがない&lt;/li&gt;
+&lt;li&gt;EclipseのGUIからビルドする前提のつくりで、CI/CDに向いていない(mavenにしたい)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;などなど&lt;/p&gt;
+&lt;p&gt;前半に並べたものは既に issue に報告&amp;amp;PRしたりしています。&lt;a href="https://github.com/intel-cloud/cosbench/issues"&gt;こんなかんじ&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;それぞれ、こんな問題があって、どう解決すべき…とか、つらつら書こうと思いますが...続きます。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[en/ja] Resuming Again/(ふたたび)再開します</title><link href="https://thatsdone.github.io/junkbox/resuming_again.html" rel="alternate"></link><published>2021-09-23T17:30:00+09:00</published><updated>2021-09-23T17:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-09-23:/junkbox/resuming_again.html</id><summary type="html">&lt;p&gt;resuming this page again&lt;/p&gt;</summary><content type="html">&lt;p&gt;It's been one and a half year since I posted the last article.&lt;/p&gt;
 &lt;p&gt;As the last post was on Feb. 15, 2020, I guess I could not afford to make time for fun things
 because of physical stress because of COVID-19 and increased meetings.&lt;/p&gt;
 &lt;p&gt;This year, I have already made presentations twice, and I'm writing including those topics.
