@@ -22,7 +22,7 @@ from http.server import HTTPServer
 from http import HTTPStatus
 
 command =  ['nvidia-smi',
-            '--query-gpu=name,index,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used',
+            '--query-gpu=name,index,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used,power.draw,power.limit',
             '--format=csv,noheader,nounits']
 #
 #
@@ -50,7 +50,8 @@ class PyPGME(BaseHTTPRequestHandler):
             (gpu_name, gpu_index,
              gpu_temp, gpu_util,
              mem_util, mem_total,
-             mem_free, mem_used) = l.decode('utf-8').split(',')
+             mem_free, mem_used,
+             power_draw, power_limit) = l.decode('utf-8').split(',')
 
             gpu_index = int(gpu_index)
             self.wfile.write(("temperature_gpu{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(gpu_temp))).encode('utf-8'))
@@ -59,6 +60,8 @@ class PyPGME(BaseHTTPRequestHandler):
             self.wfile.write(("memory_total{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_total))).encode('utf-8'))
             self.wfile.write(("memory_free{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_free))).encode('utf-8'))
             self.wfile.write(("memory_used{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_used))).encode('utf-8'))
+            self.wfile.write(("pgme_power_draw{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, power_draw)).encode('utf-8'))
+            self.wfile.write(("pgme_power_limit{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, power_limit)).encode('utf-8'))
         return
 #
 #
@@ -66,7 +69,7 @@ class PyPGME(BaseHTTPRequestHandler):
 if __name__ == "__main__":
 
     bind_address = '0.0.0.0'
-    port = 18080
+    port = 19101
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "p:b:")
