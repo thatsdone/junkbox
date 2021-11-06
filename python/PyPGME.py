@@ -24,6 +24,7 @@ from http import HTTPStatus
 command =  ['nvidia-smi',
             '--query-gpu=name,index,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used,power.draw,power.limit',
             '--format=csv,noheader,nounits']
+extended_attrs = True
 #
 #
 #
@@ -72,8 +73,9 @@ class PyPGME(BaseHTTPRequestHandler):
             self.wfile.write(("memory_total{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_total))).encode('utf-8'))
             self.wfile.write(("memory_free{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_free))).encode('utf-8'))
             self.wfile.write(("memory_used{gpu=\"%s[%d]\"} %d\n" % (gpu_name, gpu_index, int(mem_used))).encode('utf-8'))
-            self.wfile.write(("pgme_power_draw{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, power_draw)).encode('utf-8'))
-            self.wfile.write(("pgme_power_limit{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, power_limit)).encode('utf-8'))
+            if extended_attrs:
+                self.wfile.write(("pgme_power_draw{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, power_draw)).encode('utf-8'))
+                self.wfile.write(("pgme_power_limit{gpu=\"%s[%d]\"} %s\n" % (gpu_name, gpu_index, power_limit)).encode('utf-8'))
         return
 #
 #
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     port = 19101
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "p:b:")
+        opts, args = getopt.getopt(sys.argv[1:], "p:b:e")
     except getopt.GetoptError as err:
         print(str(err))
         sys.exit(2)
@@ -94,6 +96,12 @@ if __name__ == "__main__":
             port = int(a)
         elif o == '-b':
             bind_address = a
+        elif o == '-e':
+            # toggle extended_attrs
+            if extended_attrs:
+                extended_attrs = False
+            else:
+                extended_attrs = True
 
     httpd = HTTPServer((bind_address, port), PyPGME)
 
