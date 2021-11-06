@@ -31,6 +31,18 @@ class PyPGME(BaseHTTPRequestHandler):
 
     def do_GET(self):
 
+        # Check path element
+        if not (self.path == '/metrics'):
+            self.send_response(HTTPStatus.OK)
+            self.send_header('Content-Type', 'text/html')
+            self.end_headers()
+            self.wfile.write(('<html><head><title>PyPGME</title></head>\n'
+                              '<body>\n'
+                              '<h1>PyPGME</h1>\n'
+                              '<p><a href="/metrics"</a>Metrics<p>\n'
+                              '</body></html>\n').encode('utf-8'))
+            return
+
         self.send_response(HTTPStatus.OK)
         self.send_header('Content-Type', 'text/plain')
         self.end_headers()
