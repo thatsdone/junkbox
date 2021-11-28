@@ -17,7 +17,7 @@ set -x
 #  * use bridge network and mac option (for dhcp environment)
 #  * Consider disk expansion at installation time.
 #  * etc.
-
+#
 DIR=YOUR_IMAGE_PATH
 IMAGE=${DIR}/2021-01-11-raspios-buster-armhf-lite.img
 DTB=${DIR}/versatile-pb-buster.dtb
@@ -25,13 +25,22 @@ KERNEL=${DIR}/kernel-qemu-4.19.50-buster
 
 NAME=${NAME:-raspios-kvm1}
 
+ARCH=${ARCH:-arm6l}
+CPU=${CPU:-arm1176}
+MACHINE=${MACHINE:-versatilepb}
+VCPUS=${VCPUS:-1}
+MEMORY=${MEMORY:-256}
+#NETWORK=${NETWORK:-user}
+NETWORK=${NETWORK:-bridge=br0}
+
+
 virt-install \
     --name ${NAME} \
-    --arch armv6l \
-    --machine versatilepb \
-    --cpu arm1176 \
-    --vcpus 1 \
-    --memory 512 \
+    --arch ${ARCH} \
+    --machine ${MACHINE} \
+    --cpu ${CPU} \
+    --vcpus ${VCPUS} \
+    --memory ${MEMORY} \
     --import \
     --disk ${IMAGE},format=raw,bus=virtio \
     --network user,model=virtio \
@@ -40,4 +49,7 @@ virt-install \
     --serial pty \
     --rng device=/dev/urandom,model=virtio \
     --boot "dtb=${DTB},kernel=${KERNEL},kernel_args=root=/dev/vda2 panic=1 rootfstype=ext4 rw console=ttyAMA0" \
-    --events on_reboot=destroy
+    --events on_reboot=destroy \
+    --noautoconsole
+
+echo Now, you can access to the VM via 'virsh console '${NAME}
