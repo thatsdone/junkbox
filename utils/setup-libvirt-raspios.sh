@@ -9,11 +9,10 @@ set -x
 # Raspberry Pi Zero W.
 # kernel and dtb can be downloaded from below.
 #   * https://github.com/dhruvvyas90/qemu-rpi-kernel
-# image can be downloaded from below (or mirrow).
+# image can be downloaded from below (or mirror).
 #   * https://downloads.raspberrypi.org/raspios_lite_armhf/images/
 #
 # TODO:
-#  * use '--wait' or '--noautoconsole'
 #  * use bridge network and mac option (for dhcp environment)
 #  * Consider disk expansion at installation time.
 #  * etc.
@@ -43,7 +42,7 @@ virt-install \
     --memory ${MEMORY} \
     --import \
     --disk ${IMAGE},format=raw,bus=virtio \
-    --network user,model=virtio \
+    --network ${NETWORK},model=virtio \
     --video vga \
     --graphics vnc \
     --serial pty \
