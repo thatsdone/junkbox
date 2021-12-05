@@ -14,29 +14,21 @@
 #   Masanori Itoh <masanori.itoh@gmail.com>
 #
 import sys
-import os
 import getopt
-import errno
-import socket
 import time
-import datetime
+import socket
 
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 from http import HTTPStatus
 
-import smbus
-import struct
-
 THERMAL_INPUT='/sys/class/thermal/thermal_zone0/temp'
-
 
 class RaspiZeroExporter(BaseHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
         self.my_hostname = socket.gethostname()
-        self.my_ip = socket.gethostbyname(self.my_hostname)
-        #print("DEBUG: debug: __init__() %s %s %s" % (arg1, arg2, arg3))
+        #self.my_ip = socket.gethostbyname(self.my_hostname)
         try:
             self.cpu_temp = open(THERMAL_INPUT, 'r')
         except Exception:
