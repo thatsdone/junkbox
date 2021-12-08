@@ -74,7 +74,7 @@ class BME680Reader(SensorReader):
         data['temperature'] = self.sensor.data.temperature
         data['pressure'] = self.sensor.data.pressure
         data['humidity'] = self.sensor.data.humidity
-        data['heat_stable'] = self.sensor.data.heat_stable
+        data['heat_stable'] = int(self.sensor.data.heat_stable)
         data['gas_resistance'] = self.sensor.data.gas_resistance
         return data
 
