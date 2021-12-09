@@ -8,7 +8,7 @@
 # License:
 #   Apache License, Version 2.0
 # History:
-#   * 2021/12/05 v0.1 Initial version based on:
+#   * 2021/12/05 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
 #
@@ -34,4 +34,3 @@ if __name__ == "__main__":
     print(reader.get_info())
     print(reader.read_data())
 
-    
