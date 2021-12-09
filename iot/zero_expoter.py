@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 #
-# zero_exporter : A simple prometheus exporter for RaspberryPi Zero W
+# zero_exporter : A simple prometheus exporter for IoT sensors
 #
 # Description:
-#   This script returns just CPU temperature (at the moment).
+#   This is a simple prometheus exporter (initially) intended for small
+#   IoT devices such as RaspberryPi Zero W. Supports multiple sensors
+#   with sensor_reader.py based drivers.
 #
 # License:
 #   Apache License, Version 2.0 (inherited from the original)
@@ -25,9 +27,6 @@ from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 from http import HTTPStatus
 
-import smbus
-import struct
-
 THERMAL_INPUT='/sys/class/thermal/thermal_zone0/temp'
 
 sensors = []
@@ -35,14 +34,15 @@ sensors = []
 class RaspiZeroExporter(BaseHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
+
         self.my_hostname = socket.gethostname()
         self.my_ip = socket.gethostbyname(self.my_hostname)
+        self.cpu_temp = None
 
         try:
             self.cpu_temp = open(THERMAL_INPUT, 'r')
-        except Exception:
-            self.cpu_temp = None
-            print('%s does not exist. Skipping CPU temp. poll' % (THERMAL_INPUT))
+        except Exception as e:
+            print('Failed to open %s, skipping CPU temperator retrieval. / %s' % (THERMAL_INPUT, e))
         # import and initialize sensor driver classes
         self.driver_modules = dict()
         self.driver_classes = dict()
@@ -54,12 +54,13 @@ class RaspiZeroExporter(BaseHTTPRequestHandler):
                 c = getattr(m, sensor['class'])
                 self.driver_classes[sensor['class']] = c()
             except Exception as e:
-                print('Failed to import %s_reader. %s. Exitting...' %
-                      (sensor, e))
+                print('Failed to import %s. %s. Exiting...' %
+                      (sensor['module'], e))
                 sys.exit()
 
         # call super class initializer.
         super().__init__(request, client_address, server)
+
         return
 
     def do_GET(self):
@@ -119,7 +120,8 @@ if __name__ == "__main__":
             bind_address = a
         elif o == '-s':
             for s in a.split(','):
-                print(s, s.upper(), '%s_reader'  % s , '%sReader' % s.upper())
+                # 'sensor_reader.py' inherited modules expected.
+                print('Configured sensor: %s' % (s))
                 module = '%s_reader' % s
                 class_name = '%sReader' % s.upper()
                 sensors.append({'module': module,
