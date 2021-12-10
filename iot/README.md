@@ -7,7 +7,6 @@ sensors connected to IoT devices, typically Raspberry Pi.
 Python standard 'http' module. Initlally written for Raspberry Pi Zero
 W.
 
-
 ## Files
 
 * Sensor data reader modules
@@ -28,6 +27,12 @@ W.
   * example_mpu9250.py
     * Example how to use read MPU9250 sensor data using
       SMBus(I2C). Requires smbus via pip.
+
+## TODO
+* Add INA226 support
+* Add LSM9DS1 support (RaspberryPi SenseHAT)
+* Add HTS221 support (RaspberryPi SenseHAT)
+* Add LPS25H support (RaspberryPi SenseHAT)
 
 ## Usage
 
