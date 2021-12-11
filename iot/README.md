@@ -19,7 +19,7 @@ W.
     * InvenSense MPU9250 reader.
     * Depends on PyPI 'smbus'
 * Prometheus Exporter
-  * zero_expoter.py
+  * zero_exporter.py
     * A simple Prometheus Exporter using implementations of sensor_reader.
 * Examples for raw/cooked sensor data access
   * example_bme680.py
