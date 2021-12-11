@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# bme686-read.py : A sample program to read Bosch BME680
+# example_bme686.py : A sample program to read Bosch BME680
 #
 # Description:
 #   A sample program to read BME680 using Pimoroni bme680-python library.

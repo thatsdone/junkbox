@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# mpu9250-read.py : A sample program to read InvenSense MPU9250 
+# example_mpu9250.py : A sample program to read InvenSense MPU9250
 #
 # Description:
 #   A sample program to read MPU9250/AK8963 9DOF IMU sensor data.
