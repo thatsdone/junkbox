@@ -4,8 +4,7 @@ This directory contains simple implementations for reading various
 sensors connected to IoT devices, typically Raspberry Pi.
 
 'zero_exporter.py' is a very simple Prometheus Exporter requiring only
-Python standard 'http' module. Initlally written for Raspberry Pi Zero
-W.
+Python standard 'http' module. Initlally written for Raspberry Pi Zero W.
 
 ## Files
 
@@ -13,11 +12,14 @@ W.
   * sensor_reader.py
     * Base class for individual sensor reader implementations.
   * bme680_reader.py
-    * BOSCH BME680 reader.
+    * Bosch BME680 reader.
     * Depends on PyPI 'bme680' by pimoroni
   * mpu9250_reader.py
     * InvenSense MPU9250 reader.
     * Depends on PyPI 'smbus'
+  * lsm9ds1_reader.py
+    * STM LSM9DS1 reader.
+    * Depends on 'sense-hat' for RaspberryPi
 * Prometheus Exporter
   * zero_exporter.py
     * A simple Prometheus Exporter using implementations of sensor_reader.
@@ -29,10 +31,10 @@ W.
       SMBus(I2C). Requires smbus via pip.
 
 ## TODO
-* Add INA226 support
-* Add LSM9DS1 support (RaspberryPi SenseHAT)
-* Add HTS221 support (RaspberryPi SenseHAT)
-* Add LPS25H support (RaspberryPi SenseHAT)
+* Add TI INA226 support
+* Add STM LSM9DS1 support (RaspberryPi SenseHAT) Current and Power
+* Add STM HTS221 support (RaspberryPi SenseHAT) Humidity and Temperature
+* Add STM LPS25H support (RaspberryPi SenseHAT) Pressure
 
 ## Usage
 
@@ -43,7 +45,7 @@ W.
     * -p PORT (default: 18083)
     * -b BIND_ADDRESS (default: 0.0.0.0)
     * -s sensor1[,sensor2...] (deafault: bme680,mpu9250)
-      * For now, bme680 and mpu9250 are supported.
+      * For now, bme680, mpu9250 and lsm9ds1 are supported.
 
 ### Scraping result
 
