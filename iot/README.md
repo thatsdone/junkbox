@@ -13,12 +13,15 @@ Python standard 'http' module. Initlally written for Raspberry Pi Zero W.
     * Base class for individual sensor reader implementations.
   * bme680_reader.py
     * Bosch BME680 reader.
+    * Temperature, Humidity, Pressure and GAS resistance
     * Depends on PyPI 'bme680' by pimoroni
   * mpu9250_reader.py
     * InvenSense MPU9250 reader.
+    * Accelerometer, Gyroscope, Magnetometer and (chip) Temperature
     * Depends on PyPI 'smbus'
   * lsm9ds1_reader.py
     * STM LSM9DS1 reader.
+    * Accelerometer, Gyroscope, Magnetometer and (chip) Temperature
     * Depends on 'sense-hat' for RaspberryPi
 * Prometheus Exporter
   * zero_exporter.py
@@ -31,10 +34,11 @@ Python standard 'http' module. Initlally written for Raspberry Pi Zero W.
       SMBus(I2C). Requires smbus via pip.
 
 ## TODO
-* Add TI INA226 support
-* Add STM LSM9DS1 support (RaspberryPi SenseHAT) Current and Power
-* Add STM HTS221 support (RaspberryPi SenseHAT) Humidity and Temperature
-* Add STM LPS25H support (RaspberryPi SenseHAT) Pressure
+* Add TI INA226 support - Current and Voltage
+* Add Bosch BME280 support - Humidity, Temperature and Pressure
+* Add STM HTS221 support (RaspberryPi SenseHAT) - Humidity and Temperature
+* Add STM LPS25H support (RaspberryPi SenseHAT) - Pressure
+* MQTT based AWS IoT Core agent (alternative of zero_exporter.py)
 
 ## Usage
 
@@ -49,6 +53,7 @@ Python standard 'http' module. Initlally written for Raspberry Pi Zero W.
 
 ### Scraping result
 
+Access to the waiting URL by curl.
 
 ```
 $ curl http://zero1:18083/metrics
