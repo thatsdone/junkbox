@@ -23,14 +23,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <wait.h>
+
+
+int use_thread = 1;
 
 void *worker(void *arg)
 {
 	struct timeval tv, tv_save;
 	long ts, ts_save;
 	long duration = *(long *)arg;
-	pthread_t tid = pthread_self();
-	printf("%s: TID: %lu running: %ld (us)\n", __func__, tid, *(long *)arg);
+	pthread_t tid = 0;
+	pid_t pid = 0;
+	if (use_thread) {
+		tid = pthread_self();
+		printf("%s: TID: %lu running: %ld (us)\n",
+		       __func__, tid, *(long *)arg);
+	} else {
+		pid = getpid();
+		printf("%s: PID: %d running: %ld (us)\n",
+		       __func__, pid, *(long *)arg);
+	}
+
 	gettimeofday(&tv_save, NULL);
 	ts_save = tv_save.tv_sec * 1000 * 1000 + tv_save.tv_usec;
 	while (1) {
@@ -41,16 +55,22 @@ void *worker(void *arg)
 			break;
 		}
 	}
-	pthread_exit(0);
+	if (use_thread) {
+		pthread_exit(0);
+	} else {
+		exit(0);
+	}
 }
 		
 #define MAX_CONTEXT 16
 
 int main(int argc, char **argv)
 {
-	int i, ret, opt, use_thread = 1;
+	int i, ret, opt;
 	pthread_t th[MAX_CONTEXT];
 	pthread_t tid;
+	pid_t pr[MAX_CONTEXT];
+	pid_t pid;
 
 	int num_context = 4;
 	long duration = 5 * 1000 * 1000;
@@ -69,11 +89,10 @@ int main(int argc, char **argv)
 			break;
 		case 'm':
 			if (*optarg == 't' || *optarg == 'T') {
-				printf("DEBUG: optarg: %s\n", optarg);
+				printf("Multi thread mode,\n");
 				use_thread = 1; //thread
 			} else if (*optarg == 'p' || *optarg == 'P') {
-				printf("Multi process mode, Not implemented yet.\n");
-				exit(-1);
+				printf("Multi process mode,\n");
 				use_thread = 0; //process
 			} else {
 				printf("Unknown -m value : %s\n", optarg);
@@ -87,15 +106,46 @@ int main(int argc, char **argv)
                }
            }
 	
-	printf("%s: PID: %d\n", __func__, getpid());
+	printf("%s: PID: %d. Creating workers.\n", __func__, getpid());
 
 	for (i = 0; i < num_context; i++) {
-		ret = pthread_create(&th[i], NULL, worker, (void *)&duration);
-		printf("%s: pthread_create retruned %d\n", __func__, ret);
-	}
-	for (i = 0; i < num_context; i++) {
-		ret = pthread_join(th[i], (void **)NULL);
-		printf("%s: pthread_join for %d retruned %d / %lu\n", __func__, i, ret, (unsigned long)0);
+		if (use_thread) {
+			ret = pthread_create(&th[i], NULL, worker, (void *)&duration);
+			printf("%s: pthread_create retruned %d\n", __func__, ret);
+		} else {
+			pid = fork();
+			switch (pid) {
+			case 0:
+				/* child */
+				printf("child: fork returnd %d.\n", pid);
+				worker((void *)&duration);
+				break;
+			case -1:
+				/* failure */
+				printf("fork returnd %d\n", pid);
+				exit(-1);
+				break;
+			default:
+				/* parent */
+				printf("parent: fork returnd %d\n", pid);
+				pr[i] = pid;
+			}
+		}
 	}
 
+	printf("%s: PID: %d. Waiting for completion of workers.\n", __func__, getpid());
+
+	for (i = 0; i < num_context; i++) {
+		if (use_thread) {
+			ret = pthread_join(th[i], (void **)NULL);
+			printf("%s: pthread_join for %d retruned %d / %lu\n",
+			       __func__, i, ret, (unsigned long)0);
+		} else {
+			int wstatus;
+			ret = waitpid(pr[i], &wstatus, 0);
+			printf("%s: waitpid for %d retruned %d / %d\n",
+			       __func__, i, ret, wstatus);
+			;
+		}
+	}
 }
