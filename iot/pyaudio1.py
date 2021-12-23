@@ -111,7 +111,7 @@ if __name__ == "__main__":
             if a == 'S32_LE':
                 format=pyaudio.paInt32
             elif a == 'S16_LE':
-                format=pyaudio.paInt32
+                format=pyaudio.paInt16
             else:
                 printf('Unknown format: %s' % (a))
                 sys.exit()
