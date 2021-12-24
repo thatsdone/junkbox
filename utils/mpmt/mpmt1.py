@@ -9,7 +9,7 @@
 # License:
 #   Apache License, Version 2.0
 # History:
-#   * 2021/12/20 v0.1 Initial version based on:
+#   * 2021/12/20 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
 # TOTO:
@@ -52,6 +52,9 @@ if __name__ == "__main__":
                 use_thread = 1
             elif a == 'p' or a == 'P':
                 use_thread = 0
+
+    print('num_context: %d, duration; %d, mode: %s' %
+          (num_context, duration, 'threading' if use_thread else 'multiprocessing'))
 
     workers = []
     for i in range(0, num_context):
