@@ -39,7 +39,7 @@ func worker(id int, ch_in <-chan uint64, ch_out chan<- uint64) {
              break
           }
      }
-     ch_out <- 0
+	ch_out <- uint64(id)
      fmt.Println("worker: exiting...")
 }
 
@@ -76,7 +76,7 @@ func main() {
 
     //wait for goroutine completions
     for i := 0; i < *num_context; i++ {
-        fmt.Printf("ch_recv: %d\n",  <-ch_recv)
+        fmt.Printf("i: %d id: %d\n",  i, <-ch_recv)
     }
     fmt.Println("done")
 }
