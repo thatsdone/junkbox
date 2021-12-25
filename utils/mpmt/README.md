@@ -29,11 +29,14 @@ Common across langugages.
   * C: mpmt1.c
     * Uses pthread and fork().
     * Build
-      * `gcc -o mpmt1 mpmt1.c -lpthread`
+      * Simplly `make c`, and execute `./mpmt1c`
   * Go: mpmt1.go
-  * Uses goroutine. No process model at the moment.
-    * Simply `go run mpmt1.go`, or
-    * `go build -o mpmt1go mpmt1.go`
+      * Uses goroutine. No process model at the moment.
+      * Simply `go run mpmt1.go` or`make go`, and `./mpmt1go`
+  * Rust: mpmt1.rs
+      * Implements thread model only. No process model at the moment.
+      * Use nightly tool chain as this uses 'crate'.
+      * Simply `make rust `, and `./mpmt1rs`
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
