@@ -56,8 +56,9 @@ to vstack() of python numpy ndarray, IMHO.
 4. Execute `$ mvn clean package`
 5. Execute `run.sh`
 
-
-
-
-
-
+# References
+* https://javadoc.io/doc/com.googlecode.matrix-toolkits-java/mtj/latest/no/uib/cipr/matrix/sparse/FlexCompRowMatrix.html
+* https://github.com/fommil/matrix-toolkits-java
+* https://javadoc.io/doc/ai.djl/api/latest/ai/djl/ndarray/NDArray.html
+* https://deeplearning4j.org/api/latest/org/nd4j/linalg/factory/Nd4j.html
+* https://github.com/numenta/htm.java-examples/raw/master/libs/algorithmfoundry/algorithmfoundry-shade-culled/1.3/algorithmfoundry-shade-culled-1.3.jar
