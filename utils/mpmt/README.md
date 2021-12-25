@@ -30,6 +30,10 @@ Common across langugages.
     * Uses pthread and fork().
     * Build
       * `gcc -o mpmt1 mpmt1.c -lpthread`
+  * Go: mpmt1.go
+  * Uses goroutine. No process model at the moment.
+    * Simply `go run mpmt1.go`, or
+    * `go build -o mpmt1go mpmt1.go`
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
