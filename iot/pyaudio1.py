@@ -31,7 +31,7 @@ import numpy as np
 debug = False
 
 
-def record(filename, duration=5, rate=44100, fps=20, format=pyaudio.paInt32, channels=1):
+def record(filename, duration=5, rate=44100, chunk=2250, format=pyaudio.paInt32, channels=1):
 
     p = pyaudio.PyAudio()
 
@@ -44,6 +44,7 @@ def record(filename, duration=5, rate=44100, fps=20, format=pyaudio.paInt32, cha
         print("DEBUG: mic polling start")
 
     frames = []
+    # rate / chunk = read count per second
     num_loop = int(rate / chunk * duration)
     if debug:
         print('DEBUG: num_loop = %d' % (num_loop))
@@ -88,9 +89,9 @@ if __name__ == "__main__":
     # default values
     filename = 'output.wav'
     duration = 5
-    rate = 44100
-    fps = 20
-    chunk = (int)(rate / fps)
+    frame_rate = 44100
+    #
+    read_rate = 20
     format = pyaudio.paInt32
     channels = 1
 
@@ -106,7 +107,7 @@ if __name__ == "__main__":
         elif o == '-d':
             duration = int(a)
         elif o == '-f':
-            rate = int(a)
+            frame_rate = int(a)
         elif o == '-F':
             if a == 'S32_LE':
                 format=pyaudio.paInt32
@@ -116,13 +117,17 @@ if __name__ == "__main__":
                 printf('Unknown format: %s' % (a))
                 sys.exit()
         elif o == '-f':
-            # frames per sample
-            fps = int(a)
+            # read rate (reads per second)
+            read_rate = int(a)
         elif o == '-c':
             # channels: 1: monoral, 2: stereo
             channels = int(a)
         elif o == '-D':
             debug = True
 
+    # chunk default: 44100 / 20 = 2250 (frames per read)
+    chunk = (int)(frame_rate / read_rate)
+
+
     print('duration: %d (s)' % (duration))
-    record(filename, duration=duration, rate=rate)
+    record(filename, duration=duration, rate=frame_rate, chunk=chunk, format=format)
