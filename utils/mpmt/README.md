@@ -8,7 +8,7 @@ frameworks of various languages.
 
 * Usage
 
-Common across langugages.
+Common across languages.
 
 ```
   $ PROGRAM [-n NUM_CONTEXT] [-d DURATION] [-m MODE]
@@ -21,6 +21,7 @@ Common across langugages.
   * duration to generate CPU load
 * MODE
   * t or T : thread model (default)
+    * In case of golang, 'g' (goroutine).
   * p or P : process model
 
 * Languages
