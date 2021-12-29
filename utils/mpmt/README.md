@@ -38,6 +38,8 @@ Common across languages.
       * Implements thread model only. No process model at the moment.
       * Use nightly tool chain as this uses 'crate'.
       * Simply `make rust `, and `./mpmt1rs`
+  * Ruby: mpmt1.rb
+      * Implements thread model only. No process model at the moment.
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
