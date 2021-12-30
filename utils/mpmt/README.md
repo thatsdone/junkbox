@@ -40,6 +40,9 @@ Common across languages.
       * Simply `make rust `, and `./mpmt1rs`
   * Ruby: mpmt1.rb
       * Implements thread model only. No process model at the moment.
+  * Node.js: mpmt1.js
+      * Implements thread model only. No process model at the moment.
+      * Install 'posix-getopt'
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
