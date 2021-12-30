@@ -1,0 +1,9 @@
+creds:
+  thing = '12345678-thing1'
+  cred_dir: 'CRED_DIR'
+  root_ca: 'AmazonRootCA1.pem'
+  endpoint: 'xxxxxxxxxxxxxx-ats.iot.ap-northeast-1.amazonaws.com'
+  ca_certificate: '12345678-certificate.pem.crt'
+  private_key: '12345678-private.pem.key'
+  topic: '12345678/abcdefgh/topic_1'
+
