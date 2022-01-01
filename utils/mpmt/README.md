@@ -43,6 +43,10 @@ Common across languages.
   * Node.js: mpmt1.js
       * Implements thread model only. No process model at the moment.
       * Install 'posix-getopt'
+  * Scala: mpmt1.scala
+      * Implements thread model only. No process model at the moment.
+      * In case of Ubuntu, use scala3.
+      * Simply `make scala `, and `scala mpmt1`
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.

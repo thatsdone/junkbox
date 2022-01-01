@@ -8,6 +8,8 @@ go:
 	go build -o mpmt1go mpmt1.go
 rust:
 	rustc -o mpmt1rs mpmt1.rs
+scala:
+	scalac mpmt1.scala
 
 clean:
-	/bin/rm -f mpmt1rs mpmt1c mpmt1go *~
+	/bin/rm -f mpmt1rs mpmt1c mpmt1go *~ *.class *.tasty
