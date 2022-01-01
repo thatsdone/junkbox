@@ -6,7 +6,7 @@
  * License:
  *   Apache License, Version 2.0
  * History:
- *   2022/01/01 v0.1 Initial version based on:
+ *   2022/01/01 v0.1 Initial version.
  * Author:
  *   Masanori Itoh <masanori.itoh@gmail.com>
  * TODO:
@@ -23,7 +23,7 @@ object mpmt1 {
     var mode = "t"
 
     //Parse options.
-    //NOTE(thatsdone): Avoded to use getopt pacakge for now.
+    //NOTE(thatsdone): Avoided to use getopt pacakge for now.
     for (i <- 0 until args.length) {
       if (args(i) == "-n") {
         if (args(i + 1).startsWith("-")) {
@@ -54,12 +54,18 @@ object mpmt1 {
     printf("num_context: %d duration %d (s) mode: %s\n",
            num_context, duration, mode)
 
-    for (i <- 0 until num_context) {
-      var t = new Thread(new BusyWorker(num_context, duration))
-      t.start()
-      println("Thread started. " + t)
+    val threads = {
+      for (i <- 0 until num_context)
+        yield new Thread(new BusyWorker(num_context, duration))
     }
-    //FIXME(thatsdone): No need for join?
+    threads.foreach({
+      t => t.start()
+      println("Thread started: " + t)
+    })
+    threads.foreach({
+      t => t.join()
+      println("Thread completed: " + t)
+    })
   }
 }
 
