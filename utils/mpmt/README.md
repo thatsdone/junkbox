@@ -47,6 +47,9 @@ Common across languages.
       * Implements thread model only. No process model at the moment.
       * In case of Ubuntu, use scala3.
       * Simply `make scala `, and `scala mpmt1`
+  * Lua mpmt1.lua
+      * Uses coroutine lf Lua. No multi thread nor process at the moment.
+      * To be updated to use getopt.
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
