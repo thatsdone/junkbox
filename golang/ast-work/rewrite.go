@@ -81,6 +81,12 @@ func run() error {
   for _, f := range main.Files {
     fmt.Printf("DEBUG1: %s\n", f)   
     ast.Inspect(f, func(node ast.Node) bool {
+			if node != nil {
+				desc := astutil.NodeDescription(node)
+				fmt.Printf("DEBUG1.5: NodeDescription : %s\n", desc)
+			} else {
+				fmt.Printf("DEBUG1.5: Node is nil\n")
+			}
       if t, _ := node.(*ast.SelectorExpr); t != nil {
         fmt.Printf("DEBUG2: %s\n", t)
         fmt.Printf("DEBUG3: %s\n", main.Info.ObjectOf(t.Sel))
