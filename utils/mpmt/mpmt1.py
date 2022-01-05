@@ -43,8 +43,8 @@ if __name__ == "__main__":
         sys.exit(2)
 
     for o, a in opts:
-        if o == '-d':
-            duration = int(a)
+        if o == '-n':
+            num_context = int(a)
         elif o == '-d':
             duration = int(a)
         elif o == '-m':
