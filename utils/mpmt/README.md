@@ -48,8 +48,12 @@ Common across languages.
       * In case of Ubuntu, use scala3.
       * Simply `make scala `, and `scala mpmt1`
   * Lua mpmt1.lua
-      * Uses coroutine lf Lua. No multi thread nor process at the moment.
+      * Uses coroutine of Lua. No multi thread nor process at the moment.
       * To be updated to use getopt.
+  * Common Lisp mpmt1.lisp
+      * Implements thread model only using 'bordeaux-threads'. No multi process at the moment.
+      * Runs under sbcl.
+      * Still buggy...
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
