@@ -16,7 +16,7 @@
 def busy_worker(id, num_context, duration)
 
   printf("thread: %d / n: %d d: %d %s\n", id, num_context, duration, Thread.current)
-  
+
   tsnow = Time.now
   ts_save = tsnow.to_i * 1000*1000 + tsnow.usec
 
@@ -30,18 +30,18 @@ def busy_worker(id, num_context, duration)
   end
 
 end
-  
+
 
 if $0 == __FILE__
 
   require 'optparse'
-  
+
   num_context = 4
   duration = 10 * 1000 * 1000
   mode = 't'
 
   params = ARGV.getopts("n:", "d:", "m:")
-  
+
   if params.has_key? 'n'
     num_context = params['n'].to_i
   end
@@ -52,7 +52,7 @@ if $0 == __FILE__
   if params.has_key? 'm'
     mode = params['m']
   end
-  
+
   printf("num_context: %d duration: %d (us) mode: %s (t: thread)\n", num_context, duration, mode)
 
   if mode == 't' or mode == 'T'
@@ -65,7 +65,7 @@ if $0 == __FILE__
     threads.each() { |th|
       p th.join()
     }
-    
+
   elsif mode == 'p' or mode == 'P'
     printf("multi process mode is not yet implemented: %s\n", mode)
     exit
@@ -73,5 +73,5 @@ if $0 == __FILE__
     printf("Invalide mode: %s\n", mode)
     exit
   end
-  
+
 end

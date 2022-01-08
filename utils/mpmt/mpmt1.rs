@@ -54,7 +54,7 @@ fn main() {
     let mode = &matches.opt_strs("m")[0];
 
     println!("num_context: {}, duration: {}, mode: {}", num_context, duration, mode);
- 
+
     let mut handles: Vec<thread::JoinHandle<()>> = Vec::new();
 
     for i in 0..num_context {
