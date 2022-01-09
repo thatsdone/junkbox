@@ -47,7 +47,7 @@
     (dolist (opt out-opts)
       (cond
 	((equal (car opt) "n")
-	  (setf num_context (parse-integer(cdr opt))))
+	 (setf num_context (parse-integer(cdr opt))))
 	((equal (car opt) "d")
 	 (setf duration (parse-integer(cdr opt))))
 	((equal (car opt) "m")
@@ -76,9 +76,13 @@
 	 (push
 	  (bt:make-thread
 	   (lambda()
+	     ;; 'i' is pass-by-reference?
 	     (busy_worker i (cdr (assoc 'duration options))))
 	   :initial-bindings `((*trace-output* . ,*trace-output*)))
-	  threads))
+	  threads)
+	 ;; if you uncomment the below, you would see consistent worker id.
+	 ;; (sleep 1)
+	 )
 
     (format t "threads: ~a ~%" threads)
 

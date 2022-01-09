@@ -52,7 +52,8 @@ Common across languages.
       * To be updated to use getopt.
   * Common Lisp mpmt1.lisp
       * Implements thread model only using 'bordeaux-threads'. No multi process at the moment.
-      * Runs under sbcl.
+      * Runs under sbcl. Use quicklisp to install 'bordeaux-threads' and 'getopt'
+          *  https://www.quicklisp.org/beta/index.html
       * Still buggy...
 
 * Notes
