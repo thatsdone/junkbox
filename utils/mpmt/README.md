@@ -61,3 +61,8 @@ Common across languages.
   * Run the executables on a server at least 2 (v)CPUs.
   * Observe CPU usage by using top command for example. (Better to refresh frequently using '-d 1'.)
   * You would see python threading model can consume only 1 CPU (100%) even if there were multiple CPUs and you specifed more than 2 contexts.
+
+## 2. A simple test program for inter thread/process communication
+
+* TODO
+  * Write mpmt2.py for multiprocessing to see overhead of Queue against message size.
