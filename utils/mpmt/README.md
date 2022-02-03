@@ -1,4 +1,4 @@
-# mpmt : Multi-Process Multi-Thtread examples
+# mpmt : Multi-Process Multi-Thread examples
 
 This directory contains various (normally) small example programs to see
 hehaviour differences of multi-process and multi-thread programming model
@@ -64,5 +64,9 @@ Common across languages.
 
 ## 2. A simple test program for inter thread/process communication
 
+* Languages
+  * Python3: mpmt2.py
+      * A variation of mpmt1.py. Currently implements only a fixed message size (1B) measurement.
+
 * TODO
-  * Write mpmt2.py for multiprocessing to see overhead of Queue against message size.
+  * Implements variable message size measurement.
