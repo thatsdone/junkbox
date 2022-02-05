@@ -18,8 +18,13 @@ import multiprocessing
 import os
 import sys
 import getopt
+import random
+import string
 
-def pingpong_worker(identity, duration, q):
+def random_string(chars = string.ascii_uppercase + string.digits, N=10):
+	return ''.join(random.choice(chars) for _ in range(N))
+
+def pingpong_worker(identity, duration, max_count, q):
     print('pingpong_worker: %d' % (identity))
     ts_orig = time.time()
     q.put('READY')
@@ -29,21 +34,26 @@ def pingpong_worker(identity, duration, q):
         ts = time.time()
         msg = q.get()
         #print('pingpong_worker: %s' % (msg))
-        if (ts - ts_orig > duration):
+        if (duration and (ts - ts_orig > duration)) or (max_count and (count >= max_count)):
             q.put('FINISH')
             print('pingpong_worker: count: %d trans/s: %.2f' % (count, count / (ts - ts_orig)))
             return
         else:
             q.put(msg)
 
+
 if __name__ == "__main__":
 
     num_context = 1
     duration = 5
     use_thread = 1 # 1: threading, 0: multiprocessing
+    count = 10000
+    size = 1
+    count_set = 0
+    duration_set = 0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "n:d:m:")
+        opts, args = getopt.getopt(sys.argv[1:], "n:d:m:c:s:")
     except getopt.GetoptError as err:
         print(str(err))
         sys.exit(2)
@@ -53,11 +63,23 @@ if __name__ == "__main__":
             num_context = int(a)
         elif o == '-d':
             duration = int(a)
+            duration_set = 1
+            count = 0
+        elif o == '-c':
+            count = int(a)
+            count_set = 1
+            duration = 0
+        elif o == '-s':
+            size = int(a)
         elif o == '-m':
             if a == 't' or a == 'T':
                 use_thread = 1
             elif a == 'p' or a == 'P':
                 use_thread = 0
+
+    if count_set and duration_set:
+        print('-c and -d are exclusive.')
+        sys.exit()
 
     print('num_context: %d, duration; %d, mode: %s' %
           (num_context, duration, 'threading' if use_thread else 'multiprocessing'))
@@ -67,16 +89,16 @@ if __name__ == "__main__":
         print('creating worker: %d (mode: %s)' % (i, 'thread' if use_thread else 'process'))
         if use_thread:
             q = queue.Queue()
-            w = threading.Thread(target=pingpong_worker, args=(i, duration, q))
+            w = threading.Thread(target=pingpong_worker, args=(i, duration, count, q))
         else:
             q = multiprocessing.Queue()
-            w = multiprocessing.Process(target=pingpong_worker, args=(i, duration, q))
+            w = multiprocessing.Process(target=pingpong_worker, args=(i, duration, count, q))
         workers.append(w)
         w.start()
 
         msg = q.get()
         #print('DEBUG: main: received %s' % (msg))
-        msg = 'a'
+        msg = random_string(N=size)
         print('message size: %d' % len(msg))
         while True:
             q.put(msg)
@@ -87,4 +109,4 @@ if __name__ == "__main__":
 
     for w in workers:
         w.join()
-        print(w)
+        #print(w)
