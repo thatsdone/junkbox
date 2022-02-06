@@ -20,23 +20,35 @@ import sys
 import getopt
 import random
 import string
+import numpy as np
+from scipy import stats as st
 
 def random_string(chars = string.ascii_uppercase + string.digits, N=10):
 	return ''.join(random.choice(chars) for _ in range(N))
 
+nd_max = 10000
+
 def pingpong_worker(identity, duration, max_count, q):
     print('pingpong_worker: %d' % (identity))
+
+    darray = np.zeros(nd_max, dtype=np.float32)
+
     ts_orig = time.time()
+    ts_save = ts_orig
     q.put('READY')
     count = 0
     while True:
-        count = count + 1
         ts = time.time()
+        if count < nd_max:
+            darray[count] = ts - ts_save
+        ts_save = ts
+        count = count + 1
         msg = q.get()
         #print('pingpong_worker: %s' % (msg))
         if (duration and (ts - ts_orig > duration)) or (max_count and (count >= max_count)):
             q.put('FINISH')
-            print('pingpong_worker: count: %d trans/s: %.2f' % (count, count / (ts - ts_orig)))
+            print('pingpong_worker: %d trans. %f %.2f trans./s ' % (count, (ts - ts_orig) ,count / (ts - ts_orig)))
+            print(st.describe(darray))
             return
         else:
             q.put(msg)
