@@ -64,9 +64,11 @@ Common across languages.
 
 ## 2. A simple test program for inter thread/process communication
 
+Measures inter thread/process communication performance.
+
 * Languages
   * Python3: mpmt2.py
-      * A variation of mpmt1.py. Currently implements only a fixed message size (1B) measurement.
+      * A variation of mpmt1.py
 
 * TODO
   * Implements variable message size measurement.

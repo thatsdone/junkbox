@@ -28,7 +28,7 @@ def random_string(chars = string.ascii_uppercase + string.digits, N=10):
 
 nd_max = 10000
 
-def pingpong_worker(identity, duration, max_count, q):
+def pingpong_worker(identity, duration, max_count, q, size):
     print('pingpong_worker: %d' % (identity))
 
     darray = np.zeros(nd_max, dtype=np.float32)
@@ -47,7 +47,7 @@ def pingpong_worker(identity, duration, max_count, q):
         #print('pingpong_worker: %s' % (msg))
         if (duration and (ts - ts_orig > duration)) or (max_count and (count >= max_count)):
             q.put('FINISH')
-            print('pingpong_worker: %d trans. %f %.2f trans./s ' % (count, (ts - ts_orig) ,count / (ts - ts_orig)))
+            print('pingpong_worker: %d bytes %d trans. %f %.2f trans./s ' % (size, count, (ts - ts_orig) ,count / (ts - ts_orig)))
             print(st.describe(darray))
             return
         else:
@@ -101,10 +101,10 @@ if __name__ == "__main__":
         print('creating worker: %d (mode: %s)' % (i, 'thread' if use_thread else 'process'))
         if use_thread:
             q = queue.Queue()
-            w = threading.Thread(target=pingpong_worker, args=(i, duration, count, q))
+            w = threading.Thread(target=pingpong_worker, args=(i, duration, count, q, size))
         else:
             q = multiprocessing.Queue()
-            w = multiprocessing.Process(target=pingpong_worker, args=(i, duration, count, q))
+            w = multiprocessing.Process(target=pingpong_worker, args=(i, duration, count, q, size))
         workers.append(w)
         w.start()
 
