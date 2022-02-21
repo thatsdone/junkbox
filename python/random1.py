@@ -16,8 +16,8 @@
 # Authour:
 #   Masanori Itoh <masanori.itoh@gmail.com>
 # TODO:
-#   * gamma
-#   * dirichlet
+#   * use default_rng
+#   * other distributions
 #   * ...
 #import random
 import sys
@@ -51,6 +51,9 @@ if __name__ == "__main__":
     print('random1.py: random number genreration and histgoram sample')
     print('count = %d' % (count))
 
+    #common
+    num_bins=20
+
     #normal
     avg = 5
     stddev = 1
@@ -70,27 +73,54 @@ if __name__ == "__main__":
     a = 1.5      # shape : k
     size = 1     # scale : lambda
     rand_weibull = np.zeros(count, dtype=np.float64)
-    
+
+    #dirichlet
+    d_alpha = (10, 5, 2)  #
+    d_size  = 1           #
+    rand_dirichlet = np.zeros(count, dtype=np.float64)
+    d_aidx = 0
+
+    #gamma
+    g_shape  = 9.0  # k
+    g_scale  = 0.5  # theta
+    rand_gamma = np.zeros(count, dtype=np.float64)
+
     for i in range(count):
         rand_normal[i] = np.random.normal(loc=avg, scale=stddev)
         rand_uniform[i] = np.random.uniform(low=low, high=high)
         rand_exponential[i] = np.random.exponential(scale=scale)
         rand_weibull[i] = np.random.weibull(a=a, size=size)
-        
+        rand_dirichlet[i] = np.random.dirichlet(d_alpha, size=d_size)[0][d_aidx]
+        rand_gamma[i] = np.random.gamma(g_shape, scale=g_scale)
+
     print('normal    : avg = %f stdev = %f' % (avg, stddev))
-    hist_normal = np.histogram(rand_normal, bins=20, range=(0,10))
+    hist_normal = np.histogram(rand_normal, bins=num_bins, range=(0,10))
     draw_hist(hist_normal)
 
     print('uniform   : low = %f high  = %f' % (low, high))
-    hist_uniform = np.histogram(rand_uniform, bins=20,range=(0,10))
+    hist_uniform = np.histogram(rand_uniform, bins=num_bins,range=(0,10))
     draw_hist(hist_uniform)
 
     #print(rand_exponential)
     print('exponential : scale (1/lambda) = %f' % (scale))
-    hist_exponential = np.histogram(rand_exponential, bins=20, range=(0,10))
+    hist_exponential = np.histogram(rand_exponential, bins=num_bins, range=(0,10))
     draw_hist(hist_exponential)
 
     #print(rand_weibull)
     print('weibull : k= %f lambda= = %f' % (a, size))
-    hist_weibull = np.histogram(rand_weibull, bins=20, range=(0,10))
+    hist_weibull = np.histogram(rand_weibull, bins=num_bins, range=(0,10))
     draw_hist(hist_weibull)
+
+    # https://en.wikipedia.org/wiki/Dirichlet_distribution
+    # https://numpy.org/doc/stable/reference/random/generated/numpy.random.RandomState.dirichlet.html
+    # https://towardsdatascience.com/dirichlet-distribution-a82ab942a879
+    #print(rand_dirichlet)
+    print('dirichlet : alpha = %d of %s  size = %f' % (d_alpha[d_aidx], d_alpha, d_size))
+    hist_dirichlet = np.histogram(rand_dirichlet, bins=num_bins, range=(0,1))
+    draw_hist(hist_dirichlet)
+
+    https://en.wikipedia.org/wiki/Gamma_distribution
+    #print(rand_gamma)
+    print('gamma : shape(k) = %f scale(themata) = %f' % (g_shape, g_scale))
+    hist_gamma = np.histogram(rand_gamma, bins=num_bins, range=(0,10))
+    draw_hist(hist_gamma)
