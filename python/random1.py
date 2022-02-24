@@ -79,6 +79,8 @@ if __name__ == "__main__":
     d_size  = 1           #
     rand_dirichlet = np.zeros(count, dtype=np.float64)
     d_aidx = 0
+    d_min = 0.0
+    d_max= 1.0
 
     #gamma
     g_shape  = 9.0  # k
@@ -115,11 +117,12 @@ if __name__ == "__main__":
     # https://numpy.org/doc/stable/reference/random/generated/numpy.random.RandomState.dirichlet.html
     # https://towardsdatascience.com/dirichlet-distribution-a82ab942a879
     #print(rand_dirichlet)
-    print('dirichlet : alpha = %d of %s  size = %f' % (d_alpha[d_aidx], d_alpha, d_size))
-    hist_dirichlet = np.histogram(rand_dirichlet, bins=num_bins, range=(0,1))
+    print('dirichlet : alpha = %d of %s  size = %f range=(%f, %f)' %
+          (d_alpha[d_aidx], d_alpha, d_size, d_min, d_max))
+    hist_dirichlet = np.histogram(rand_dirichlet, bins=num_bins, range=(d_min,d_max))
     draw_hist(hist_dirichlet)
 
-    https://en.wikipedia.org/wiki/Gamma_distribution
+    #https://en.wikipedia.org/wiki/Gamma_distribution
     #print(rand_gamma)
     print('gamma : shape(k) = %f scale(themata) = %f' % (g_shape, g_scale))
     hist_gamma = np.histogram(rand_gamma, bins=num_bins, range=(0,10))
