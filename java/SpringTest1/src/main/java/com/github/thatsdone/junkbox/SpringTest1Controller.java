@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,5 +23,9 @@ class SpringTest1Controller {
     @GetMapping("/hello")
     String hello() {
         return "Hello, World!";
+    }
+    @PostMapping("/api/operation")
+    String apiPostOperation() {
+        return "POST /api/operation received.";
     }
 }
