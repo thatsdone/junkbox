@@ -33,5 +33,8 @@ etc.
 * https://armeria.dev/docs/server-basics
 * https://github.com/line/armeria
 * https://www.slf4j.org/api/org/slf4j/impl/SimpleLogger.html
- 
+
+* https://javadoc.io/doc/com.linecorp.armeria/armeria-javadoc/latest/com/linecorp/armeria/server/Server.html
+* https://javadoc.io/doc/com.linecorp.armeria/armeria-javadoc/latest/com/linecorp/armeria/server/ServerBuilder.html
+
 
