@@ -56,6 +56,8 @@ Common across languages.
           *  https://www.quicklisp.org/beta/index.html
       * Still buggy...
       * Looks like the are misunderstanding regarding pass-by-value or pass-by-reference in SBCL/Common Lisp. Please see the comment in 'bt:make-thread' block. If we execute it without the '(sleep 1)', busy_worker() prints wroing 'id'.
+  * Julia mpmt1.jl
+      * Thread mode only at the moment.
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
