@@ -62,7 +62,10 @@ Common across languages.
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
   * Observe CPU usage by using top command for example. (Better to refresh frequently using '-d 1'.)
-  * You would see python threading model can consume only 1 CPU (100%) even if there were multiple CPUs and you specifed more than 2 contexts.
+  * You would see python threading model can consume only 1 CPU (100%) even if there are multiple CPUs and you specifed more than 2 contexts.
+
+* TODO
+  * Add Erlang implementation.
 
 ## 2. A simple test program for inter thread/process communication
 
@@ -73,4 +76,4 @@ Measures inter thread/process communication performance.
       * A variation of mpmt1.py
 
 * TODO
-  * Implements variable message size measurement.
+  * Implement variable message size measurement.
