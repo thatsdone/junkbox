@@ -21,26 +21,23 @@ import requests
 import json
 #import yaml
 #import pprint
+import argparse
 
-REG_IP=None
-REG_PORT=None
 REGISTRY=None
 
 if __name__ == "__main__":
 
-    if len(sys.argv) > 1:
-        REGISTRY=sys.argv[1]
+    parser = argparse.ArgumentParser(description='regadm.py')
+    parser.add_argument('-u', '--url', default='127.0.0.1:5000')
+    parser.add_argument('-o', '--operation', default='LIST')
 
-    if not REGISTRY:
-        REGISTRY=os.getenv('REGISTRY')
+    args = parser.parse_args()
 
-    if not REGISTRY:
-        print('Specify registry  via REGISTRY env variable or argument like 192.168.0.1:5000')
-        sys.exit()
+    REGISTRY=args.url
+    OP=args.operation
 
-    REG_URL='http://%s/v2' % (REGISTRY)
-    if REG_IP and REG_PORT:
-        REG_URL='http://%s:%s/v2' % (REG_IP, REG_PORT)
+    print('REGISTRY: %s OP: %s' % (REGISTRY, OP))
+
     CATALOG_URL='%s/_catalog' % (REG_URL)
 
     r = requests.get(CATALOG_URL, verify=False)
