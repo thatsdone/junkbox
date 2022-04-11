@@ -66,6 +66,7 @@ Common across languages.
 
 * TODO
   * Add Erlang implementation.
+  * Add Java implementation.
 
 ## 2. A simple test program for inter thread/process communication
 
@@ -73,7 +74,7 @@ Measures inter thread/process communication performance.
 
 * Languages
   * Python3: mpmt2.py
-      * A variation of mpmt1.py
+      * A variation of mpmt1.py You can see difference of queue performance between threading and multiprocessing.
 
 * TODO
   * Implement variable message size measurement.
