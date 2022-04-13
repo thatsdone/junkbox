@@ -47,16 +47,16 @@ Common across languages.
       * Implements thread model only. No process model at the moment.
       * In case of Ubuntu, use scala3.
       * Simply `make scala `, and `scala mpmt1`
-  * Lua mpmt1.lua
+  * Lua: mpmt1.lua
       * Uses coroutine of Lua. No multi thread nor process at the moment.
       * To be updated to use getopt.
-  * Common Lisp mpmt1.lisp
+  * Common Lisp(sbcl): mpmt1.lisp
       * Implements thread model only using 'bordeaux-threads'. No multi process at the moment.
       * Runs under sbcl. Use quicklisp to install 'bordeaux-threads' and 'getopt'
           *  https://www.quicklisp.org/beta/index.html
       * Still buggy...
       * Looks like the are misunderstanding regarding pass-by-value or pass-by-reference in SBCL/Common Lisp. Please see the comment in 'bt:make-thread' block. If we execute it without the '(sleep 1)', busy_worker() prints wroing 'id'.
-  * Julia mpmt1.jl
+  * Julia: mpmt1.jl
       * Thread mode only at the moment.
 
 * Notes
@@ -65,8 +65,7 @@ Common across languages.
   * You would see python threading model can consume only 1 CPU (100%) even if there are multiple CPUs and you specifed more than 2 contexts.
 
 * TODO
-  * Add Erlang implementation.
-  * Add Java implementation.
+  * Add some more languages. (Erlang, Java, Perl, WebAssembly(?)...etc)
 
 ## 2. A simple test program for inter thread/process communication
 
