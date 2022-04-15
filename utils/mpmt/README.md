@@ -65,7 +65,7 @@ Common across languages.
   * You would see python threading model can consume only 1 CPU (100%) even if there are multiple CPUs and you specifed more than 2 contexts.
 
 * TODO
-  * Add some more languages. (Erlang, Java, Perl, WebAssembly(?)...etc)
+  * Add some more languages. (Java, Erlang, Elixir, Closure, Perl, WebAssembly(?)...etc)
 
 ## 2. A simple test program for inter thread/process communication
 
