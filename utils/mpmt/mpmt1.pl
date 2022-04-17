@@ -8,7 +8,7 @@
 #   * 2022/04/16 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TOTO:
+# TODO:
 #   * Implement multi process model
 use strict;
 use Getopt::Std;

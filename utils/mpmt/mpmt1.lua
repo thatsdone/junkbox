@@ -11,7 +11,7 @@
 --   Masanori Itoh <masanori.itoh@gmail.com>
 -- Note:
 
--- TOTO:
+-- TODO:
 --   * Explore getopt
 
 --

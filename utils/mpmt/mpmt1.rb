@@ -9,7 +9,7 @@
 #   * 2021/12/29 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TOTO:
+# TODO:
 #   * Implement multi process mode (or more clever thread mode)
 
 

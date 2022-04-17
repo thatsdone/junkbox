@@ -12,7 +12,7 @@
 #   * 2021/12/20 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TOTO:
+# TODO:
 #   * Add HELP messages.
 import time
 import threading

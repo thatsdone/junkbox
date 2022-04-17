@@ -9,7 +9,7 @@
 #   * 2022/03/21 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TOTO:
+# TODO:
 #   * Add multiprocessing mode?
 #
 using Dates

@@ -9,7 +9,7 @@
 #   * 2021/12/30 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TOTO:
+# TODO:
 #   * Investigate multi-thread feature of Node.js
 #   * Add options by using getopt
 */
