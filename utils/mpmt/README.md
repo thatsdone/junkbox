@@ -58,6 +58,9 @@ Common across languages.
       * Looks like the are misunderstanding regarding pass-by-value or pass-by-reference in SBCL/Common Lisp. Please see the comment in 'bt:make-thread' block. If we execute it without the '(sleep 1)', busy_worker() prints wroing 'id'.
   * Julia: mpmt1.jl
       * Thread mode only at the moment.
+  * Perl: mpmt1.pl
+      * Thread mode only at the moment.
+      * Note: Perl interpreter-based thred runs parallelly not only concurrently different from Python, Ruby, etc.
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
@@ -65,7 +68,7 @@ Common across languages.
   * You would see python threading model can consume only 1 CPU (100%) even if there are multiple CPUs and you specifed more than 2 contexts.
 
 * TODO
-  * Add some more languages. (Java, Erlang, Elixir, Closure, Perl, WebAssembly(?)...etc)
+  * Add some more languages. (Java, Erlang, Elixir, Closure, WebAssembly(?)...etc)
 
 ## 2. A simple test program for inter thread/process communication
 
