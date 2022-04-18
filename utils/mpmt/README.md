@@ -55,7 +55,7 @@ Common across languages.
       * Runs under sbcl. Use quicklisp to install 'bordeaux-threads' and 'getopt'
           *  https://www.quicklisp.org/beta/index.html
       * Still buggy...
-      * Looks like the are misunderstanding regarding pass-by-value or pass-by-reference in SBCL/Common Lisp. Please see the comment in 'bt:make-thread' block. If we execute it without the '(sleep 1)', busy_worker() prints wroing 'id'.
+      * Looks like there are misunderstandings regarding pass-by-value or pass-by-reference in SBCL/Common Lisp. Please see the comment in 'bt:make-thread' block. If we execute it without the '(sleep 1)', busy_worker() prints wrong 'id'.
   * Julia: mpmt1.jl
       * Thread mode only at the moment.
   * Perl: mpmt1.pl
