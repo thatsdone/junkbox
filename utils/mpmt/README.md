@@ -61,6 +61,8 @@ Common across languages.
   * Perl: mpmt1.pl
       * Thread mode only at the moment.
       * Note: Perl interpreter-based thred runs parallelly not only concurrently different from Python, Ruby, etc.
+  * Elixir: mpmt1.exs
+      * Just worked version. Need blush up.
 
 * Notes
   * Run the executables on a server at least 2 (v)CPUs.
@@ -68,7 +70,7 @@ Common across languages.
   * You would see python threading model can consume only 1 CPU (100%) even if there are multiple CPUs and you specifed more than 2 contexts.
 
 * TODO
-  * Add some more languages. (Java, Erlang, Elixir, Closure, WebAssembly(?)...etc)
+  * Add some more languages. (Java, Erlang, Haskell, Closure, WebAssembly(?)...etc)
 
 ## 2. A simple test program for inter thread/process communication
 
