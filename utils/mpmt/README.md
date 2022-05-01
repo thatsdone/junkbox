@@ -58,6 +58,7 @@ Common across languages.
       * Looks like there are misunderstandings regarding pass-by-value or pass-by-reference in SBCL/Common Lisp. Please see the comment in 'bt:make-thread' block. If we execute it without the '(sleep 1)', busy_worker() prints wrong 'id'.
   * Julia: mpmt1.jl
       * Thread mode only at the moment.
+      * Note that you need to increase maximum thread number of Julia runtime by JULIA_NUM_THREADS environment variable not only -n NUM_CONTEXT.
   * Perl: mpmt1.pl
       * Thread mode only at the moment.
       * Note: Perl interpreter-based thred runs parallelly not only concurrently different from Python, Ruby, etc.
