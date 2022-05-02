@@ -14,7 +14,7 @@ https://github.com/quarkusio/quarkus-quickstarts/tree/main/getting-started
 $ mvn wrapper:wrapper
 $ mvn -N io.takari:maven:wrapper
 $ ./mvnw package
-$ java jar target/quarkus-app/quarkus-run.jar
+$ java -jar target/quarkus-app/quarkus-run.jar
 $ curl http://localhost:18080/api/metrics/foo
 $ curl -X POST http://localhost:18080/api/operation -d "foo"
 
