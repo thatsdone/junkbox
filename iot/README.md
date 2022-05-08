@@ -32,6 +32,9 @@ Python standard 'http' module. Initlally written for Raspberry Pi Zero W.
   * example_mpu9250.py
     * Example how to use read MPU9250 sensor data using
       SMBus(I2C). Requires smbus via pip.
+* Examples for data logging
+  * imulogger.py
+    * A simple IMU data logger for MPU9250
 
 ## TODO
 * Add TI INA226 support - Current and Voltage
