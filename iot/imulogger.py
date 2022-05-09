@@ -20,6 +20,7 @@
 #   Masanori Itoh <masanori.itoh@gmail.com>
 #
 # TODO:
+#   * write README.md
 #   * write data reader/analyzer
 #
 import sys
@@ -89,11 +90,15 @@ def save_thread(q):
 
         # example of persistent (and large) storage space.
         # rewrite below as you like.
-        cmd = 'cp %s /nfs/data/imulogger' % output_filename        
-        proc = subprocess.run(cmd, shell=True, stdout=PIPE, stderr=PIPE,
-                              text=True)
-        ts_end = time.time_ns()
-        print('%d : save_thread(): scp: %d : stdout %s : stderror: %s duration: %d (ns) ' % (ts_end, proc.returncode, proc.stdout, proc.stderr, (ts_end - ts_begin)))
+
+        if args.command:
+            save_cmd = args.command + ' ' + output_filename
+            proc = subprocess.run(save_cmd, shell=True, stdout=PIPE,
+                                  stderr=PIPE, text=True)
+            ts_end = time.time_ns()
+            print('%d : save_thread(): %s: exit: %d duration: %d (ns) ' % (ts_end, save_cmd, proc.returncode, (ts_end - ts_begin)))
+            if proc.returncode > 0:
+                print('%d : stdout %s : stderr: %s' % (ts_end, proc.stdout, procstderr))
 
 if __name__ == "__main__":
 
@@ -102,15 +107,13 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--interval', default=2000000)
     args = parser.parse_args()
 
-    if not args.command:
-        cmd = args.command
-        
+
     q = queue.Queue()
     th = threading.Thread(target=save_thread, args=(q,))
     th.start()
     
-    poll_count = args.interval # save interval (in pooling count)
-    print('# IMU data logger. max_loop = %d' % (poll_count))
+    poll_count = int(args.interval) # save interval (in polling count)
+    print('# IMU data logger. poll_count = %d' % (poll_count))
     while True:
         sample(poll_count, q)
 
