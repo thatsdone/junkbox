@@ -1,0 +1,4 @@
+# your slack API token
+token: 'YOUR_TOKEN'
+# default channel
+channel: 'YOUR_CHANNEL'
