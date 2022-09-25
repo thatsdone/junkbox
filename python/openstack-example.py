@@ -59,10 +59,16 @@ class OSExample:
         # create keystone client instance
         kclient = keystoneclient.Client(session=sess)
 
-        # get user_id of the current user
+        # get user_id of the current user from auth
         user_id = self.auth.get_user_id(sess)
-        print('user id : %s' % (user._info['id']))
+        print('user id(auth) : %s' % (user_id))
+        # get user related information from keystone client
+        # especially, domain id is important
         user = kclient.users.get(user_id)
+        print('name : %s' % (user._info['name']))
+        print('user id : %s' % (user._info['id']))
+        print('domain id : %s ' % (user._info['domain_id']))
+        # print('description : %s ' % (user._info['description']))
 
         # list projects that the given user has membership
         projects = kclient.projects.list(user=user)
