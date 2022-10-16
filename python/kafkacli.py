@@ -22,7 +22,6 @@ from kafka.cluster import ClusterMetadata
 
 import time
 import argparse
-#import logging
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='kafkacli.py')
@@ -30,7 +29,6 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--bootstrap_servers', default='localhost:9092')
     parser.add_argument('-i', '--interval', default=5)
     parser.add_argument('--debug', action='store_true')
-    parser.add_argument('--logfile', default='pygen.log')
     args = parser.parse_args()
     #
     debug = False
