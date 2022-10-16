@@ -42,12 +42,13 @@ if sys.argv[1] == 'send':
 elif sys.argv[1] == 'recv':
     consumer = KafkaConsumer(bootstrap_servers=bootstrap_servers)
     consumer.subscribe(topics=[topic])
-    result = consumer.poll(timeout_ms=3600*1000, max_records=1024)
-    for k in result:
-        print('RESULT KEY: ', k, type(result[k]), result[k])
-        for elm in result[k]:
-            print('ELM: ', type(elm), 'topic: ', elm.topic, 'partition: ', elm.partition, 'value: ', elm.value)
-            for  h in elm.headers:
-                print(h, type(h), h[0], h[1])
+    while True:
+        result = consumer.poll(timeout_ms=3600*1000, max_records=1024)
+        for k in result:
+            print('RESULT KEY: ', k, type(result[k]), result[k])
+            for elm in result[k]:
+                print('ELM: ', type(elm), 'topic: ', elm.topic, 'partition: ', elm.partition, 'value: ', elm.value)
+                for  h in elm.headers:
+                    print(h, type(h), h[0], h[1])
 else:
     print('Unkown argument: ', sys.argv[1])
