@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# kafkacli.py: A tiny kafka topic status checker
+# kafkastatus.py: A tiny kafka topic status checker
 #
 # License:
 #   Apache License, Version 2.0
@@ -24,7 +24,7 @@ import time
 import argparse
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='kafkacli.py')
+    parser = argparse.ArgumentParser(description='kafkastatus.py')
     parser.add_argument('-t', '--topic', default='my-topic')
     parser.add_argument('-b', '--bootstrap_servers', default='localhost:9092')
     parser.add_argument('-i', '--interval', default=5)
