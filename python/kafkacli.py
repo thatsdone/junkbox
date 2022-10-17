@@ -47,10 +47,9 @@ if __name__ == "__main__":
         print('-R(--recv) and -S(--send) are exclusive')
         sys.exit()
     elif not (args.recv and args.send):
-        print('Running receiver mode (-R)')
         args.recv = True
 
-    print('# kafkacli.py : Running %s mode' % ('receiver' if args.recv else 'sender'))
+    print('# kafkacli.py : Running %s mode' % ('receiver(-R)' if args.recv else 'sender(-S)'))
     print('# bootstrap_servers: %s' % (bootstrap_servers))
     print('# topic: %s' % (topic))
     print('# poll timeout: %d (s)' % (args.poll_timeout))
