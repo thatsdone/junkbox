@@ -58,7 +58,8 @@ if __name__ == "__main__":
     #
     beginning_offsets = consumer.beginning_offsets(tps)
     if debug:
-        print('# topic: %s part ealiest lastest msg' % (tp.topic))
+        print('# topic: %s'% (tp.topic))
+        print('# partition ealiest_seq lastest_seq num_msgs')
         for tp in tps:
             print('  %d %d %d %d' % (tp.partition,
                                      consumer.position(tp),
