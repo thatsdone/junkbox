@@ -14,3 +14,12 @@ $$\begin{pmatrix}a_{11} & a_{12}\\\ a_{21} & a_{22}\end{pmatrix}$$
 \begin{bmatrix}X\\Y\end{bmatrix}
 ```
 
+```math
+\displaystyle \int_0^{\infty} f(x)dx
+```
+
+```math
+\displaystyle \oint_C \mathbf{F}(\mathbf{r}) \cdot d\mathbf{r}
+```
+
+$\textit i\\hbar\displaystyle{\frac{\partial}{\partial t}} \psi(\mathbf x, t) = [-\displaystyle{\frac{\hbar^2}{2m}} \nabla^2 + V(\mathbf x, t)]\psi(\mathbf x,t) ...$
