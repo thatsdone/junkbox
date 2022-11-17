@@ -30,3 +30,7 @@ $$\hat\sigma_x = \displaystyle \begin{pmatrix}0 && 1\\\ 1 && 0\end{pmatrix}$$
 $$\hat\sigma_y = \displaystyle \begin{pmatrix}0 && -\textit i\\\ \textit i && 0\end{pmatrix}$$
 
 $$\hat\sigma_z = \displaystyle \begin{pmatrix}1 && 0\\\ 0 && -1\end{pmatrix}$$
+
+$\bra{u}H\ket{v}$
+
+$H^{\dagger}$
