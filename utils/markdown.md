@@ -34,3 +34,7 @@ $$\hat\sigma_z = \displaystyle \begin{pmatrix}1 && 0\\\ 0 && -1\end{pmatrix}$$
 $\bra{u}H\ket{v}$
 
 $H^{\dagger}$
+
+```math
+\phi_{\mathit i}(\mathit v) = \displaystyle \sum_{S \subseteq N \textbackslash \{i\} }  \displaystyle \frac{|S|! (n - |S| - 1)! }{n!} (v(S \cup \{i\} - \textit v(S))) 
+```
