@@ -42,10 +42,11 @@ hello: PE32 executable (console) Intel 80386 Mono/.Net assembly, for MS Windows
 ```
 
 To execute, use mono as a wrapper.
-``
+```
 $ mono hello
 Hello Mono World
 ```
+
 BTW, I didn't know that at least Ubuntu 22.04 can execute PE32. :o
 ```
 $ ./hello
