@@ -18,6 +18,7 @@ import sys
 import time
 import github.GithubObject as gho
 from github.GithubObject import NotSet
+import argparse
 
 def op_gitlab_auth(url, token):
     import gitlab
@@ -232,20 +233,22 @@ if __name__ == "__main__":
     scm_type = None
     profile = None
 
-    if len(sys.argv) >= 2:
-        profile = sys.argv[1]
-    else:
-        profile = 'ghe_destination'
+    parser = argparse.ArgumentParser(description='ghlutil.py')
+    parser.add_argument('--profile', default='ghe_destination')
+    parser.add_argument('-c', '--config', default='config.yaml')
+    parser.add_argument('-t', '--target', default='issue')
+    parser.add_argument('-o', '--operation', default='list')
+    args = parser.parse_args()
 
-    with open(config_file) as fd:
+    with open(args.config) as fd:
         conf = yaml.load(fd, Loader=yaml.SafeLoader)
     if not conf:
         print('Specify a config file')
         sys.exit()
-    print('searching \'%s\' in %s' % (profile, config_file) )
+    print('searching \'%s\' in %s' % (args.profile, args.config))
     for p in conf['profiles']:
         print(p['name'], p['scm_type'], p['url'], p['organization'], p['repository'])
-        if p['name'] == profile:
+        if p['name'] == args.profile:
             url = p['url']
             token = p['token']
             organization = p['organization']
@@ -254,13 +257,21 @@ if __name__ == "__main__":
             break
     #
     #
-    #
+    op = args.operation
+    print(scm_type, args.target)
     if scm_type == 'gitlab':
         gl = op_gitlab_auth(url, token)
+        if args.target == 'issue':
+            op_gitlab_issues(gl, organization, repository, op=op)
+        elif args.target == 'label':
+            op_gitlab_labels(gl, organization, repository)
         #op_gitlab(gl, organization, repository)
-        op_gitlab_issues(gl, organization, repository, op='list')
-        #op_gitlab_labels(gl, organization, repository)
+
     elif scm_type == 'github':
         gh = op_github_auth(url, token)
+        if args.target == 'issue':
+            op_github_labels(gh, organization, repository, op=op)
+        elif args.target == 'label':
+            op_github_issues(gh, organization, repository, op=op)
         #op_github(gh, organization, repository)
-        op_github_labels(gh, organization, repository, op='migrate')
+
