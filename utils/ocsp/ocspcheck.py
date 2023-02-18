@@ -34,9 +34,12 @@ import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ocspcheck.py')
+    parser.add_argument('--host', default=None)
+    parser.add_argument('--port', type=int, default=443)
     parser.add_argument('--cert', default=None)
     parser.add_argument('--ocsp_server', default=None)
     parser.add_argument('--issuer', default=None)
+    parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
 
     #
@@ -55,44 +58,72 @@ if __name__ == "__main__":
             print('ERROR: fail to load cert: %s' % (args.cert))
             sys.exit()
         #
-        # extract OCSP server URI
-        #
-        v = cert.extensions.get_extension_for_oid(ExtensionOID.AUTHORITY_INFORMATION_ACCESS).value
-        ocsp_server = v[0].access_location.value
-        print('extracted ocsp_server: %s ' % (ocsp_server))
-        if args.ocsp_server:
-            print('overriding ocsp_server as: %s' % (args.ocsp_server))
-            ocsp_server = args.ocsp_server
-        #
-        # load locally stored issuer cert
-        #
-        issuer_cert = None
-        if args.issuer:
-            with open(args.issuer, 'rt') as fp:
-                issuer_cert_pem = fp.read()
-            issuer_cert = x509.load_pem_x509_certificate(issuer_cert_pem.encode('ascii'), default_backend())
-        #
-        # create an OCSP request
-        #
-        builder = ocsp.OCSPRequestBuilder()
-        builder = builder.add_certificate(cert, issuer_cert, SHA256())
-        req = builder.build()
-        req_path = base64.b64encode(req.public_bytes(serialization.Encoding.DER))
-        ocsp_req = urljoin(ocsp_server + '/', req_path.decode('ascii'))
-        print('OCSP request URL: %s ' % (ocsp_req))
-        #
-        # send the OCSP request
-        #
-        ocsp_resp = requests.get(ocsp_req)
-        if ocsp_resp.ok:
-            ocsp_decoded = ocsp.load_der_ocsp_response(ocsp_resp.content)
-            if ocsp_decoded.response_status == OCSPResponseStatus.SUCCESSFUL:
-                print('response_status:     %s' % (ocsp_decoded.response_status))
-                print('certificate: status: %s' % (ocsp_decoded.certificate_status))
-                print('certificate: this_update: %s' % (ocsp_decoded.this_update))
-                print('certificate: next_update: %s' % (ocsp_decoded.next_update))
-            else:
-                print('decoding ocsp response failed: %s' % (ocsp_decoded.response_status))
+    else:
+        conn = ssl.create_connection((args.host, args.port))
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        sock = context.wrap_socket(conn, server_hostname=args.host)
+        certDER = sock.getpeercert(True)
+        certPEM = ssl.DER_cert_to_PEM_cert(certDER)
+        cert = x509.load_pem_x509_certificate(certPEM.encode('ascii'), default_backend())
+
+    ocsp_server = None
+    issuer_url = None
+    issuer_cert = None
+    #
+    # Lookup Authority Information and extract Issuer/OCSP
+    #
+    v = cert.extensions.get_extension_for_oid(ExtensionOID.AUTHORITY_INFORMATION_ACCESS).value
+    for elm in v:
+        if elm.access_method == AuthorityInformationAccessOID.OCSP:
+            print('Found: OCSP', elm.access_location.value)
+            ocsp_server = elm.access_location.value
+
+        elif elm.access_method == AuthorityInformationAccessOID.CA_ISSUERS:
+            print('Found: Issuer', elm.access_location.value)
+            issuer_url = elm.access_location.value
+
+    if args.ocsp_server:
+        print('overriding ocsp_server as: %s' % (args.ocsp_server))
+        ocsp_server = args.ocsp_server
+
+    #
+    # load ssuer cert
+    #
+    if not args.issuer:
+        issuer_response = requests.get(issuer_url)
+        if issuer_response.ok:
+            issuerDER = issuer_response.content
+            issuerPEM = ssl.DER_cert_to_PEM_cert(issuerDER)
+            issuer_cert = x509.load_pem_x509_certificate(issuerPEM.encode('ascii'), default_backend())
         else:
-            print('fetching ocsp cert status failed with response status: %s ' % (ocsp_resp.status_code))
+            print('GET Issuer cert faile.')
+            sys.exit()
+    else:
+        with open(args.issuer, 'rt') as fp:
+            issuer_cert_pem = fp.read()
+        issuer_cert = x509.load_pem_x509_certificate(issuer_cert_pem.encode('ascii'), default_backend())
+    #
+    # create an OCSP request
+    #
+    builder = ocsp.OCSPRequestBuilder()
+    builder = builder.add_certificate(cert, issuer_cert, SHA256())
+    req = builder.build()
+    req_path = base64.b64encode(req.public_bytes(serialization.Encoding.DER))
+    ocsp_req = urljoin(ocsp_server + '/', req_path.decode('ascii'))
+    print('OCSP request URL: %s ' % (ocsp_req))
+    #
+    # send the OCSP request
+    #
+    ocsp_resp = requests.get(ocsp_req)
+    if ocsp_resp.ok:
+        ocsp_decoded = ocsp.load_der_ocsp_response(ocsp_resp.content)
+        if ocsp_decoded.response_status == OCSPResponseStatus.SUCCESSFUL:
+            print('response_status:     %s' % (ocsp_decoded.response_status))
+            print('certificate: status: %s' % (ocsp_decoded.certificate_status))
+            print('certificate: this_update: %s' % (ocsp_decoded.this_update))
+            print('certificate: next_update: %s' % (ocsp_decoded.next_update))
+        else:
+            print('decoding ocsp response failed: %s' % (ocsp_decoded.response_status))
+    else:
+        print('fetching ocsp cert status failed with response status: %s ' % (ocsp_resp.status_code))
 
