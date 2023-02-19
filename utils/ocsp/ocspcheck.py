@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# ocspcheck.py: A tiny utility for OCSP stapling
+# ocspcheck.py: A tiny utility for OCSP stapling study
 #
 # License:
 #   Apache License, Version 2.0
@@ -39,9 +39,9 @@ if __name__ == "__main__":
     parser.add_argument('--host', default=None)
     parser.add_argument('--port', type=int, default=443)
     parser.add_argument('--cert', default=None)
-    parser.add_argument('--ocsp_server', default=None)
+    parser.add_argument('--ocsp_uri', default=None)
     parser.add_argument('--issuer', default=None)
-    parser.add_argument('--hash', default='sha256')
+    parser.add_argument('--hash_alg', default='sha256')
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
 
@@ -55,10 +55,13 @@ if __name__ == "__main__":
         cert = None
         with open(args.cert, 'rt') as fp:
             cert_pem = fp.read()
-            cert = x509.load_pem_x509_certificate(cert_pem.encode('ascii'),
-                                                  default_backend())
+            try:
+                cert = x509.load_pem_x509_certificate(cert_pem.encode('ascii'),
+                                                      default_backend())
+            except Exception:
+                print(sys.exc_info())
         if not cert:
-            print('ERROR: fail to load cert: %s' % (args.cert))
+            print('ERROR: failed to load cert: %s' % (args.cert))
             sys.exit()
         #
     else:
@@ -70,12 +73,11 @@ if __name__ == "__main__":
         cert = x509.load_pem_x509_certificate(certPEM.encode('ascii'), default_backend())
     if args.debug:
         #print(dir(cert))
-        print('issuer', cert.issuer)
-        #print('signature', cert.signature)
-        print('signature_alg', cert.signature_algorithm_oid)
-        print('subject',cert.subject)
-        #print(cert.tbs_certificate_bytes)
-    ocsp_server = None
+        print('issuer: ', cert.issuer.rfc4514_string())
+        #print('signature: ', cert.signature)
+        print('signature_alg: ', cert.signature_algorithm_oid)
+        print('subject: ',cert.subject.rfc4514_string())
+    ocsp_uri = None
     issuer_url = None
     issuer_cert = None
     #
@@ -85,15 +87,15 @@ if __name__ == "__main__":
     for elm in v:
         if elm.access_method == AuthorityInformationAccessOID.OCSP:
             print('Found: OCSP', elm.access_location.value)
-            ocsp_server = elm.access_location.value
+            ocsp_uri = elm.access_location.value
 
         elif elm.access_method == AuthorityInformationAccessOID.CA_ISSUERS:
             print('Found: Issuer', elm.access_location.value)
             issuer_url = elm.access_location.value
 
-    if args.ocsp_server:
-        print('overriding ocsp_server as: %s' % (args.ocsp_server))
-        ocsp_server = args.ocsp_server
+    if args.ocsp_uri:
+        print('overriding ocsp_uri as: %s' % (args.ocsp_uri))
+        ocsp_uri = args.ocsp_uri
 
     #
     # load ssuer cert
@@ -118,10 +120,10 @@ if __name__ == "__main__":
     #
     builder = ocsp.OCSPRequestBuilder()
     hash_alg = SHA256()
-    if args.hash == 'sha384':
+    if args.hash_alg == 'sha384':
         hash_alg = SHA384()
         print('using hash: ', hash_alg)
-    elif args.hash == 'sha512':
+    elif args.hash_alg == 'sha512':
         hash_alg = SHA512()
         print('using hash: ', hash_alg)
     builder = builder.add_certificate(cert, issuer_cert, hash_alg)
@@ -131,7 +133,7 @@ if __name__ == "__main__":
         #print(dir(req))
         #print(dir(req.public_bytes))
     req_path = base64.b64encode(req.public_bytes(serialization.Encoding.DER))
-    ocsp_req = urljoin(ocsp_server + '/', req_path.decode('ascii'))
+    ocsp_req = urljoin(ocsp_uri + '/', req_path.decode('ascii'))
     print('OCSP request URL: %s ' % (ocsp_req))
     #
     # send the OCSP request
