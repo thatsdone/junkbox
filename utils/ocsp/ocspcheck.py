@@ -24,6 +24,8 @@ from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives.hashes import SHA384
+from cryptography.hazmat.primitives.hashes import SHA512
 from cryptography.x509 import ocsp
 from cryptography.x509.ocsp import OCSPResponseStatus
 from cryptography.x509.oid import ExtensionOID, AuthorityInformationAccessOID
@@ -39,6 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('--cert', default=None)
     parser.add_argument('--ocsp_server', default=None)
     parser.add_argument('--issuer', default=None)
+    parser.add_argument('--hash', default='sha256')
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
 
@@ -65,7 +68,13 @@ if __name__ == "__main__":
         certDER = sock.getpeercert(True)
         certPEM = ssl.DER_cert_to_PEM_cert(certDER)
         cert = x509.load_pem_x509_certificate(certPEM.encode('ascii'), default_backend())
-
+    if args.debug:
+        #print(dir(cert))
+        print('issuer', cert.issuer)
+        #print('signature', cert.signature)
+        print('signature_alg', cert.signature_algorithm_oid)
+        print('subject',cert.subject)
+        #print(cert.tbs_certificate_bytes)
     ocsp_server = None
     issuer_url = None
     issuer_cert = None
@@ -102,12 +111,25 @@ if __name__ == "__main__":
         with open(args.issuer, 'rt') as fp:
             issuer_cert_pem = fp.read()
         issuer_cert = x509.load_pem_x509_certificate(issuer_cert_pem.encode('ascii'), default_backend())
+    if args.debug:
+        print('issuer signature_alg', issuer_cert.signature_algorithm_oid)
     #
     # create an OCSP request
     #
     builder = ocsp.OCSPRequestBuilder()
-    builder = builder.add_certificate(cert, issuer_cert, SHA256())
+    hash_alg = SHA256()
+    if args.hash == 'sha384':
+        hash_alg = SHA384()
+        print('using hash: ', hash_alg)
+    elif args.hash == 'sha512':
+        hash_alg = SHA512()
+        print('using hash: ', hash_alg)
+    builder = builder.add_certificate(cert, issuer_cert, hash_alg)
     req = builder.build()
+    if args.debug:
+        print(req)
+        #print(dir(req))
+        #print(dir(req.public_bytes))
     req_path = base64.b64encode(req.public_bytes(serialization.Encoding.DER))
     ocsp_req = urljoin(ocsp_server + '/', req_path.decode('ascii'))
     print('OCSP request URL: %s ' % (ocsp_req))
