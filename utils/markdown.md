@@ -38,3 +38,5 @@ $H^{\dagger}$
 ```math
 \phi_{\mathit i}(\mathit v) = \displaystyle \sum_{S \subseteq N \textbackslash \{i\} }  \displaystyle \frac{|S|! (n - |S| - 1)! }{n!} (v(S \cup \{i\} - \textit v(S))) 
 ```
+
+$sin(\theta + \alpha) = sin(\theta)cos(\alpha) + cos(\theta)sin(\alpha)$
