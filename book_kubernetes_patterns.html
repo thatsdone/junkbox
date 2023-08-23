@@ -65,65 +65,59 @@
     <div class="content">
       <p><a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/">BPF本</a>の話も書きかけなのですが、そういえば同僚がSan Diego でもらってきた本の中に<a href="https://www.amazon.co.jp/dp/1492050288">Kubernetes Patterns: Reusable Elements for Designing Cloud-Native Applications</a>もありました。</p>
 <p>同じく章構成はこんな感じになっています。</p>
-<div class="highlight"><pre><span></span><code>    <span class="mi">1</span><span class="p">.</span> <span class="n">Introduction</span>
+<div class="highlight"><pre><span></span><code>    1. Introduction
 
-<span class="n">Part</span> <span class="n">I</span> <span class="p">:</span> <span class="n">Foundation</span> <span class="n">Patterns</span>
+Part I : Foundation Patterns
 </code></pre></div>
-
 
 <p>まずは基本パターン…というよりは、見てわかる通り、k8s を使いこなすにあたって押さえておくべき基本概念ですね。</p>
-<div class="highlight"><pre><span></span><code>    <span class="mi">2</span> <span class="n">Predcitable</span> <span class="n">Dememands</span>
-    <span class="mi">3</span> <span class="n">Declarative</span> <span class="n">Deployments</span>
-    <span class="mi">4</span> <span class="n">Health</span> <span class="n">Probe</span>
-    <span class="mi">5</span> <span class="n">Managed</span> <span class="n">Lifecycle</span>
-    <span class="mi">6</span> <span class="n">Automated</span> <span class="n">Placement</span>
+<div class="highlight"><pre><span></span><code>    2 Predcitable Dememands
+    3 Declarative Deployments
+    4 Health Probe
+    5 Managed Lifecycle
+    6 Automated Placement
 
-<span class="n">Part</span> <span class="n">II</span> <span class="p">:</span> <span class="n">Behavioral</span> <span class="n">Patterns</span>
+Part II : Behavioral Patterns
 </code></pre></div>
-
 
 <p>プログラムやサービスの挙動に応じたパターン分類。だいたい名が体を表しているように思いますが、ぱっと見て11のStateful Serviceと13のSelf Awarenessの違いって何よ？と思ったのですが、Self Awarenessのほうは、コンテナが自分が動ているpodを意識する必要があるようなケースのためのものです。</p>
-<div class="highlight"><pre><span></span><code>    <span class="mi">7</span> <span class="n">Batch</span> <span class="n">Job</span>
-    <span class="mi">8</span> <span class="n">Periodic</span> <span class="n">Job</span>
-    <span class="mi">9</span> <span class="n">Daemon</span> <span class="n">Service</span>
-    <span class="mi">10</span> <span class="n">Singleton</span> <span class="n">Service</span>
-    <span class="mi">11</span> <span class="n">Stateful</span> <span class="n">Service</span>
-    <span class="mi">12</span> <span class="n">Service</span> <span class="n">Discovery</span>
-    <span class="mi">13</span> <span class="k">Self</span> <span class="n">Awareness</span>
+<div class="highlight"><pre><span></span><code><span class="w">    </span><span class="mi">7</span><span class="w"> </span><span class="nx">Batch</span><span class="w"> </span><span class="nx">Job</span>
+<span class="w">    </span><span class="mi">8</span><span class="w"> </span><span class="nx">Periodic</span><span class="w"> </span><span class="nx">Job</span>
+<span class="w">    </span><span class="mi">9</span><span class="w"> </span><span class="nx">Daemon</span><span class="w"> </span><span class="nx">Service</span>
+<span class="w">    </span><span class="mi">10</span><span class="w"> </span><span class="nx">Singleton</span><span class="w"> </span><span class="nx">Service</span>
+<span class="w">    </span><span class="mi">11</span><span class="w"> </span><span class="nx">Stateful</span><span class="w"> </span><span class="nx">Service</span>
+<span class="w">    </span><span class="mi">12</span><span class="w"> </span><span class="nx">Service</span><span class="w"> </span><span class="nx">Discovery</span>
+<span class="w">    </span><span class="mi">13</span><span class="w"> </span><span class="k">Self</span><span class="w"> </span><span class="nx">Awareness</span>
 
-<span class="n">Part</span> <span class="n">III</span> <span class="p">:</span> <span class="n">Structural</span> <span class="n">Patterns</span>
+<span class="nx">Part</span><span class="w"> </span><span class="nx">III</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="nx">Structural</span><span class="w"> </span><span class="nx">Patterns</span>
 </code></pre></div>
-
 
 <p>Part IIIはプログラムやサービスの構造に基づいたパターン分類。</p>
-<div class="highlight"><pre><span></span><code>    <span class="mi">14</span> <span class="n">Init</span> <span class="n">Container</span>
-    <span class="mi">15</span> <span class="n">Side</span> <span class="n">Car</span>
-    <span class="mi">16</span> <span class="n">Adapter</span>
-    <span class="mi">17</span> <span class="n">Ambasaddor</span>
+<div class="highlight"><pre><span></span><code>    14 Init Container
+    15 Side Car
+    16 Adapter
+    17 Ambasaddor
 
-<span class="n">Part</span> <span class="n">IV</span> <span class="p">:</span> <span class="n">Configuration</span> <span class="n">Patterns</span>
+Part IV : Configuration Patterns
 </code></pre></div>
-
 
 <p>プログラムやサービスの設定情報をどう持ってまわるか？に基づいたパターン分類。</p>
-<div class="highlight"><pre><span></span><code>    <span class="mi">18</span> <span class="n">EnvVar</span> <span class="n">Configuration</span>
-    <span class="mi">19</span> <span class="n">Confiuration</span> <span class="n">Resource</span>
-    <span class="mi">20</span> <span class="k">Immutable</span> <span class="n">Configuration</span>
-    <span class="mi">21</span> <span class="n">Configuration</span> <span class="k">Template</span>
+<div class="highlight"><pre><span></span><code>    18 EnvVar Configuration
+    19 Confiuration Resource
+    20 Immutable Configuration
+    21 Configuration Template
 
-<span class="n">Part</span> <span class="n">V</span> <span class="p">:</span> <span class="n">Advanced</span> <span class="n">Patterns</span>
+Part V : Advanced Patterns
 </code></pre></div>
-
 
 <p>進んだトピック。22のControllerと23のOperatorは、いわゆる kubernetes のController/Operatorの解説、24はkubernetesによってアプリケーションをスケールさせる方法、最後の25はここまでの話題とは少し毛色が変わってkubernetes clusterの中でイメージを維持管理する方法論です。</p>
-<div class="highlight"><pre><span></span><code>    <span class="mi">22</span> <span class="n">Controller</span>
-    <span class="mi">23</span> <span class="k">Operator</span>
-    <span class="mi">24</span> <span class="n">Elastic</span> <span class="k">Scale</span>
-    <span class="mi">25</span> <span class="n">Image</span> <span class="n">Builder</span>
+<div class="highlight"><pre><span></span><code>    22 Controller
+    23 Operator
+    24 Elastic Scale
+    25 Image Builder
 
-    <span class="n">Aferword</span>
+    Aferword
 </code></pre></div>
-
 
 <p>まとめ。</p>
 <p>さて、ここまでざっと本の構造を眺めただけなので、ちゃんと読まなくては(笑)</p>

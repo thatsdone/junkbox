@@ -16,7 +16,7 @@ COSBenchの構造等の詳細は
 &lt;a href="https://www.snia.org/educational-library/object-storage-workload-testing-tools-2019"&gt;Object Storage Workload Testing Tools&lt;/a&gt;
 でRedHatのエンジニアが使いどころを紹介しているほか、2021年にはTencentが自社Object Storageサービスの性能チューニングのベストプラクティスの一環で&lt;a href="https://intl.cloud.tencent.com/document/product/436/38298"&gt;Working with COSBench&lt;/a&gt;
 という記事を出しているようで、まだ買われているようです。&lt;/p&gt;
-&lt;p&gt;さて、本題は'21/10初頭時点でのリポジトリ…とうか、コードの状態の話。
+&lt;p&gt;さて、本題は'21/10初頭時点でのリポジトリ…というか、コードの状態の話。
 (前置きのほうが長かったかも(苦笑))&lt;/p&gt;
 &lt;p&gt;ちょっと動かしてみた後、独自APIのObject Storageのドライバを追加しようかとビルドも試してみて気づいたことをいくつか。&lt;/p&gt;
 &lt;ul&gt;
@@ -56,58 +56,53 @@ COSBenchの構造等の詳細は
 &lt;h2&gt;インストール&lt;/h2&gt;
 &lt;p&gt;大人の事情でCentOS7系で動作確認したかったので、Pythonは(未だに)2.7系を使っています(苦笑)&lt;/p&gt;
 &lt;p&gt;Apache Arrow自体は新しいものを使いたかったので、virtualenv を使って以下のようにお手軽に作成しました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ virtualenv venvs/arrow
-$ &lt;span class="nb"&gt;source&lt;/span&gt; venvs/arrow/bin/activate
-$ pip install pyarrow
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;virtualenv&lt;span class="w"&gt; &lt;/span&gt;venvs/arrow
+$&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;source&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;venvs/arrow/bin/activate
+$&lt;span class="w"&gt; &lt;/span&gt;pip&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;pyarrow
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;h2&gt;とりあえずやってみたこと&lt;/h2&gt;
 &lt;p&gt;以下のようなテストデータを作って&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;value2-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-     &lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value2-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-
 &lt;p&gt;以下のようなプログラムで試しました。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pyarrow.parquet&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;pq&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pyarrow.parquet&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;pq&lt;/span&gt;
 &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;pyarrow&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;json&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;pajson&lt;/span&gt;
 
 &lt;span class="n"&gt;table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pajson&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_json&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;test.json&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;==================write table&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;==================write table&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="n"&gt;pq&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;write_table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;table&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;test.parquet&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;==================using parquet.read_schema&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;==================using parquet.read_schema&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="n"&gt;schema&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pq&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_schema&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;test.parquet&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;schema&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;schema&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;実行するとこんな感じになります。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ python test.py
-&lt;span class="o"&gt;==================&lt;/span&gt;write &lt;span class="nv"&gt;table&lt;/span&gt;
-&lt;span class="o"&gt;==================&lt;/span&gt;using parquet.read_schema
-key1: int64
-key2: string
-key3: list&amp;lt;item: string&amp;gt;
-  child &lt;span class="m"&gt;0&lt;/span&gt;, item: string
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;python&lt;span class="w"&gt; &lt;/span&gt;test.py
+&lt;span class="o"&gt;==================&lt;/span&gt;write&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;table&lt;/span&gt;
+&lt;span class="o"&gt;==================&lt;/span&gt;using&lt;span class="w"&gt; &lt;/span&gt;parquet.read_schema
+key1:&lt;span class="w"&gt; &lt;/span&gt;int64
+key2:&lt;span class="w"&gt; &lt;/span&gt;string
+key3:&lt;span class="w"&gt; &lt;/span&gt;list&amp;lt;item:&lt;span class="w"&gt; &lt;/span&gt;string&amp;gt;
+&lt;span class="w"&gt;  &lt;/span&gt;child&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;item:&lt;span class="w"&gt; &lt;/span&gt;string
 metadata
 --------
-OrderedDict&lt;span class="o"&gt;([(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ARROW:schema&amp;#39;&lt;/span&gt;, &lt;span class="s1"&gt;&amp;#39;/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;)])&lt;/span&gt;
+OrderedDict&lt;span class="o"&gt;([(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ARROW:schema&amp;#39;&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;)])&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;後述の通り、先にスキーマを作らなくても動くのかどうか確認したかったのですが、入力に従ったスキーマが作成されているようです。&lt;/p&gt;
 &lt;p&gt;余談ですが、1レコードしかないので、サイズはこんな感じになりますね(苦笑)&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ du -b test.json test.parquet
-&lt;span class="m"&gt;80&lt;/span&gt;      test.json
-&lt;span class="m"&gt;232&lt;/span&gt; test.parquet
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;du&lt;span class="w"&gt; &lt;/span&gt;-b&lt;span class="w"&gt; &lt;/span&gt;test.json&lt;span class="w"&gt; &lt;/span&gt;test.parquet
+&lt;span class="m"&gt;80&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;test.json
+&lt;span class="m"&gt;232&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;test.parquet
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;h2&gt;TODO&lt;/h2&gt;
 &lt;ul&gt;
@@ -125,54 +120,51 @@ OrderedDict&lt;span class="o"&gt;([(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39
 &lt;h3&gt;pyarrow.json では Objectのネストはできない&lt;/h3&gt;
 &lt;p&gt;以下の例では "key4"の値はさらにObject(Pythonではdcit)になっていますが、これは&lt;code&gt;pyarrow.json.read_json()&lt;/code&gt;に食わせるとエラーになるようです。&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;value2-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-  &lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
-    &lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;
-  &lt;span class="p"&gt;],&lt;/span&gt;
-  &lt;span class="nt"&gt;&amp;quot;key4&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key41&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key42&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;value42&amp;quot;&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value2-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key4&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key41&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key42&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value42&amp;quot;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;h3&gt;JSONで許されているトップレベルの名無しArrayは通らない&lt;/h3&gt;
 &lt;p&gt;JSONの規格上、以下のようなデータは許されているのですが、&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="p"&gt;[&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;value2-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
-      &lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;
-      &lt;span class="p"&gt;]&lt;/span&gt; 
-  &lt;span class="p"&gt;},&lt;/span&gt;
-  &lt;span class="p"&gt;{&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;value2-2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-    &lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
-      &lt;span class="s2"&gt;&amp;quot;value3-2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-      &lt;span class="s2"&gt;&amp;quot;value3-2&amp;quot;&lt;/span&gt;
-    &lt;span class="p"&gt;]&lt;/span&gt;
-  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value2-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-1&amp;quot;&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value2-2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;key3&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;value3-2&amp;quot;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-
 &lt;p&gt;しかし、こんな感じでエラーになります。
 これは、Arrayの要素を1つに減らしても同じです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$ python test.py
-Traceback &lt;span class="o"&gt;(&lt;/span&gt;most recent call last&lt;span class="o"&gt;)&lt;/span&gt;:
-  File &lt;span class="s2"&gt;&amp;quot;test.py&amp;quot;&lt;/span&gt;, line &lt;span class="m"&gt;6&lt;/span&gt;, in &amp;lt;module&amp;gt;
-    &lt;span class="nv"&gt;table&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; pajson.read_json&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;test3.json&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-  File &lt;span class="s2"&gt;&amp;quot;pyarrow/_json.pyx&amp;quot;&lt;/span&gt;, line &lt;span class="m"&gt;193&lt;/span&gt;, in pyarrow._json.read_json
-  File &lt;span class="s2"&gt;&amp;quot;pyarrow/error.pxi&amp;quot;&lt;/span&gt;, line &lt;span class="m"&gt;84&lt;/span&gt;, in pyarrow.lib.check_status
-pyarrow.lib.ArrowInvalid: JSON parse error: Column&lt;span class="o"&gt;()&lt;/span&gt; changed from object to array in row &lt;span class="m"&gt;0&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;python&lt;span class="w"&gt; &lt;/span&gt;test.py
+Traceback&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;most&lt;span class="w"&gt; &lt;/span&gt;recent&lt;span class="w"&gt; &lt;/span&gt;call&lt;span class="w"&gt; &lt;/span&gt;last&lt;span class="o"&gt;)&lt;/span&gt;:
+&lt;span class="w"&gt;  &lt;/span&gt;File&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;test.py&amp;quot;&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;line&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;6&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;module&amp;gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nv"&gt;table&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;pajson.read_json&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;test3.json&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;File&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;pyarrow/_json.pyx&amp;quot;&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;line&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;193&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;pyarrow._json.read_json
+&lt;span class="w"&gt;  &lt;/span&gt;File&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;pyarrow/error.pxi&amp;quot;&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;line&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;84&lt;/span&gt;,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid:&lt;span class="w"&gt; &lt;/span&gt;JSON&lt;span class="w"&gt; &lt;/span&gt;parse&lt;span class="w"&gt; &lt;/span&gt;error:&lt;span class="w"&gt; &lt;/span&gt;Column&lt;span class="o"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;changed&lt;span class="w"&gt; &lt;/span&gt;from&lt;span class="w"&gt; &lt;/span&gt;object&lt;span class="w"&gt; &lt;/span&gt;to&lt;span class="w"&gt; &lt;/span&gt;array&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;row&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;続きます。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Jupyter Notebook Dynamic Plot</title><link href="https://thatsdone.github.io/junkbox/jupyter_notebook_dynamic_plot.html" rel="alternate"></link><published>2020-02-13T23:00:00+09:00</published><updated>2020-02-13T23:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-13:/junkbox/jupyter_notebook_dynamic_plot.html</id><summary type="html">&lt;p&gt;Jupyter Notebookで動くグラフを描画したい&lt;/p&gt;</summary><content type="html">&lt;p&gt;Jupyter Notebookを使っていて、どんどんあたらしい結果が出てくる場合等、描画結果を動的に更新したいと思って調べたメモ。&lt;/p&gt;
 &lt;ul&gt;
@@ -198,100 +190,93 @@ pyarrow.lib.ArrowInvalid: JSON parse error: Column&lt;span class="o"&gt;()&lt;/s
 &lt;/li&gt;
 &lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] Kubernetes Patterns</title><link href="https://thatsdone.github.io/junkbox/book_kubernetes_patterns.html" rel="alternate"></link><published>2020-02-11T21:00:00+09:00</published><updated>2020-02-11T21:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-02-11:/junkbox/book_kubernetes_patterns.html</id><summary type="html">&lt;p&gt;Kubernetes Patterns - Reusable Elements for Designing Cloud-Native Applications&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF本&lt;/a&gt;の話も書きかけなのですが、そういえば同僚がSan Diego でもらってきた本の中に&lt;a href="https://www.amazon.co.jp/dp/1492050288"&gt;Kubernetes Patterns: Reusable Elements for Designing Cloud-Native Applications&lt;/a&gt;もありました。&lt;/p&gt;
 &lt;p&gt;同じく章構成はこんな感じになっています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt; &lt;span class="n"&gt;Introduction&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    1. Introduction
 
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Foundation&lt;/span&gt; &lt;span class="n"&gt;Patterns&lt;/span&gt;
+Part I : Foundation Patterns
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;まずは基本パターン…というよりは、見てわかる通り、k8s を使いこなすにあたって押さえておくべき基本概念ですね。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="n"&gt;Predcitable&lt;/span&gt; &lt;span class="n"&gt;Dememands&lt;/span&gt;
-    &lt;span class="mi"&gt;3&lt;/span&gt; &lt;span class="n"&gt;Declarative&lt;/span&gt; &lt;span class="n"&gt;Deployments&lt;/span&gt;
-    &lt;span class="mi"&gt;4&lt;/span&gt; &lt;span class="n"&gt;Health&lt;/span&gt; &lt;span class="n"&gt;Probe&lt;/span&gt;
-    &lt;span class="mi"&gt;5&lt;/span&gt; &lt;span class="n"&gt;Managed&lt;/span&gt; &lt;span class="n"&gt;Lifecycle&lt;/span&gt;
-    &lt;span class="mi"&gt;6&lt;/span&gt; &lt;span class="n"&gt;Automated&lt;/span&gt; &lt;span class="n"&gt;Placement&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    2 Predcitable Dememands
+    3 Declarative Deployments
+    4 Health Probe
+    5 Managed Lifecycle
+    6 Automated Placement
 
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;II&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Behavioral&lt;/span&gt; &lt;span class="n"&gt;Patterns&lt;/span&gt;
+Part II : Behavioral Patterns
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;プログラムやサービスの挙動に応じたパターン分類。だいたい名が体を表しているように思いますが、ぱっと見て11のStateful Serviceと13のSelf Awarenessの違いって何よ？と思ったのですが、Self Awarenessのほうは、コンテナが自分が動ているpodを意識する必要があるようなケースのためのものです。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="mi"&gt;7&lt;/span&gt; &lt;span class="n"&gt;Batch&lt;/span&gt; &lt;span class="n"&gt;Job&lt;/span&gt;
-    &lt;span class="mi"&gt;8&lt;/span&gt; &lt;span class="n"&gt;Periodic&lt;/span&gt; &lt;span class="n"&gt;Job&lt;/span&gt;
-    &lt;span class="mi"&gt;9&lt;/span&gt; &lt;span class="n"&gt;Daemon&lt;/span&gt; &lt;span class="n"&gt;Service&lt;/span&gt;
-    &lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="n"&gt;Singleton&lt;/span&gt; &lt;span class="n"&gt;Service&lt;/span&gt;
-    &lt;span class="mi"&gt;11&lt;/span&gt; &lt;span class="n"&gt;Stateful&lt;/span&gt; &lt;span class="n"&gt;Service&lt;/span&gt;
-    &lt;span class="mi"&gt;12&lt;/span&gt; &lt;span class="n"&gt;Service&lt;/span&gt; &lt;span class="n"&gt;Discovery&lt;/span&gt;
-    &lt;span class="mi"&gt;13&lt;/span&gt; &lt;span class="k"&gt;Self&lt;/span&gt; &lt;span class="n"&gt;Awareness&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Batch&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Job&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Periodic&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Job&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;9&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Daemon&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Service&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Singleton&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Service&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Stateful&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Service&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;12&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Service&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Discovery&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;13&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;Self&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Awareness&lt;/span&gt;
 
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;III&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Structural&lt;/span&gt; &lt;span class="n"&gt;Patterns&lt;/span&gt;
+&lt;span class="nx"&gt;Part&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;III&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Structural&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Patterns&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;Part IIIはプログラムやサービスの構造に基づいたパターン分類。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="mi"&gt;14&lt;/span&gt; &lt;span class="n"&gt;Init&lt;/span&gt; &lt;span class="n"&gt;Container&lt;/span&gt;
-    &lt;span class="mi"&gt;15&lt;/span&gt; &lt;span class="n"&gt;Side&lt;/span&gt; &lt;span class="n"&gt;Car&lt;/span&gt;
-    &lt;span class="mi"&gt;16&lt;/span&gt; &lt;span class="n"&gt;Adapter&lt;/span&gt;
-    &lt;span class="mi"&gt;17&lt;/span&gt; &lt;span class="n"&gt;Ambasaddor&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    14 Init Container
+    15 Side Car
+    16 Adapter
+    17 Ambasaddor
 
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;IV&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Configuration&lt;/span&gt; &lt;span class="n"&gt;Patterns&lt;/span&gt;
+Part IV : Configuration Patterns
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;プログラムやサービスの設定情報をどう持ってまわるか？に基づいたパターン分類。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="mi"&gt;18&lt;/span&gt; &lt;span class="n"&gt;EnvVar&lt;/span&gt; &lt;span class="n"&gt;Configuration&lt;/span&gt;
-    &lt;span class="mi"&gt;19&lt;/span&gt; &lt;span class="n"&gt;Confiuration&lt;/span&gt; &lt;span class="n"&gt;Resource&lt;/span&gt;
-    &lt;span class="mi"&gt;20&lt;/span&gt; &lt;span class="k"&gt;Immutable&lt;/span&gt; &lt;span class="n"&gt;Configuration&lt;/span&gt;
-    &lt;span class="mi"&gt;21&lt;/span&gt; &lt;span class="n"&gt;Configuration&lt;/span&gt; &lt;span class="k"&gt;Template&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    18 EnvVar Configuration
+    19 Confiuration Resource
+    20 Immutable Configuration
+    21 Configuration Template
 
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;V&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Advanced&lt;/span&gt; &lt;span class="n"&gt;Patterns&lt;/span&gt;
+Part V : Advanced Patterns
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;進んだトピック。22のControllerと23のOperatorは、いわゆる kubernetes のController/Operatorの解説、24はkubernetesによってアプリケーションをスケールさせる方法、最後の25はここまでの話題とは少し毛色が変わってkubernetes clusterの中でイメージを維持管理する方法論です。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="mi"&gt;22&lt;/span&gt; &lt;span class="n"&gt;Controller&lt;/span&gt;
-    &lt;span class="mi"&gt;23&lt;/span&gt; &lt;span class="k"&gt;Operator&lt;/span&gt;
-    &lt;span class="mi"&gt;24&lt;/span&gt; &lt;span class="n"&gt;Elastic&lt;/span&gt; &lt;span class="k"&gt;Scale&lt;/span&gt;
-    &lt;span class="mi"&gt;25&lt;/span&gt; &lt;span class="n"&gt;Image&lt;/span&gt; &lt;span class="n"&gt;Builder&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    22 Controller
+    23 Operator
+    24 Elastic Scale
+    25 Image Builder
 
-    &lt;span class="n"&gt;Aferword&lt;/span&gt;
+    Aferword
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;まとめ。&lt;/p&gt;
 &lt;p&gt;さて、ここまでざっと本の構造を眺めただけなので、ちゃんと読まなくては(笑)&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] BPF Performance Tools - Brendan Gregg</title><link href="https://thatsdone.github.io/junkbox/book_bpf_performance_tools.html" rel="alternate"></link><published>2020-01-29T22:30:00+09:00</published><updated>2020-01-29T22:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2020-01-29:/junkbox/book_bpf_performance_tools.html</id><summary type="html">&lt;p&gt;Linux System and Application Observability by BPF&lt;/p&gt;</summary><content type="html">&lt;p&gt;海外出張しているうちに、Brendan Gregg の "&lt;a href="https://www.amazon.co.jp/Performance-Tools-Addison-Wesley-Professional-Computing/dp/0136554822/"&gt;BPF Performance Tools&lt;/a&gt;" が届いていました。:)&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://www.amazon.co.jp/dp/0133390098"&gt;前著&lt;/a&gt;の&lt;a href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html"&gt;まとめ&lt;/a&gt;を書いている最中ではあるのですが、こっちもまとめようかと思います。(つまり、やっぱり書きかけ…)&lt;/p&gt;
 &lt;h2&gt;本書の構成&lt;/h2&gt;
 &lt;p&gt;まず、目次の章レベルの構成は以下のような感じになっています。&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Technologies&lt;/span&gt;
-    &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="n"&gt;Introduction&lt;/span&gt;
-    &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="n"&gt;Technology&lt;/span&gt; &lt;span class="n"&gt;Background&lt;/span&gt;
-    &lt;span class="mi"&gt;3&lt;/span&gt; &lt;span class="n"&gt;Performance&lt;/span&gt; &lt;span class="n"&gt;Analysis&lt;/span&gt;
-    &lt;span class="mi"&gt;4&lt;/span&gt; &lt;span class="n"&gt;BCC&lt;/span&gt;
-    &lt;span class="mi"&gt;5&lt;/span&gt; &lt;span class="n"&gt;bpftrace&lt;/span&gt;
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;II&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;Using&lt;/span&gt; &lt;span class="n"&gt;BPF&lt;/span&gt; &lt;span class="n"&gt;Tools&lt;/span&gt;
-    &lt;span class="mi"&gt;6&lt;/span&gt; &lt;span class="n"&gt;CPUs&lt;/span&gt;
-    &lt;span class="mi"&gt;7&lt;/span&gt; &lt;span class="n"&gt;Memory&lt;/span&gt;
-    &lt;span class="mi"&gt;8&lt;/span&gt; &lt;span class="n"&gt;Filesystems&lt;/span&gt;
-    &lt;span class="mi"&gt;9&lt;/span&gt; &lt;span class="n"&gt;Disk&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;O&lt;/span&gt;
-    &lt;span class="mi"&gt;10&lt;/span&gt; &lt;span class="n"&gt;Networking&lt;/span&gt;
-    &lt;span class="mi"&gt;11&lt;/span&gt; &lt;span class="k"&gt;Security&lt;/span&gt;
-    &lt;span class="mi"&gt;12&lt;/span&gt; &lt;span class="n"&gt;Laguages&lt;/span&gt;
-    &lt;span class="mi"&gt;13&lt;/span&gt; &lt;span class="n"&gt;Applications&lt;/span&gt;
-    &lt;span class="mi"&gt;14&lt;/span&gt; &lt;span class="n"&gt;Kernel&lt;/span&gt;
-    &lt;span class="mi"&gt;15&lt;/span&gt; &lt;span class="n"&gt;Containers&lt;/span&gt;
-    &lt;span class="mi"&gt;16&lt;/span&gt; &lt;span class="n"&gt;Hypervisors&lt;/span&gt;
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;III&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Additional&lt;/span&gt; &lt;span class="n"&gt;Topics&lt;/span&gt;
-    &lt;span class="mi"&gt;17&lt;/span&gt; &lt;span class="n"&gt;Other&lt;/span&gt; &lt;span class="n"&gt;BPF&lt;/span&gt; &lt;span class="n"&gt;Performance&lt;/span&gt; &lt;span class="n"&gt;Tools&lt;/span&gt;
-    &lt;span class="mi"&gt;18&lt;/span&gt; &lt;span class="n"&gt;Tips&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Tricks&lt;/span&gt; &lt;span class="k"&gt;and&lt;/span&gt; &lt;span class="n"&gt;Common&lt;/span&gt; &lt;span class="n"&gt;Problems&lt;/span&gt;
-&lt;span class="n"&gt;Part&lt;/span&gt; &lt;span class="n"&gt;IV&lt;/span&gt; &lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;Appendixes&lt;/span&gt;
-    &lt;span class="n"&gt;A&lt;/span&gt; &lt;span class="n"&gt;BPF&lt;/span&gt; &lt;span class="n"&gt;Trace&lt;/span&gt; &lt;span class="n"&gt;One&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;Liners&lt;/span&gt;
-    &lt;span class="n"&gt;B&lt;/span&gt; &lt;span class="n"&gt;BPF&lt;/span&gt; &lt;span class="n"&gt;Trace&lt;/span&gt; &lt;span class="n"&gt;Cheat&lt;/span&gt; &lt;span class="n"&gt;Sheet&lt;/span&gt;
-    &lt;span class="k"&gt;C&lt;/span&gt; &lt;span class="n"&gt;BCC&lt;/span&gt; &lt;span class="n"&gt;Tool&lt;/span&gt; &lt;span class="n"&gt;Development&lt;/span&gt;
-    &lt;span class="n"&gt;D&lt;/span&gt; &lt;span class="k"&gt;C&lt;/span&gt; &lt;span class="n"&gt;BPF&lt;/span&gt;
-    &lt;span class="n"&gt;E&lt;/span&gt; &lt;span class="n"&gt;BPF&lt;/span&gt; &lt;span class="n"&gt;Instructions&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Part I : Technologies
+    1 Introduction
+    2 Technology Background
+    3 Performance Analysis
+    4 BCC
+    5 bpftrace
+Part II : Using BPF Tools
+    6 CPUs
+    7 Memory
+    8 Filesystems
+    9 Disk I/O
+    10 Networking
+    11 Security
+    12 Laguages
+    13 Applications
+    14 Kernel
+    15 Containers
+    16 Hypervisors
+Part III : Additional Topics
+    17 Other BPF Performance Tools
+    18 Tips, Tricks and Common Problems
+Part IV : Appendixes
+    A BPF Trace One-Liners
+    B BPF Trace Cheat Sheet
+    C BCC Tool Development
+    D C BPF
+    E BPF Instructions
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;p&gt;Part Iで大事なのは3章の3.2節"Performance Methodologies"でしょうか。この3.2節に相当する内容は、前著では2章すべてをあててかなり包括的に性能解析の考え方を説明していたのですが、本書では必要最小限のかなりコンパクトな量におさえています。
 Part Iではそのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。&lt;/p&gt;
@@ -306,12 +291,11 @@ Part Iではそのほか、1章で全体像、2章でBPFそのものと関連コ
 &lt;p&gt;調べてみたところ、Colin Ian Kingさんがメンテしているppaから最新版が入れられるようなので、どうしても自前でビルドしたい人以外はこちらを使うとよいでしょう。&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports"&gt;https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;以下の手順でインストールできます。(bpftraceも一緒に入れてください)&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo add-apt-repository ppa:colin-king/bpftrace-backports
-sudo apt-get update
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;add-apt-repository&lt;span class="w"&gt; &lt;/span&gt;ppa:colin-king/bpftrace-backports
+sudo&lt;span class="w"&gt; &lt;/span&gt;apt-get&lt;span class="w"&gt; &lt;/span&gt;update
 
-sudo apt-get install bpfcc-tools bpftrace
+sudo&lt;span class="w"&gt; &lt;/span&gt;apt-get&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;bpfcc-tools&lt;span class="w"&gt; &lt;/span&gt;bpftrace
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
 
 &lt;h2&gt;性能分析の方法論&lt;/h2&gt;
 &lt;p&gt;一番大事なところ(だと私は思う)、性能分析の方法論は3.2節で解説されています。&lt;/p&gt;

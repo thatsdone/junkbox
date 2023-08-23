@@ -85,58 +85,53 @@
 <h2>インストール</h2>
 <p>大人の事情でCentOS7系で動作確認したかったので、Pythonは(未だに)2.7系を使っています(苦笑)</p>
 <p>Apache Arrow自体は新しいものを使いたかったので、virtualenv を使って以下のようにお手軽に作成しました。</p>
-<div class="highlight"><pre><span></span><code>$ virtualenv venvs/arrow
-$ <span class="nb">source</span> venvs/arrow/bin/activate
-$ pip install pyarrow
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>virtualenv<span class="w"> </span>venvs/arrow
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>venvs/arrow/bin/activate
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pyarrow
 </code></pre></div>
-
 
 <h2>とりあえずやってみたこと</h2>
 <p>以下のようなテストデータを作って</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-    <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
-     <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;value3-1&quot;</span><span class="p">,</span> <span class="s2">&quot;value3-1&quot;</span><span class="p">]</span>
+<span class="w">    </span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
+<span class="w">     </span><span class="nt">&quot;key3&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;value3-1&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;value3-1&quot;</span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 
-
 <p>以下のようなプログラムで試しました。</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">pyarrow.parquet</span> <span class="kn">as</span> <span class="nn">pq</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">pyarrow.parquet</span> <span class="k">as</span> <span class="nn">pq</span>
 <span class="kn">from</span> <span class="nn">pyarrow</span> <span class="kn">import</span> <span class="n">json</span> <span class="k">as</span> <span class="n">pajson</span>
 
 <span class="n">table</span> <span class="o">=</span> <span class="n">pajson</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="s1">&#39;test.json&#39;</span><span class="p">)</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s1">&#39;==================write table&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==================write table&#39;</span><span class="p">)</span>
 <span class="n">pq</span><span class="o">.</span><span class="n">write_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="s1">&#39;test.parquet&#39;</span><span class="p">)</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s1">&#39;==================using parquet.read_schema&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;==================using parquet.read_schema&#39;</span><span class="p">)</span>
 <span class="n">schema</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">read_schema</span><span class="p">(</span><span class="s1">&#39;test.parquet&#39;</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
 </code></pre></div>
-
 
 <p>実行するとこんな感じになります。</p>
-<div class="highlight"><pre><span></span><code>$ python test.py
-<span class="o">==================</span>write <span class="nv">table</span>
-<span class="o">==================</span>using parquet.read_schema
-key1: int64
-key2: string
-key3: list&lt;item: string&gt;
-  child <span class="m">0</span>, item: string
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>python<span class="w"> </span>test.py
+<span class="o">==================</span>write<span class="w"> </span><span class="nv">table</span>
+<span class="o">==================</span>using<span class="w"> </span>parquet.read_schema
+key1:<span class="w"> </span>int64
+key2:<span class="w"> </span>string
+key3:<span class="w"> </span>list&lt;item:<span class="w"> </span>string&gt;
+<span class="w">  </span>child<span class="w"> </span><span class="m">0</span>,<span class="w"> </span>item:<span class="w"> </span>string
 metadata
 --------
-OrderedDict<span class="o">([(</span><span class="s1">&#39;ARROW:schema&#39;</span>, <span class="s1">&#39;/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=&#39;</span><span class="o">)])</span>
+OrderedDict<span class="o">([(</span><span class="s1">&#39;ARROW:schema&#39;</span>,<span class="w"> </span><span class="s1">&#39;/////wgBAAAQAAAAAAAKAAwABgAFAAgACgAAAAABAwAMAAAACAAIAAAABAAIAAAABAAAAAMAAACcAAAAXAAAAAQAAACA////AAABDEAAAAAQAAAABAAAAAEAAAAIAAAAsP///6D///8AAAEFFAAAAAwAAAAEAAAAAAAAAMz///8EAAAAaXRlbQAAAAAEAAAAa2V5MwAAAADU////AAABBRgAAAAQAAAABAAAAAAAAAAEAAQABAAAAAQAAABrZXkyAAAAABAAFAAIAAYABwAMAAAAEAAQAAAAAAABAiQAAAAUAAAABAAAAAAAAAAIAAwACAAHAAgAAAAAAAABQAAAAAQAAABrZXkxAAAAAAAAAAA=&#39;</span><span class="o">)])</span>
 </code></pre></div>
-
 
 <p>後述の通り、先にスキーマを作らなくても動くのかどうか確認したかったのですが、入力に従ったスキーマが作成されているようです。</p>
 <p>余談ですが、1レコードしかないので、サイズはこんな感じになりますね(苦笑)</p>
-<div class="highlight"><pre><span></span><code>$ du -b test.json test.parquet
-<span class="m">80</span>      test.json
-<span class="m">232</span> test.parquet
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>du<span class="w"> </span>-b<span class="w"> </span>test.json<span class="w"> </span>test.parquet
+<span class="m">80</span><span class="w">      </span>test.json
+<span class="m">232</span><span class="w"> </span>test.parquet
 </code></pre></div>
-
 
 <h2>TODO</h2>
 <ul>
@@ -154,54 +149,51 @@ OrderedDict<span class="o">([(</span><span class="s1">&#39;ARROW:schema&#39;</sp
 <h3>pyarrow.json では Objectのネストはできない</h3>
 <p>以下の例では "key4"の値はさらにObject(Pythonではdcit)になっていますが、これは<code>pyarrow.json.read_json()</code>に食わせるとエラーになるようです。</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-  <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-  <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
-  <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span>
-    <span class="s2">&quot;value3-1&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;value3-1&quot;</span>
-  <span class="p">],</span>
-  <span class="nt">&quot;key4&quot;</span><span class="p">:</span> <span class="p">{</span>
-    <span class="nt">&quot;key41&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-    <span class="nt">&quot;key42&quot;</span><span class="p">:</span> <span class="s2">&quot;value42&quot;</span>
-  <span class="p">}</span>
+<span class="w">  </span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;key3&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">&quot;value3-1&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;value3-1&quot;</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;key4&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;key41&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;key42&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value42&quot;</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
-
 
 <h3>JSONで許されているトップレベルの名無しArrayは通らない</h3>
 <p>JSONの規格上、以下のようなデータは許されているのですが、</p>
 <div class="highlight"><pre><span></span><code><span class="p">[</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;value3-1&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;value3-1&quot;</span>
-      <span class="p">]</span> 
-  <span class="p">},</span>
-  <span class="p">{</span>
-    <span class="nt">&quot;key1&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-    <span class="nt">&quot;key2&quot;</span><span class="p">:</span> <span class="s2">&quot;value2-2&quot;</span><span class="p">,</span>
-    <span class="nt">&quot;key3&quot;</span><span class="p">:</span> <span class="p">[</span>
-      <span class="s2">&quot;value3-2&quot;</span><span class="p">,</span>
-      <span class="s2">&quot;value3-2&quot;</span>
-    <span class="p">]</span>
-  <span class="p">}</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value2-1&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;key3&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;value3-1&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;value3-1&quot;</span>
+<span class="w">      </span><span class="p">]</span><span class="w"> </span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;key1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;key2&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;value2-2&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;key3&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">      </span><span class="s2">&quot;value3-2&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="s2">&quot;value3-2&quot;</span>
+<span class="w">    </span><span class="p">]</span>
+<span class="w">  </span><span class="p">}</span>
 <span class="p">]</span>
 </code></pre></div>
 
-
 <p>しかし、こんな感じでエラーになります。
 これは、Arrayの要素を1つに減らしても同じです。</p>
-<div class="highlight"><pre><span></span><code>$ python test.py
-Traceback <span class="o">(</span>most recent call last<span class="o">)</span>:
-  File <span class="s2">&quot;test.py&quot;</span>, line <span class="m">6</span>, in &lt;module&gt;
-    <span class="nv">table</span> <span class="o">=</span> pajson.read_json<span class="o">(</span><span class="s1">&#39;test3.json&#39;</span><span class="o">)</span>
-  File <span class="s2">&quot;pyarrow/_json.pyx&quot;</span>, line <span class="m">193</span>, in pyarrow._json.read_json
-  File <span class="s2">&quot;pyarrow/error.pxi&quot;</span>, line <span class="m">84</span>, in pyarrow.lib.check_status
-pyarrow.lib.ArrowInvalid: JSON parse error: Column<span class="o">()</span> changed from object to array in row <span class="m">0</span>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>python<span class="w"> </span>test.py
+Traceback<span class="w"> </span><span class="o">(</span>most<span class="w"> </span>recent<span class="w"> </span>call<span class="w"> </span>last<span class="o">)</span>:
+<span class="w">  </span>File<span class="w"> </span><span class="s2">&quot;test.py&quot;</span>,<span class="w"> </span>line<span class="w"> </span><span class="m">6</span>,<span class="w"> </span><span class="k">in</span><span class="w"> </span>&lt;module&gt;
+<span class="w">    </span><span class="nv">table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>pajson.read_json<span class="o">(</span><span class="s1">&#39;test3.json&#39;</span><span class="o">)</span>
+<span class="w">  </span>File<span class="w"> </span><span class="s2">&quot;pyarrow/_json.pyx&quot;</span>,<span class="w"> </span>line<span class="w"> </span><span class="m">193</span>,<span class="w"> </span><span class="k">in</span><span class="w"> </span>pyarrow._json.read_json
+<span class="w">  </span>File<span class="w"> </span><span class="s2">&quot;pyarrow/error.pxi&quot;</span>,<span class="w"> </span>line<span class="w"> </span><span class="m">84</span>,<span class="w"> </span><span class="k">in</span><span class="w"> </span>pyarrow.lib.check_status
+pyarrow.lib.ArrowInvalid:<span class="w"> </span>JSON<span class="w"> </span>parse<span class="w"> </span>error:<span class="w"> </span>Column<span class="o">()</span><span class="w"> </span>changed<span class="w"> </span>from<span class="w"> </span>object<span class="w"> </span>to<span class="w"> </span>array<span class="w"> </span><span class="k">in</span><span class="w"> </span>row<span class="w"> </span><span class="m">0</span>
 </code></pre></div>
-
 
 <p>続きます。</p>
     </div>

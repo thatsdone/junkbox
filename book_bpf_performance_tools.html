@@ -67,35 +67,34 @@
 <p><a href="https://www.amazon.co.jp/dp/0133390098">前著</a>の<a href="https://thatsdone.github.io/junkbox/methodologies_of_systems_performance.html">まとめ</a>を書いている最中ではあるのですが、こっちもまとめようかと思います。(つまり、やっぱり書きかけ…)</p>
 <h2>本書の構成</h2>
 <p>まず、目次の章レベルの構成は以下のような感じになっています。</p>
-<div class="highlight"><pre><span></span><code><span class="n">Part</span> <span class="n">I</span> <span class="p">:</span> <span class="n">Technologies</span>
-    <span class="mi">1</span> <span class="n">Introduction</span>
-    <span class="mi">2</span> <span class="n">Technology</span> <span class="n">Background</span>
-    <span class="mi">3</span> <span class="n">Performance</span> <span class="n">Analysis</span>
-    <span class="mi">4</span> <span class="n">BCC</span>
-    <span class="mi">5</span> <span class="n">bpftrace</span>
-<span class="n">Part</span> <span class="n">II</span> <span class="p">:</span> <span class="k">Using</span> <span class="n">BPF</span> <span class="n">Tools</span>
-    <span class="mi">6</span> <span class="n">CPUs</span>
-    <span class="mi">7</span> <span class="n">Memory</span>
-    <span class="mi">8</span> <span class="n">Filesystems</span>
-    <span class="mi">9</span> <span class="n">Disk</span> <span class="n">I</span><span class="o">/</span><span class="n">O</span>
-    <span class="mi">10</span> <span class="n">Networking</span>
-    <span class="mi">11</span> <span class="k">Security</span>
-    <span class="mi">12</span> <span class="n">Laguages</span>
-    <span class="mi">13</span> <span class="n">Applications</span>
-    <span class="mi">14</span> <span class="n">Kernel</span>
-    <span class="mi">15</span> <span class="n">Containers</span>
-    <span class="mi">16</span> <span class="n">Hypervisors</span>
-<span class="n">Part</span> <span class="n">III</span> <span class="p">:</span> <span class="n">Additional</span> <span class="n">Topics</span>
-    <span class="mi">17</span> <span class="n">Other</span> <span class="n">BPF</span> <span class="n">Performance</span> <span class="n">Tools</span>
-    <span class="mi">18</span> <span class="n">Tips</span><span class="p">,</span> <span class="n">Tricks</span> <span class="k">and</span> <span class="n">Common</span> <span class="n">Problems</span>
-<span class="n">Part</span> <span class="n">IV</span> <span class="p">:</span> <span class="n">Appendixes</span>
-    <span class="n">A</span> <span class="n">BPF</span> <span class="n">Trace</span> <span class="n">One</span><span class="o">-</span><span class="n">Liners</span>
-    <span class="n">B</span> <span class="n">BPF</span> <span class="n">Trace</span> <span class="n">Cheat</span> <span class="n">Sheet</span>
-    <span class="k">C</span> <span class="n">BCC</span> <span class="n">Tool</span> <span class="n">Development</span>
-    <span class="n">D</span> <span class="k">C</span> <span class="n">BPF</span>
-    <span class="n">E</span> <span class="n">BPF</span> <span class="n">Instructions</span>
+<div class="highlight"><pre><span></span><code>Part I : Technologies
+    1 Introduction
+    2 Technology Background
+    3 Performance Analysis
+    4 BCC
+    5 bpftrace
+Part II : Using BPF Tools
+    6 CPUs
+    7 Memory
+    8 Filesystems
+    9 Disk I/O
+    10 Networking
+    11 Security
+    12 Laguages
+    13 Applications
+    14 Kernel
+    15 Containers
+    16 Hypervisors
+Part III : Additional Topics
+    17 Other BPF Performance Tools
+    18 Tips, Tricks and Common Problems
+Part IV : Appendixes
+    A BPF Trace One-Liners
+    B BPF Trace Cheat Sheet
+    C BCC Tool Development
+    D C BPF
+    E BPF Instructions
 </code></pre></div>
-
 
 <p>Part Iで大事なのは3章の3.2節"Performance Methodologies"でしょうか。この3.2節に相当する内容は、前著では2章すべてをあててかなり包括的に性能解析の考え方を説明していたのですが、本書では必要最小限のかなりコンパクトな量におさえています。
 Part Iではそのほか、1章で全体像、2章でBPFそのものと関連コンポーネントの紹介、4章で"BCC" (BPF Compiler Collection)と題してBPF関連の開発ツールについての紹介、5章が一番よく使われるツールで"bpftool"の詳しい解説になっています。</p>
@@ -110,12 +109,11 @@ Part Iではそのほか、1章で全体像、2章でBPFそのものと関連コ
 <p>調べてみたところ、Colin Ian Kingさんがメンテしているppaから最新版が入れられるようなので、どうしても自前でビルドしたい人以外はこちらを使うとよいでしょう。</p>
 <p><a href="https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports">https://launchpad.net/~colin-king/+archive/ubuntu/bpftrace-backports</a></p>
 <p>以下の手順でインストールできます。(bpftraceも一緒に入れてください)</p>
-<div class="highlight"><pre><span></span><code>sudo add-apt-repository ppa:colin-king/bpftrace-backports
-sudo apt-get update
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>add-apt-repository<span class="w"> </span>ppa:colin-king/bpftrace-backports
+sudo<span class="w"> </span>apt-get<span class="w"> </span>update
 
-sudo apt-get install bpfcc-tools bpftrace
+sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>bpfcc-tools<span class="w"> </span>bpftrace
 </code></pre></div>
-
 
 <h2>性能分析の方法論</h2>
 <p>一番大事なところ(だと私は思う)、性能分析の方法論は3.2節で解説されています。</p>
