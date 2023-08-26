@@ -1,5 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2021-10-01T18:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Object Storageのベンチマークについて(COSBench編)</title><link href="https://thatsdone.github.io/junkbox/object_storage_benchmark_cosbench.html" rel="alternate"></link><published>2021-10-01T18:00:00+09:00</published><updated>2021-10-01T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-10-01:/junkbox/object_storage_benchmark_cosbench.html</id><summary type="html">&lt;p&gt;Object Storage Benchmark(COSBench)&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、AWS S3のようなObject Storageの性能評価をせねばならん…という事情があり、
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2022-08-23T23:59:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] OpenStack Nova のスケジューラを作ってみた (NumProjectsFilter)</title><link href="https://thatsdone.github.io/junkbox/openstack_nova_scheduler.html" rel="alternate"></link><published>2022-08-23T23:59:00+09:00</published><updated>2022-08-23T23:59:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2022-08-23:/junkbox/openstack_nova_scheduler.html</id><summary type="html">&lt;p&gt;自前OpenStack Novaのschedulerの作り方のサンプル&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまで、qiitaやらblogspotに記事を書いてきたのですが、ここに集約しておこうと思います。&lt;/p&gt;
+&lt;p&gt;まず、2017年にqiitaに書いた&lt;a href="https://qiita.com/thatsdone/items/9ee090577f3e11ff4f26"&gt;記事&lt;/a&gt;です。
+ネタとしてはそのまま今でも使えると思います。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;今年の9月の話なので、もうだいぶ前の話になるのだが、そういえば OpenStack Nova のスケジューラを作ってみたので、記録として残しておきたい。&lt;/p&gt;
+&lt;p&gt;(この記事はOpenStack Advent Calendar 2017参加エントリ...ではありません(笑))&lt;/p&gt;
+&lt;h1&gt;発端&lt;/h1&gt;
+&lt;p&gt;発端は某所でこんな議論をしていたことだった。
+OpenStackでつくった基盤があって、その上にいろいろサービスを収容するのだが、運用を真面目に考えていると、当然何かの故障時に影響をどれだけ抑え込めるかも検討することになる。&lt;/p&gt;
+&lt;p&gt;まず、「サービス」の運営主体というものを考えてみると、管理会計上も組織編制上も独立になっていることが多い。この主体を、OpenStack の Project にマッピングするのはとても自然な考え方だと思う。&lt;/p&gt;
+&lt;p&gt;ここで、「故障」の話に戻る。
+この時の議論では、compute が 1 台故障で落ちた時に「影響を受けるサービスの数」に制約をつけられないか？というのが発端だった。この記事を読むような人はよく承知の通り、OpenStack Nova では以下の公式ドキュメントにあるように、様々な FilterScheduler が提供されている。これらをくみあわせればなんとかならないだろうかと、考えた&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://docs.openstack.org/nova/pike/user/filter-scheduler.html"&gt;https://docs.openstack.org/nova/pike/user/filter-scheduler.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;...のだが、NumInstancesFilter のように、ある compute (あるいは host aggregate)の上で作成可能なVM数に制約をつけるFilterはあっても、「ある compute の上でVMを作成可能な Project (にマッピングされたサービス)の数に制約をつける」ことはできないのだった。(実はうまい組み合わせがあって、見落としているだけなのかもしれないが、当時同僚と考えた検討した結果は「無理じゃね？」だった)&lt;/p&gt;
+&lt;p&gt;そういうわけで、「ないなら作ってみればいいじゃん」と思った結果がここに置いてある。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/openstack/nova/compare/master...thatsdone:feature/num-prj-filter"&gt;https://github.com/openstack/nova/compare/master...thatsdone:feature/num-prj-filter&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;以下、仕様、設計と実装について説明する。&lt;/p&gt;
+&lt;h1&gt;仕様&lt;/h1&gt;
+&lt;p&gt;以下のパラメータを追加した。&lt;/p&gt;
+&lt;h2&gt;max_projects_per_host&lt;/h2&gt;
+&lt;p&gt;意味は「computeノードあたりのVM作成可能プロジェクト数の上限」である。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;nova.conf に指定して、システム全体で一意に指定する方法と、&lt;/li&gt;
+&lt;li&gt;host_aggregate の metadata に指定して aggregate 単位で指定する方法&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;を用意した。デフォルトは50(projects)とし、普通の運用では不用意にこのFilterが有効になってしまっていても無視できるくらい大きくした。&lt;/p&gt;
+&lt;h1&gt;設計と実装&lt;/h1&gt;
+&lt;p&gt;設計自体は、実は公式ドキュメントに "Writing Your Own Filter" というセクションがあるくらいで、 &lt;/p&gt;
+&lt;p&gt;&lt;a href="https://docs.openstack.org/nova/pike/user/filter-scheduler.html#writing-your-own-filter"&gt;https://docs.openstack.org/nova/pike/user/filter-scheduler.html#writing-your-own-filter&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;インターフェースははっきりしており、特に難しいことはない。
+敢えて言えば、中から使う機能のI/Fだろうか。特に、DBから情報をひっぱってくる場合にどのDB APIを使うべきなのか、類似コードを探しながら検討を行った。&lt;/p&gt;
+&lt;p&gt;実装だが、仕様が NumInstancesFilter ととても近いため、num_instances_filter.pyをベースにした。しかも、(練習用という意味あいもあったので...という言い訳)比較的 Naive な作りである。(笑)
+規模としても、既存ファイルの修正が1つ（パラメータ処理部分）と、新規ファイルが2つ(このFilterの実装本体とテストコード)だけである。&lt;/p&gt;
+&lt;p&gt;以下、本体部分を見てみよう。&lt;/p&gt;
+&lt;p&gt;FilterSchedulerの場合、以下にある &lt;code&gt;host_passes()&lt;/code&gt; というメソッドが、今、選択対象候補になっているホストごとに呼び出され、各Filterのcriteriaに基づいて True (VM配置可能)またはFalse(VM配置不可能)を返すようになっている。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;host_passes&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;host_state&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;spec_obj&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="n"&gt;max_projects&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_get_max_projects_per_host&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;host_state&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;spec_obj&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+        &lt;span class="n"&gt;LOG&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;debug&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;DEBUG: NumProjects filter called. &amp;quot;&lt;/span&gt;
+                  &lt;span class="s2"&gt;&amp;quot;spec_obj=&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;&amp;#39; host_state=&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;spec_obj&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;host_state&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="n"&gt;LOG&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;debug&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;DEBUG: host_state.host=&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;&amp;#39; project_id=&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                  &lt;span class="n"&gt;host_state&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;spec_obj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;project_id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+        &lt;span class="n"&gt;admin&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;context&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_admin_context&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="n"&gt;filters&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;host&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;host_state&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;deleted&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="kc"&gt;False&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+        &lt;span class="n"&gt;instances&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;objects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;InstanceList&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get_by_filters&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;admin&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;filters&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;まず、ここで指定されたホスト上で実行中のVMの一覧を取り出している。
+実は、必要なのは project_id の一覧の集合だけなのだが、あまり低いレベルのDB APIを呼ぶのもよろしくないので、ここではオーバーヘッドは承知で上記のI/Fを使っている。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;        &lt;span class="n"&gt;LOG&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;debug&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;DEBUG: instances=&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;instances&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+        &lt;span class="n"&gt;projects&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nb"&gt;set&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+        &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;instances&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;LOG&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;debug&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;DEBUG: uuid=&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;&amp;#39;, project_id=&amp;#39;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                      &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;uuid&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;project_id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+            &lt;span class="n"&gt;projects&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;instance&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;project_id&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;次に、さきほど得られたVM一覧から project_id を取り出し、set 型にの変数に格納している。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="n"&gt;spec_obj&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;project_id&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;projects&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="c1"&gt;# FIXME(thatsdone):&lt;/span&gt;
+            &lt;span class="c1"&gt;# This &amp;#39;True&amp;#39; allows to run multiple VMs on a sigle host.&lt;/span&gt;
+            &lt;span class="n"&gt;passes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+        &lt;span class="k"&gt;elif&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;projects&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;=&lt;/span&gt; &lt;span class="n"&gt;max_projects&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;passes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;False&lt;/span&gt;
+        &lt;span class="k"&gt;else&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;passes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kc"&gt;True&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;最後に、
+1. 要求元のユーザの project_id が、今つくった set 型の変数の中にあれば通過
+2. なければ、VM実行中のproject数が閾値を超えているかチェック
+という順番で判定を行っている。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;        &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="ow"&gt;not&lt;/span&gt; &lt;span class="n"&gt;passes&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+            &lt;span class="n"&gt;LOG&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;debug&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;%(host_state)s&lt;/span&gt;&lt;span class="s2"&gt; fails num_projects check: &amp;quot;&lt;/span&gt;
+                      &lt;span class="s2"&gt;&amp;quot;Max projects per host is set to &lt;/span&gt;&lt;span class="si"&gt;%(max_projects)s&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                      &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;host_state&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;host_state&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                       &lt;span class="s1"&gt;&amp;#39;max_projects&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="n"&gt;max_projects&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;passes&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;これだけである。&lt;/p&gt;
+&lt;p&gt;新機能追加も、この程度であればたいして難しくないというのがわかると思う。&lt;/p&gt;
+&lt;h2&gt;課題&lt;/h2&gt;
+&lt;p&gt;この実装で、一応やりたいことは実現できる。ただし、いくつか問題も抱えているので記しておく。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;DBアクセスの負荷への影響&lt;ul&gt;
+&lt;li&gt;ホストごとに、Instance 型でVM一覧を取り出していること&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;あるホストで、1つのプロジェクトのVMが2つ以上実行されうる&lt;ul&gt;
+&lt;li&gt;あるサービスへの影響も最小化したいというのは自然な要求だからである。ただしこれは、他のFilterで解決すべき問題かもしれない。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h1&gt;これをどうするのか？&lt;/h1&gt;
+&lt;p&gt;もろもろの背景事情もあり、今のところは upstream に提案するつもりはない。
+...が、英語で記事くらい書いてみてもいいかもしれない。&lt;/p&gt;
+&lt;h1&gt;まとめ&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;OpenStack Nova の FilterScheduler に新しいFilterを追加する例を紹介した。&lt;/li&gt;
+&lt;li&gt;仕様を決めるにあたって、どういう motivation だったのかを説明した。&lt;/li&gt;
+&lt;li&gt;まあ私もなんとなく生きていますよ...ということで(笑)&lt;/li&gt;
+&lt;li&gt;Happy Hacking!!&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] Object Storageのベンチマークについて(COSBench編)</title><link href="https://thatsdone.github.io/junkbox/object_storage_benchmark_cosbench.html" rel="alternate"></link><published>2021-10-01T18:00:00+09:00</published><updated>2021-10-01T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-10-01:/junkbox/object_storage_benchmark_cosbench.html</id><summary type="html">&lt;p&gt;Object Storage Benchmark(COSBench)&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、AWS S3のようなObject Storageの性能評価をせねばならん…という事情があり、
 「そういえば、COSBenchってかなり昔からあるよなー」と思いつつ、最近あれこれ調べていました。&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://github.com/intel-cloud/cosbench/"&gt;COSBenchのリポジトリ&lt;/a&gt;
 とか、

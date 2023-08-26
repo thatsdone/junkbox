@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] OpenStack Nova のスケジューラを作ってみた (NumProjectsFilter) | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/openstack_nova_scheduler.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="自前OpenStack Novaのschedulerの作り方のサンプル">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] OpenStack Nova のスケジューラを作ってみた (NumProjectsFilter)
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2022-08-23T23:59:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Tue 23 August 2022
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>これまで、qiitaやらblogspotに記事を書いてきたのですが、ここに集約しておこうと思います。</p>
+<p>まず、2017年にqiitaに書いた<a href="https://qiita.com/thatsdone/items/9ee090577f3e11ff4f26">記事</a>です。
+ネタとしてはそのまま今でも使えると思います。</p>
+<hr>
+<p>今年の9月の話なので、もうだいぶ前の話になるのだが、そういえば OpenStack Nova のスケジューラを作ってみたので、記録として残しておきたい。</p>
+<p>(この記事はOpenStack Advent Calendar 2017参加エントリ...ではありません(笑))</p>
+<h1>発端</h1>
+<p>発端は某所でこんな議論をしていたことだった。
+OpenStackでつくった基盤があって、その上にいろいろサービスを収容するのだが、運用を真面目に考えていると、当然何かの故障時に影響をどれだけ抑え込めるかも検討することになる。</p>
+<p>まず、「サービス」の運営主体というものを考えてみると、管理会計上も組織編制上も独立になっていることが多い。この主体を、OpenStack の Project にマッピングするのはとても自然な考え方だと思う。</p>
+<p>ここで、「故障」の話に戻る。
+この時の議論では、compute が 1 台故障で落ちた時に「影響を受けるサービスの数」に制約をつけられないか？というのが発端だった。この記事を読むような人はよく承知の通り、OpenStack Nova では以下の公式ドキュメントにあるように、様々な FilterScheduler が提供されている。これらをくみあわせればなんとかならないだろうかと、考えた</p>
+<p><a href="https://docs.openstack.org/nova/pike/user/filter-scheduler.html">https://docs.openstack.org/nova/pike/user/filter-scheduler.html</a></p>
+<p>...のだが、NumInstancesFilter のように、ある compute (あるいは host aggregate)の上で作成可能なVM数に制約をつけるFilterはあっても、「ある compute の上でVMを作成可能な Project (にマッピングされたサービス)の数に制約をつける」ことはできないのだった。(実はうまい組み合わせがあって、見落としているだけなのかもしれないが、当時同僚と考えた検討した結果は「無理じゃね？」だった)</p>
+<p>そういうわけで、「ないなら作ってみればいいじゃん」と思った結果がここに置いてある。</p>
+<p><a href="https://github.com/openstack/nova/compare/master...thatsdone:feature/num-prj-filter">https://github.com/openstack/nova/compare/master...thatsdone:feature/num-prj-filter</a></p>
+<p>以下、仕様、設計と実装について説明する。</p>
+<h1>仕様</h1>
+<p>以下のパラメータを追加した。</p>
+<h2>max_projects_per_host</h2>
+<p>意味は「computeノードあたりのVM作成可能プロジェクト数の上限」である。</p>
+<ol>
+<li>nova.conf に指定して、システム全体で一意に指定する方法と、</li>
+<li>host_aggregate の metadata に指定して aggregate 単位で指定する方法</li>
+</ol>
+<p>を用意した。デフォルトは50(projects)とし、普通の運用では不用意にこのFilterが有効になってしまっていても無視できるくらい大きくした。</p>
+<h1>設計と実装</h1>
+<p>設計自体は、実は公式ドキュメントに "Writing Your Own Filter" というセクションがあるくらいで、 </p>
+<p><a href="https://docs.openstack.org/nova/pike/user/filter-scheduler.html#writing-your-own-filter">https://docs.openstack.org/nova/pike/user/filter-scheduler.html#writing-your-own-filter</a></p>
+<p>インターフェースははっきりしており、特に難しいことはない。
+敢えて言えば、中から使う機能のI/Fだろうか。特に、DBから情報をひっぱってくる場合にどのDB APIを使うべきなのか、類似コードを探しながら検討を行った。</p>
+<p>実装だが、仕様が NumInstancesFilter ととても近いため、num_instances_filter.pyをベースにした。しかも、(練習用という意味あいもあったので...という言い訳)比較的 Naive な作りである。(笑)
+規模としても、既存ファイルの修正が1つ（パラメータ処理部分）と、新規ファイルが2つ(このFilterの実装本体とテストコード)だけである。</p>
+<p>以下、本体部分を見てみよう。</p>
+<p>FilterSchedulerの場合、以下にある <code>host_passes()</code> というメソッドが、今、選択対象候補になっているホストごとに呼び出され、各Filterのcriteriaに基づいて True (VM配置可能)またはFalse(VM配置不可能)を返すようになっている。</p>
+<div class="highlight"><pre><span></span><code>    <span class="k">def</span> <span class="nf">host_passes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host_state</span><span class="p">,</span> <span class="n">spec_obj</span><span class="p">):</span>
+        <span class="n">max_projects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_max_projects_per_host</span><span class="p">(</span><span class="n">host_state</span><span class="p">,</span> <span class="n">spec_obj</span><span class="p">)</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;DEBUG: NumProjects filter called. &quot;</span>
+                  <span class="s2">&quot;spec_obj=&#39;</span><span class="si">%s</span><span class="s2">&#39; host_state=&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="n">spec_obj</span><span class="p">,</span> <span class="n">host_state</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;DEBUG: host_state.host=&#39;</span><span class="si">%s</span><span class="s2">&#39; project_id=&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span>
+                  <span class="n">host_state</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="n">spec_obj</span><span class="o">.</span><span class="n">project_id</span><span class="p">)</span>
+
+        <span class="n">admin</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_admin_context</span><span class="p">()</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">host_state</span><span class="o">.</span><span class="n">host</span><span class="p">],</span> <span class="s2">&quot;deleted&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="n">instances</span> <span class="o">=</span> <span class="n">objects</span><span class="o">.</span><span class="n">InstanceList</span><span class="p">()</span><span class="o">.</span><span class="n">get_by_filters</span><span class="p">(</span><span class="n">admin</span><span class="p">,</span> <span class="n">filters</span><span class="p">)</span>
+</code></pre></div>
+
+<p>まず、ここで指定されたホスト上で実行中のVMの一覧を取り出している。
+実は、必要なのは project_id の一覧の集合だけなのだが、あまり低いレベルのDB APIを呼ぶのもよろしくないので、ここではオーバーヘッドは承知で上記のI/Fを使っている。</p>
+<div class="highlight"><pre><span></span><code>        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;DEBUG: instances=&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="n">instances</span><span class="p">)</span>
+
+        <span class="n">projects</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">instances</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;DEBUG: uuid=&#39;</span><span class="si">%s</span><span class="s2">&#39;, project_id=&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span>
+                      <span class="n">instance</span><span class="p">[</span><span class="s1">&#39;uuid&#39;</span><span class="p">],</span> <span class="n">instance</span><span class="p">[</span><span class="s1">&#39;project_id&#39;</span><span class="p">])</span>
+            <span class="n">projects</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">instance</span><span class="p">[</span><span class="s1">&#39;project_id&#39;</span><span class="p">])</span>
+</code></pre></div>
+
+<p>次に、さきほど得られたVM一覧から project_id を取り出し、set 型にの変数に格納している。</p>
+<div class="highlight"><pre><span></span><code>        <span class="k">if</span> <span class="n">spec_obj</span><span class="o">.</span><span class="n">project_id</span> <span class="ow">in</span> <span class="n">projects</span><span class="p">:</span>
+            <span class="c1"># FIXME(thatsdone):</span>
+            <span class="c1"># This &#39;True&#39; allows to run multiple VMs on a sigle host.</span>
+            <span class="n">passes</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">projects</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">max_projects</span><span class="p">:</span>
+            <span class="n">passes</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">passes</span> <span class="o">=</span> <span class="kc">True</span>
+</code></pre></div>
+
+<p>最後に、
+1. 要求元のユーザの project_id が、今つくった set 型の変数の中にあれば通過
+2. なければ、VM実行中のproject数が閾値を超えているかチェック
+という順番で判定を行っている。</p>
+<div class="highlight"><pre><span></span><code>        <span class="k">if</span> <span class="ow">not</span> <span class="n">passes</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(host_state)s</span><span class="s2"> fails num_projects check: &quot;</span>
+                      <span class="s2">&quot;Max projects per host is set to </span><span class="si">%(max_projects)s</span><span class="s2">&quot;</span><span class="p">,</span>
+                      <span class="p">{</span><span class="s1">&#39;host_state&#39;</span><span class="p">:</span> <span class="n">host_state</span><span class="p">,</span>
+                       <span class="s1">&#39;max_projects&#39;</span><span class="p">:</span> <span class="n">max_projects</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">passes</span>
+</code></pre></div>
+
+<p>これだけである。</p>
+<p>新機能追加も、この程度であればたいして難しくないというのがわかると思う。</p>
+<h2>課題</h2>
+<p>この実装で、一応やりたいことは実現できる。ただし、いくつか問題も抱えているので記しておく。</p>
+<ol>
+<li>DBアクセスの負荷への影響<ul>
+<li>ホストごとに、Instance 型でVM一覧を取り出していること</li>
+</ul>
+</li>
+<li>あるホストで、1つのプロジェクトのVMが2つ以上実行されうる<ul>
+<li>あるサービスへの影響も最小化したいというのは自然な要求だからである。ただしこれは、他のFilterで解決すべき問題かもしれない。</li>
+</ul>
+</li>
+</ol>
+<h1>これをどうするのか？</h1>
+<p>もろもろの背景事情もあり、今のところは upstream に提案するつもりはない。
+...が、英語で記事くらい書いてみてもいいかもしれない。</p>
+<h1>まとめ</h1>
+<ul>
+<li>OpenStack Nova の FilterScheduler に新しいFilterを追加する例を紹介した。</li>
+<li>仕様を決めるにあたって、どういう motivation だったのかを説明した。</li>
+<li>まあ私もなんとなく生きていますよ...ということで(笑)</li>
+<li>Happy Hacking!!</li>
+</ul>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
