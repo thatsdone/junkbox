@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2022-08-23T23:59:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] OpenStack Nova のスケジューラを作ってみた (NumProjectsFilter)</title><link href="https://thatsdone.github.io/junkbox/openstack_nova_scheduler.html" rel="alternate"></link><published>2022-08-23T23:59:00+09:00</published><updated>2022-08-23T23:59:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2022-08-23:/junkbox/openstack_nova_scheduler.html</id><summary type="html">&lt;p&gt;自前OpenStack Novaのschedulerの作り方のサンプル&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまで、qiitaやらblogspotに記事を書いてきたのですが、ここに集約しておこうと思います。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-08-27T17:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] MySQL版pgbenchについて</title><link href="https://thatsdone.github.io/junkbox/pgbench_for_mysql.html" rel="alternate"></link><published>2023-08-27T17:00:00+09:00</published><updated>2023-08-27T17:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-08-27:/junkbox/pgbench_for_mysql.html</id><summary type="html">&lt;p&gt;MySQL版pgbenchについて&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
+&lt;p&gt;今日は2017年にqiitaに書いた&lt;a href="https://qiita.com/thatsdone/items/78eeeb31f567ce6c05b0"&gt;記事&lt;/a&gt;から。&lt;/p&gt;
+&lt;p&gt;とはいえ、2013年2月(10年以上前！)に書いた記事の残TODOの自分へのリマインドなので、そんなに沈めていたのか…と目が遠くなります。(苦笑)&lt;/p&gt;
+&lt;p&gt;MySQL版のpgbench(ざっくり、TPC-B likeなコンパクトなベンチマーク)って、需要はありそうな気もするのですが、そうでもないんですかねぇ。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;(これは、自分にプレッシャーをかけるためのメモです)&lt;/p&gt;
+&lt;p&gt;2013年の2月にこんな記事を書いたのを思い出した。&lt;/p&gt;
+&lt;p&gt;「&lt;a href="https://thatsdone-j.blogspot.jp/2013/02/mysql-pgbench.html"&gt;MySQL版の pgbench ってないの？&lt;/a&gt;」&lt;/p&gt;
+&lt;p&gt;当時、MySQLに軽く負荷をかけてみる必要が発生し、sysbench 付属のアレだともともとSQLレベルのdeadlockが発生する性質のものなので、当時やりたかったことには使えず、PostgreSQLのpgbenchみたいなお手軽なやつがないかなー…と思って探したら MySQLユーザー会の有志の方が昔(2004年!?)移植したものを発見し、2013年当時でも1行手直しするだけで動いたという話だった。&lt;/p&gt;
+&lt;p&gt;そして、続編がこれである。&lt;/p&gt;
+&lt;p&gt;「&lt;a href="https://thatsdone-j.blogspot.jp/2013/03/python-mysqlbench.html"&gt;python 版 mysqlbench&lt;/a&gt;」&lt;/p&gt;
+&lt;p&gt;これは、当時 python の修行がてら上記の MySQL版pgbench(言語はC言語)を Python に移植しようと思ったのだった。&lt;/p&gt;
+&lt;p&gt;実は、上記がおいてある git repository には、さらに sqlalchemy を使って移植し(ようとし)たものも置いてあったりする。&lt;/p&gt;
+&lt;p&gt;仕掛中のまま放り出してあったのだが、この際ちゃんとまとめようよ &amp;gt; 自分&lt;/p&gt;
+&lt;p&gt;…というわけで、逃げられなくなった...w&lt;/p&gt;
+&lt;p&gt;(オチは(まだ)ありません(笑))&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] OpenStack Nova のスケジューラを作ってみた (NumProjectsFilter)</title><link href="https://thatsdone.github.io/junkbox/openstack_nova_scheduler.html" rel="alternate"></link><published>2023-08-23T23:59:00+09:00</published><updated>2023-08-23T23:59:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-08-23:/junkbox/openstack_nova_scheduler.html</id><summary type="html">&lt;p&gt;自前OpenStack Novaのschedulerの作り方のサンプル&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまで、qiitaやらblogspotに記事を書いてきたのですが、ここに集約しておこうと思います。&lt;/p&gt;
 &lt;p&gt;まず、2017年にqiitaに書いた&lt;a href="https://qiita.com/thatsdone/items/9ee090577f3e11ff4f26"&gt;記事&lt;/a&gt;です。
 ネタとしてはそのまま今でも使えると思います。&lt;/p&gt;
 &lt;hr&gt;
@@ -194,8 +209,10 @@ OpenStackでつくった基盤があって、その上にいろいろサービ�
 &lt;/li&gt;
 &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=sKfuqNW-uGE"&gt;REAL DUO / Forbidden Colours Ryuichi Sakamoto - Luciano Damiani, mandolino Michele Libraro ch.&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=ZA-NjYpRn34"&gt;Kaori Muraji - 村治佳織 - Merry Christmas,Mr Lawrence - Ryuichi Sakamoto's&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=z14Zu0933BU"&gt;Merry Christmas Mr Lawrence (戦場のﾒﾘｰｸﾘｽﾏｽ) - Ryuichi Sakamoto arr. by Hirokazu Sato&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=z14Zu0933BU"&gt;Merry Christmas Mr Lawrence (戦場のﾒﾘｰｸﾘｽﾏｽ) - Ryuichi Sakamoto arr. by Hirokazu Sato&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;Singapore出身のクラッシックギタリスト&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;シロフォン&lt;ul&gt;
