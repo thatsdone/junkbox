@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] GNU ld の--no-as-neededと--as-neededオプションについて | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Linuxでsystem callをhookしたいときの注意">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] GNU ld の--no-as-neededと--as-neededオプションについて
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2023-08-30T17:20:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Wed 30 August 2023
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。</p>
+<p>今日は2013年(!?)にqiitaに書いた<a href="http://thatsdone-j.blogspot.jp/2013/03/gnu-ld-as-needed-and-no-as-needed.html">記事</a>になります。
+これには続きがあるのですが、また別途。</p>
+<hr>
+<p>GNU ld の挙動で気が付いたことがあったのでメモ。</p>
+<p>例によって少し前置きが長くなるが、端的にいえば、system call 等の他人が提供する関数呼び出しをフックして、処理を横取りしたくなることがたまにある。</p>
+<p>例えば、system call の write(2) をフックしたいなら、以下のようなプログラムを書くことになる。</p>
+<div class="highlight"><pre><span></span><code><span class="w">  </span><span class="mi">1</span><span class="w"> </span><span class="c1">#include &lt;dlfcn.h&gt;  /* これが必要 */</span>
+<span class="w">  </span><span class="mi">2</span><span class="w"> </span><span class="c1">#include &lt;unistd.h&gt; /* 今回hookしたい write(2)が定義されている */</span>
+<span class="w">  </span><span class="mi">3</span><span class="w"> </span><span class="c1">#include &lt;stdio.h&gt;</span>
+<span class="w">  </span><span class="mi">4</span><span class="w"> </span><span class="c1">#include &lt;errno.h&gt;</span>
+<span class="w">  </span><span class="mi">5</span>
+<span class="w">    </span><span class="err">↓</span><span class="w"> </span><span class="n">hook</span><span class="w"> </span><span class="err">したい関数、この場合は</span><span class="n">write</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="err">と同じようにする。</span>
+<span class="w">  </span><span class="mi">6</span><span class="w"> </span><span class="n">ssize_t</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">org</span><span class="p">)(</span><span class="nb nb-Type">int</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="nb nb-Type">void</span><span class="w"> </span><span class="o">*</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="n">size_t</span><span class="w"> </span><span class="n">count</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="mi">7</span>
+<span class="w">    </span><span class="err">↓</span><span class="n">main</span><span class="p">()</span><span class="err">実行の前に呼ばれる初期化ルーチン</span>
+<span class="w">  </span><span class="mi">8</span><span class="w"> </span><span class="n">__attribute__</span><span class="p">((</span><span class="n">constructor</span><span class="p">))</span>
+<span class="w">  </span><span class="mi">9</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="nb nb-Type">void</span><span class="w"> </span><span class="n">init_hook</span><span class="p">()</span>
+<span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="mi">11</span><span class="w">     </span><span class="n">org</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ssize_t</span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="nb nb-Type">int</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="nb nb-Type">void</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">size_t</span><span class="p">))</span><span class="n">dlsym</span><span class="p">(</span><span class="n">RTLD_NEXT</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;write&quot;</span><span class="p">);</span>
+<span class="w"> </span><span class="mi">12</span><span class="w">     </span><span class="n">printf</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: constructor called! %p</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">__func__</span><span class="p">,</span><span class="w"> </span><span class="n">org</span><span class="p">);</span>
+<span class="w"> </span><span class="mi">13</span><span class="w"> </span><span class="p">}</span>
+<span class="w"> </span><span class="mi">14</span>
+<span class="w">    </span><span class="err">↓</span><span class="n">main</span><span class="p">()</span><span class="err">から抜けた後に呼ばれる終了ルーチン</span>
+<span class="w"> </span><span class="mi">15</span><span class="w"> </span><span class="n">__attribute__</span><span class="p">((</span><span class="n">destructor</span><span class="p">))</span>
+<span class="w"> </span><span class="mi">16</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="nb nb-Type">void</span><span class="w"> </span><span class="n">fini_hook</span><span class="p">()</span>
+<span class="w"> </span><span class="mi">17</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="mi">18</span><span class="w">     </span><span class="n">printf</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: destructor called!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">__func__</span><span class="p">);</span>
+<span class="w"> </span><span class="mi">19</span><span class="w"> </span><span class="p">}</span>
+<span class="w"> </span><span class="mi">20</span>
+<span class="w">    </span><span class="err">↓</span><span class="n">write</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="err">の処理を横取りするルーチン</span>
+<span class="w"> </span><span class="mi">21</span><span class="w"> </span><span class="n">ssize_t</span><span class="w"> </span><span class="n">write</span><span class="p">(</span><span class="nb nb-Type">int</span><span class="w"> </span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="nb nb-Type">void</span><span class="w"> </span><span class="o">*</span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="n">size_t</span><span class="w"> </span><span class="n">count</span><span class="p">)</span>
+<span class="w"> </span><span class="mi">22</span><span class="w"> </span><span class="p">{</span>
+<span class="w"> </span><span class="mi">23</span><span class="w">     </span><span class="nb nb-Type">int</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="w"> </span><span class="mi">24</span>
+<span class="w"> </span><span class="mi">25</span><span class="w">     </span><span class="o">/*</span>
+<span class="w"> </span><span class="mi">26</span><span class="w">      </span><span class="o">*</span><span class="w"> </span><span class="n">Do</span><span class="w"> </span><span class="n">what</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">like</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">do</span><span class="w"> </span><span class="n">here</span>
+<span class="w"> </span><span class="mi">27</span><span class="w">      </span><span class="o">*/</span>
+<span class="w"> </span><span class="mi">28</span><span class="w">     </span><span class="n">printf</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">: hook!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">__func__</span><span class="p">);</span>
+<span class="w"> </span><span class="mi">29</span><span class="w">     </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb nb-Type">int</span><span class="p">)</span><span class="n">org</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="n">buf</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
+<span class="w"> </span><span class="mi">30</span><span class="w">     </span><span class="o">/*</span>
+<span class="w"> </span><span class="mi">31</span><span class="w">      </span><span class="o">*</span><span class="w"> </span><span class="n">Do</span><span class="w"> </span><span class="n">what</span><span class="w"> </span><span class="n">you</span><span class="w"> </span><span class="n">like</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">do</span><span class="w"> </span><span class="n">here</span>
+<span class="w"> </span><span class="mi">32</span><span class="w">      </span><span class="o">*/</span>
+<span class="w"> </span><span class="mi">33</span><span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">ret</span><span class="p">;</span>
+<span class="w"> </span><span class="mi">34</span>
+<span class="w"> </span><span class="mi">35</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<p>これを、hook.c として保存しておき、hook.so という名前の shared object を作成する。この際、初期化ルーチンの中で、オリジナルの write(2)のエントリを探すのに使っている dlsym(3)のために、-ldl オプション(と -D_GNU_SOURCE)が必要になる。</p>
+<p>$gcc  -D_GNU_SOURCE  -fPIC -shared -ldl hook.c -o hook.so</p>
+<p>ぐぐると日本語の解説もいくつか出てくるので参照してほしいのだが、上記のようにして shared object 作り、プログラムの実行時に LD_PRELOAD 環境変数で読み混ませてやれば目的を達することができる。</p>
+<p>…はずだった。これまでは。</p>
+<p>しかし、上記を(少なくとも) Ubuntu 12.10 上で作成して、実行してみると</p>
+<div class="highlight"><pre><span></span><code>  $ env LD_PRELOAD=./hook.so cat /tmp/foo
+  cat: symbol lookup error: ./hook.so: undefined symbol: dlsym
+</code></pre></div>
+
+<p>…と、エラーになってしまう。
+オリジナルの write(2)を探すのに使っていて、-ldl でちゃんと指定しているはずの dlsym()が見つからないとか言っている。</p>
+<p>なんで？
+…ということで確認してみると、当然リンクされているはずの libdl.so がリンクされていない！</p>
+<div class="highlight"><pre><span></span><code>  $ ldd hook.so
+          linux-vdso.so.1 =&gt;  (0x00007fff8edba000)
+          libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f06d3745000)
+          /lib64/ld-linux-x86-64.so.2 (0x00007f06d3d1a000)
+</code></pre></div>
+
+<p>どういうことなの？
+…と、ぐぐっていて出てきた以下のトピックを読んで初めて知ったのだが、</p>
+<p>http://os.inf.tu-dresden.de/pipermail/l4-hackers/2011/005078.html</p>
+<p>実は、少なくとも現行の Ubuntu ではリンカ (GNU ld) の挙動が変更されており、以下のように、--no-as-needed というオプションを指定しないといけないことが分かった。
+（脱線するが、L4のMLって、まだ普通に生きているのだなぁ...と、遠い目になったのはひみつ）</p>
+<div class="highlight"><pre><span></span><code>  $ gcc -D_GNU_SOURCE -Wl,&#39;--no-as-needed&#39; -fPIC -shared -ldl hook.c -o hook.so
+  $ ldd hook.so
+          linux-vdso.so.1 =&gt;  (0x00007fff5494d000)
+          libdl.so.2 =&gt; /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f2d72be2000)
+          libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f2d72823000)
+          /lib64/ld-linux-x86-64.so.2 (0x00007f2d72ffc000)
+</code></pre></div>
+
+<p>赤字部分のように、今度は意図の通り、リンクされている。</p>
+<p>現行のデフォルトの挙動は'--no-as-needed'の逆の'--as-needed'で、これは、リンカ(ld)に -ldl 等と渡された shared object の一覧の中から、プログラムの中で実際に使われているシンボルが入っている shared object のみ実際にリンクするという意味になるようだ。</p>
+<p>でも、ちゃんと使っているじゃん？…と思うかもしれない。
+これについては、ソースレベルでは(まだ)未確認なのだが、今回の場合は、_init ルーチンの中で dlsym() を使っており、'--as-needed' の場合に探索される範囲から外れているから…というのが真相らしい。</p>
+<p>さて、ここでもうひとつ注意がある。'--no-as-needed' をコマンドラインのどの順番で指定するかには意味がある。この例では -ldl の前に指定する必要がある。
+実際、-ldl の後ろに指定して shared object を作ってみると</p>
+<div class="highlight"><pre><span></span><code>  $ gcc  -g -Wall -D_GNU_SOURCE -fPIC -shared -ldl -Wl,&#39;--no-as-needed&#39; hook.c -o hook.so
+  $ ldd hook.so
+          linux-vdso.so.1 =&gt;  (0x00007fffea666000)
+          libc.so.6 =&gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007fb722dc8000)
+          /lib64/ld-linux-x86-64.so.2 (0x00007fb72339d000)
+</code></pre></div>
+
+<p>の通り、また libdl.so がリンクされなってしまうので注意のこと。</p>
+<p>ちなみに、以下は man ld からの引用なのだが、赤字のところが　--no-as-neededの場合は逆になる…ということのようだ。
+そんなの気がつかねーよ...orz</p>
+<div class="highlight"><pre><span></span><code>LD(1)                        GNU Development Tools                       LD(1)
+
+NAME
+       ld - The GNU linker
+
+SYNOPSIS
+       ld [options] objfile ...
+
+DESCRIPTION
+  (snip)
+       --as-needed
+       --no-as-needed
+           This option affects ELF DT_NEEDED tags for dynamic libraries
+           mentioned on the command line after the --as-needed option.
+           Normally the linker will add a DT_NEEDED tag for each dynamic
+           library mentioned on the command line, regardless of whether the
+           library is actually needed or not.  --as-needed causes a DT_NEEDED
+           tag to only be emitted for a library that satisfies an undefined
+           symbol reference from a regular object file or, if the library is
+           not found in the DT_NEEDED lists of other libraries linked up to
+           that point, an undefined symbol reference from another dynamic
+           library.  --no-as-needed restores the default behaviour.
+</code></pre></div>
+
+<p>最後に、今回作った hook.so を実際に使ってみるとどうなるかも載せておく。</p>
+<p>write(2) を使うできるだけ単純なプログラムということで、cat を使って</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>cat<span class="w"> </span>/tmp/bar
+FOO
+</code></pre></div>
+
+<p>というファイルを表示してみると、</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>env<span class="w"> </span><span class="nv">LD_PRELOAD</span><span class="o">=</span>./hook.so<span class="w">  </span>cat<span class="w"> </span>/tmp/bar
+init_hook:<span class="w"> </span>constructor<span class="w"> </span>called!<span class="w"> </span>0x7fd48f0228f0
+write:<span class="w"> </span>hook!
+FOO
+
+$
+</code></pre></div>
+
+<p>ということで、冒頭のサンプルに書いてある通り、実際の write(2)が走る前に "write: hook!" と自分で追加した処理が実行されていることがわかる。</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>

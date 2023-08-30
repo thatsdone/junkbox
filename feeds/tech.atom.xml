@@ -1,5 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-08-27T17:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] MySQL版pgbenchについて</title><link href="https://thatsdone.github.io/junkbox/pgbench_for_mysql.html" rel="alternate"></link><published>2023-08-27T17:00:00+09:00</published><updated>2023-08-27T17:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-08-27:/junkbox/pgbench_for_mysql.html</id><summary type="html">&lt;p&gt;MySQL版pgbenchについて&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-08-30T17:20:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] GNU ld の--no-as-neededと--as-neededオプションについて</title><link href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html" rel="alternate"></link><published>2023-08-30T17:20:00+09:00</published><updated>2023-08-30T17:20:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-08-30:/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html</id><summary type="html">&lt;p&gt;Linuxでsystem callをhookしたいときの注意&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
+&lt;p&gt;今日は2013年(!?)にqiitaに書いた&lt;a href="http://thatsdone-j.blogspot.jp/2013/03/gnu-ld-as-needed-and-no-as-needed.html"&gt;記事&lt;/a&gt;になります。
+これには続きがあるのですが、また別途。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;GNU ld の挙動で気が付いたことがあったのでメモ。&lt;/p&gt;
+&lt;p&gt;例によって少し前置きが長くなるが、端的にいえば、system call 等の他人が提供する関数呼び出しをフックして、処理を横取りしたくなることがたまにある。&lt;/p&gt;
+&lt;p&gt;例えば、system call の write(2) をフックしたいなら、以下のようなプログラムを書くことになる。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;#include &amp;lt;dlfcn.h&amp;gt;  /* これが必要 */&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;#include &amp;lt;unistd.h&amp;gt; /* 今回hookしたい write(2)が定義されている */&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;#include &amp;lt;errno.h&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="err"&gt;↓&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;したい関数、この場合は&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;と同じようにする。&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ssize_t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;org&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;fd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb nb-Type"&gt;void&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size_t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="err"&gt;↓&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="err"&gt;実行の前に呼ばれる初期化ルーチン&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;__attribute__&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;constructor&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;9&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;static&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb nb-Type"&gt;void&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;init_hook&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="n"&gt;org&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ssize_t&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb nb-Type"&gt;void&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size_t&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="n"&gt;dlsym&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RTLD_NEXT&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;write&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;12&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;: constructor called! %p&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;__func__&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;org&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;13&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;14&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="err"&gt;↓&lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="err"&gt;から抜けた後に呼ばれる終了ルーチン&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;__attribute__&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="n"&gt;destructor&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;static&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb nb-Type"&gt;void&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;fini_hook&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;17&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;18&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;: destructor called!&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;__func__&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;19&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="err"&gt;↓&lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="err"&gt;の処理を横取りするルーチン&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;21&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ssize_t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;fd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb nb-Type"&gt;void&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;size_t&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;23&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ret&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;24&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;25&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="o"&gt;/*&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;26&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Do&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;what&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;you&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;like&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;do&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;here&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;27&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="o"&gt;*/&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;28&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="si"&gt;%s&lt;/span&gt;&lt;span class="s2"&gt;: hook!&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;__func__&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;29&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="n"&gt;ret&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb nb-Type"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="n"&gt;org&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;fd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;buf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;count&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="o"&gt;/*&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;31&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Do&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;what&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;you&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;like&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;do&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;here&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;32&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="o"&gt;*/&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;33&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ret&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;34&lt;/span&gt;
+&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;35&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;これを、hook.c として保存しておき、hook.so という名前の shared object を作成する。この際、初期化ルーチンの中で、オリジナルの write(2)のエントリを探すのに使っている dlsym(3)のために、-ldl オプション(と -D_GNU_SOURCE)が必要になる。&lt;/p&gt;
+&lt;p&gt;$gcc  -D_GNU_SOURCE  -fPIC -shared -ldl hook.c -o hook.so&lt;/p&gt;
+&lt;p&gt;ぐぐると日本語の解説もいくつか出てくるので参照してほしいのだが、上記のようにして shared object 作り、プログラムの実行時に LD_PRELOAD 環境変数で読み混ませてやれば目的を達することができる。&lt;/p&gt;
+&lt;p&gt;…はずだった。これまでは。&lt;/p&gt;
+&lt;p&gt;しかし、上記を(少なくとも) Ubuntu 12.10 上で作成して、実行してみると&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;  $ env LD_PRELOAD=./hook.so cat /tmp/foo
+  cat: symbol lookup error: ./hook.so: undefined symbol: dlsym
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;…と、エラーになってしまう。
+オリジナルの write(2)を探すのに使っていて、-ldl でちゃんと指定しているはずの dlsym()が見つからないとか言っている。&lt;/p&gt;
+&lt;p&gt;なんで？
+…ということで確認してみると、当然リンクされているはずの libdl.so がリンクされていない！&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;  $ ldd hook.so
+          linux-vdso.so.1 =&amp;gt;  (0x00007fff8edba000)
+          libc.so.6 =&amp;gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f06d3745000)
+          /lib64/ld-linux-x86-64.so.2 (0x00007f06d3d1a000)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;どういうことなの？
+…と、ぐぐっていて出てきた以下のトピックを読んで初めて知ったのだが、&lt;/p&gt;
+&lt;p&gt;http://os.inf.tu-dresden.de/pipermail/l4-hackers/2011/005078.html&lt;/p&gt;
+&lt;p&gt;実は、少なくとも現行の Ubuntu ではリンカ (GNU ld) の挙動が変更されており、以下のように、--no-as-needed というオプションを指定しないといけないことが分かった。
+（脱線するが、L4のMLって、まだ普通に生きているのだなぁ...と、遠い目になったのはひみつ）&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;  $ gcc -D_GNU_SOURCE -Wl,&amp;#39;--no-as-needed&amp;#39; -fPIC -shared -ldl hook.c -o hook.so
+  $ ldd hook.so
+          linux-vdso.so.1 =&amp;gt;  (0x00007fff5494d000)
+          libdl.so.2 =&amp;gt; /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f2d72be2000)
+          libc.so.6 =&amp;gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007f2d72823000)
+          /lib64/ld-linux-x86-64.so.2 (0x00007f2d72ffc000)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;赤字部分のように、今度は意図の通り、リンクされている。&lt;/p&gt;
+&lt;p&gt;現行のデフォルトの挙動は'--no-as-needed'の逆の'--as-needed'で、これは、リンカ(ld)に -ldl 等と渡された shared object の一覧の中から、プログラムの中で実際に使われているシンボルが入っている shared object のみ実際にリンクするという意味になるようだ。&lt;/p&gt;
+&lt;p&gt;でも、ちゃんと使っているじゃん？…と思うかもしれない。
+これについては、ソースレベルでは(まだ)未確認なのだが、今回の場合は、_init ルーチンの中で dlsym() を使っており、'--as-needed' の場合に探索される範囲から外れているから…というのが真相らしい。&lt;/p&gt;
+&lt;p&gt;さて、ここでもうひとつ注意がある。'--no-as-needed' をコマンドラインのどの順番で指定するかには意味がある。この例では -ldl の前に指定する必要がある。
+実際、-ldl の後ろに指定して shared object を作ってみると&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;  $ gcc  -g -Wall -D_GNU_SOURCE -fPIC -shared -ldl -Wl,&amp;#39;--no-as-needed&amp;#39; hook.c -o hook.so
+  $ ldd hook.so
+          linux-vdso.so.1 =&amp;gt;  (0x00007fffea666000)
+          libc.so.6 =&amp;gt; /lib/x86_64-linux-gnu/libc.so.6 (0x00007fb722dc8000)
+          /lib64/ld-linux-x86-64.so.2 (0x00007fb72339d000)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;の通り、また libdl.so がリンクされなってしまうので注意のこと。&lt;/p&gt;
+&lt;p&gt;ちなみに、以下は man ld からの引用なのだが、赤字のところが　--no-as-neededの場合は逆になる…ということのようだ。
+そんなの気がつかねーよ...orz&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;LD(1)                        GNU Development Tools                       LD(1)
+
+NAME
+       ld - The GNU linker
+
+SYNOPSIS
+       ld [options] objfile ...
+
+DESCRIPTION
+  (snip)
+       --as-needed
+       --no-as-needed
+           This option affects ELF DT_NEEDED tags for dynamic libraries
+           mentioned on the command line after the --as-needed option.
+           Normally the linker will add a DT_NEEDED tag for each dynamic
+           library mentioned on the command line, regardless of whether the
+           library is actually needed or not.  --as-needed causes a DT_NEEDED
+           tag to only be emitted for a library that satisfies an undefined
+           symbol reference from a regular object file or, if the library is
+           not found in the DT_NEEDED lists of other libraries linked up to
+           that point, an undefined symbol reference from another dynamic
+           library.  --no-as-needed restores the default behaviour.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;最後に、今回作った hook.so を実際に使ってみるとどうなるかも載せておく。&lt;/p&gt;
+&lt;p&gt;write(2) を使うできるだけ単純なプログラムということで、cat を使って&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;cat&lt;span class="w"&gt; &lt;/span&gt;/tmp/bar
+FOO
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;というファイルを表示してみると、&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;env&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;LD_PRELOAD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;./hook.so&lt;span class="w"&gt;  &lt;/span&gt;cat&lt;span class="w"&gt; &lt;/span&gt;/tmp/bar
+init_hook:&lt;span class="w"&gt; &lt;/span&gt;constructor&lt;span class="w"&gt; &lt;/span&gt;called!&lt;span class="w"&gt; &lt;/span&gt;0x7fd48f0228f0
+write:&lt;span class="w"&gt; &lt;/span&gt;hook!
+FOO
+
+$
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;ということで、冒頭のサンプルに書いてある通り、実際の write(2)が走る前に "write: hook!" と自分で追加した処理が実行されていることがわかる。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] MySQL版pgbenchについて</title><link href="https://thatsdone.github.io/junkbox/pgbench_for_mysql.html" rel="alternate"></link><published>2023-08-27T17:00:00+09:00</published><updated>2023-08-27T17:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-08-27:/junkbox/pgbench_for_mysql.html</id><summary type="html">&lt;p&gt;MySQL版pgbenchについて&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
 &lt;p&gt;今日は2017年にqiitaに書いた&lt;a href="https://qiita.com/thatsdone/items/78eeeb31f567ce6c05b0"&gt;記事&lt;/a&gt;から。&lt;/p&gt;
 &lt;p&gt;とはいえ、2013年2月(10年以上前！)に書いた記事の残TODOの自分へのリマインドなので、そんなに沈めていたのか…と目が遠くなります。(苦笑)&lt;/p&gt;
 &lt;p&gt;MySQL版のpgbench(ざっくり、TPC-B likeなコンパクトなベンチマーク)って、需要はありそうな気もするのですが、そうでもないんですかねぇ。&lt;/p&gt;
