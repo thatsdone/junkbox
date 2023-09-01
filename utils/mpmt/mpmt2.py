@@ -9,8 +9,6 @@
 #   * 2022/02/03 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TOTO:
-#   * Make message size configurable.
 import time
 import threading
 import queue

@@ -9,8 +9,8 @@
 #   * 2022/02/13 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TOTO:
-#   * Add commands (list, describe, delete,...)
+# TODO:
+#   * Implements commands (list, describe, delete,...)
 #   * Integrate garbage collection works
 # REFERENCES:
 #   * https://stackoverflow.com/questions/43666910/remove-docker-repository-on-remote-docker-registry

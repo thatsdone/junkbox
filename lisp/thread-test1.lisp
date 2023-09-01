@@ -16,8 +16,6 @@
 ;; Credits:
 ;;   * This is based on an example shown in [1].
 ;;     Faults are mine, honors belong to the blog author of [1].
-;; TOTO:
-;;  * Write mpmt1.lisp
 
 (ql:quickload :bordeaux-threads)
 (defun print-thread-info ()
