@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] なんちゃってPrometheus ExporterでGPU利用率を採取する | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/simple_prometheus_exporter.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="なんちゃってPrometheus ExporterでGPU利用率を採取する">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] なんちゃってPrometheus ExporterでGPU利用率を採取する
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2023-09-02T20:30:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Sat 02 September 2023
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>今回はだいぶ前に作ったものの話。</p>
+<p>話は2020年にさかのぼります。
+当時、vSphereで動くGPU関連製品を使った検証をしていました。
+GPUはNVIDIA製ですが、検証対象の製品自体は独立系のものでした。</p>
+<p>CPU等の他のmetricsについてはPrometheusで一元収集していたので、自然な流れで当該GPUの利用率もPrometheusで収集できないのかと思いました。…が、独自仕様の製品を買ってくれと言われ、しかもいいお値段だったので、それなら自分で作ればいいじゃんと考えたのでした(笑)</p>
+<p>まず、その製品はESXi Shell上でnvidia-smiが使えるようになっていました。</p>
+<p>よく知られているように、nvidia-smiを内部から呼び出してGPUのmetricsを返すExporterは複数存在し、私は<a href="https://github.com/chhibber/pgme">PGME</a>を使っていました。
+PGMEは、一般的なPrometheus Exporterと同様にGo言語で書かれており、GoのバイナリということはもしかしたらESXi Shellで動くか？と思って動かしてみたらSEGVしてしまいました...orz</p>
+<p>さて、どうするか？</p>
+<p>ESXi ShellはミニマムなLinux Distributionなわけで、確認したところ Python3 も入っていました。</p>
+<p>また、Python には標準で <a href="https://docs.python.org/3/library/http.server.html">http.server</a>がついてきます。</p>
+<p>…ということは、PGMEと同等の処理処理を、http.serverのGET method処理ルーチンで動かしてやればいいじゃん…と思い至って作ってみたものが以下においてあります。</p>
+<p>https://github.com/thatsdone/junkbox/blob/master/python/PyPGME.py</p>
+<p>眺めるとわかるのですが、do_GET() の中で nvidia-smi を呼び出し、結果をparseして、PGME互換のmetricsに整形して返しているだけです。</p>
+<p>なお、起動引数はこんな感じで
+* '-p' : Listen port (default: 19101)
+* '-b' : Bind address (default: 0.0.0.0)
+* '-e' : Extended Attribute</p>
+<p>最後の'-e'は、オリジナルのPGMEには存在しません。後述のmetrics採取例のように、電力関連の pgme_power_draw と pgme_power_limit を追加出力できるように(後から)しました。</p>
+<p>他の目的のPrometheus Exporterが欲しくなった時のひな形としても使えるので、けっこう重宝しています(笑)</p>
+<p>metrics採取例(IPはダミー、PyPGME.py 起動時には -p 9101と -e を指定)</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>curl<span class="w"> </span>http://192.168.1.1:9101/metrics
+<span class="c1"># TYPE temperature_gpu gauge</span>
+<span class="c1"># HELP temperature.gpu of nvidia-smi</span>
+temperature_gpu<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w"> </span><span class="m">32</span>
+<span class="c1"># TYPE utilization_gpu gauge</span>
+<span class="c1"># HELP utilization.gpu of nvidia-smi</span>
+utilization_gpu<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w"> </span><span class="m">0</span>
+<span class="c1"># TYPE utilization_memory gauge</span>
+<span class="c1"># HELP utilization.memory of nvidia-smi</span>
+utilization_memory<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w"> </span><span class="m">0</span>
+<span class="c1"># TYPE memory_total gauge</span>
+<span class="c1"># HELP memory.total of nvidia-smi</span>
+memory_total<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w"> </span><span class="m">16384</span>
+<span class="c1"># TYPE memory_free gauge</span>
+<span class="c1"># HELP memory.free of nvidia-smi</span>
+memory_free<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w"> </span><span class="m">16280</span>
+<span class="c1"># TYPE memory_used gauge</span>
+<span class="c1"># HELP memory.used of nvidia-smi</span>
+memory_used<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w"> </span><span class="m">0</span>
+<span class="c1"># TYPE pgme_power_draw gauge</span>
+<span class="c1"># HELP power.draw of nvidia-smi</span>
+pgme_power_draw<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w">  </span><span class="m">25</span>.63
+<span class="c1"># TYPE pgme_power_limit gauge</span>
+<span class="c1"># HELP power.limit of nvidia-smi</span>
+pgme_power_limit<span class="o">{</span><span class="nv">gpu</span><span class="o">=</span><span class="s2">&quot;Tesla P100-PCIE-16GB[0]&quot;</span><span class="o">}</span><span class="w">  </span><span class="m">250</span>.00
+</code></pre></div>
+
+<p>GPUが2023年にもなってP100なのは愛嬌ということで(笑)</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>

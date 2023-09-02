@@ -1,5 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-08-30T17:20:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] GNU ld の--no-as-neededと--as-neededオプションについて</title><link href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html" rel="alternate"></link><published>2023-08-30T17:20:00+09:00</published><updated>2023-08-30T17:20:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-08-30:/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html</id><summary type="html">&lt;p&gt;Linuxでsystem callをhookしたいときの注意&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-09-02T20:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] なんちゃってPrometheus ExporterでGPU利用率を採取する</title><link href="https://thatsdone.github.io/junkbox/simple_prometheus_exporter.html" rel="alternate"></link><published>2023-09-02T20:30:00+09:00</published><updated>2023-09-02T20:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-02:/junkbox/simple_prometheus_exporter.html</id><summary type="html">&lt;p&gt;なんちゃってPrometheus ExporterでGPU利用率を採取する&lt;/p&gt;</summary><content type="html">&lt;p&gt;今回はだいぶ前に作ったものの話。&lt;/p&gt;
+&lt;p&gt;話は2020年にさかのぼります。
+当時、vSphereで動くGPU関連製品を使った検証をしていました。
+GPUはNVIDIA製ですが、検証対象の製品自体は独立系のものでした。&lt;/p&gt;
+&lt;p&gt;CPU等の他のmetricsについてはPrometheusで一元収集していたので、自然な流れで当該GPUの利用率もPrometheusで収集できないのかと思いました。…が、独自仕様の製品を買ってくれと言われ、しかもいいお値段だったので、それなら自分で作ればいいじゃんと考えたのでした(笑)&lt;/p&gt;
+&lt;p&gt;まず、その製品はESXi Shell上でnvidia-smiが使えるようになっていました。&lt;/p&gt;
+&lt;p&gt;よく知られているように、nvidia-smiを内部から呼び出してGPUのmetricsを返すExporterは複数存在し、私は&lt;a href="https://github.com/chhibber/pgme"&gt;PGME&lt;/a&gt;を使っていました。
+PGMEは、一般的なPrometheus Exporterと同様にGo言語で書かれており、GoのバイナリということはもしかしたらESXi Shellで動くか？と思って動かしてみたらSEGVしてしまいました...orz&lt;/p&gt;
+&lt;p&gt;さて、どうするか？&lt;/p&gt;
+&lt;p&gt;ESXi ShellはミニマムなLinux Distributionなわけで、確認したところ Python3 も入っていました。&lt;/p&gt;
+&lt;p&gt;また、Python には標準で &lt;a href="https://docs.python.org/3/library/http.server.html"&gt;http.server&lt;/a&gt;がついてきます。&lt;/p&gt;
+&lt;p&gt;…ということは、PGMEと同等の処理処理を、http.serverのGET method処理ルーチンで動かしてやればいいじゃん…と思い至って作ってみたものが以下においてあります。&lt;/p&gt;
+&lt;p&gt;https://github.com/thatsdone/junkbox/blob/master/python/PyPGME.py&lt;/p&gt;
+&lt;p&gt;眺めるとわかるのですが、do_GET() の中で nvidia-smi を呼び出し、結果をparseして、PGME互換のmetricsに整形して返しているだけです。&lt;/p&gt;
+&lt;p&gt;なお、起動引数はこんな感じで
+* '-p' : Listen port (default: 19101)
+* '-b' : Bind address (default: 0.0.0.0)
+* '-e' : Extended Attribute&lt;/p&gt;
+&lt;p&gt;最後の'-e'は、オリジナルのPGMEには存在しません。後述のmetrics採取例のように、電力関連の pgme_power_draw と pgme_power_limit を追加出力できるように(後から)しました。&lt;/p&gt;
+&lt;p&gt;他の目的のPrometheus Exporterが欲しくなった時のひな形としても使えるので、けっこう重宝しています(笑)&lt;/p&gt;
+&lt;p&gt;metrics採取例(IPはダミー、PyPGME.py 起動時には -p 9101と -e を指定)&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;curl&lt;span class="w"&gt; &lt;/span&gt;http://192.168.1.1:9101/metrics
+&lt;span class="c1"&gt;# TYPE temperature_gpu gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP temperature.gpu of nvidia-smi&lt;/span&gt;
+temperature_gpu&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;32&lt;/span&gt;
+&lt;span class="c1"&gt;# TYPE utilization_gpu gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP utilization.gpu of nvidia-smi&lt;/span&gt;
+utilization_gpu&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
+&lt;span class="c1"&gt;# TYPE utilization_memory gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP utilization.memory of nvidia-smi&lt;/span&gt;
+utilization_memory&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
+&lt;span class="c1"&gt;# TYPE memory_total gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP memory.total of nvidia-smi&lt;/span&gt;
+memory_total&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;16384&lt;/span&gt;
+&lt;span class="c1"&gt;# TYPE memory_free gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP memory.free of nvidia-smi&lt;/span&gt;
+memory_free&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;16280&lt;/span&gt;
+&lt;span class="c1"&gt;# TYPE memory_used gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP memory.used of nvidia-smi&lt;/span&gt;
+memory_used&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
+&lt;span class="c1"&gt;# TYPE pgme_power_draw gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP power.draw of nvidia-smi&lt;/span&gt;
+pgme_power_draw&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;25&lt;/span&gt;.63
+&lt;span class="c1"&gt;# TYPE pgme_power_limit gauge&lt;/span&gt;
+&lt;span class="c1"&gt;# HELP power.limit of nvidia-smi&lt;/span&gt;
+pgme_power_limit&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="nv"&gt;gpu&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Tesla P100-PCIE-16GB[0]&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;}&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;250&lt;/span&gt;.00
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;GPUが2023年にもなってP100なのは愛嬌ということで(笑)&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] GNU ld の--no-as-neededと--as-neededオプションについて</title><link href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html" rel="alternate"></link><published>2023-08-30T17:20:00+09:00</published><updated>2023-08-30T17:20:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-08-30:/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html</id><summary type="html">&lt;p&gt;Linuxでsystem callをhookしたいときの注意&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
 &lt;p&gt;今日は2013年(!?)にqiitaに書いた&lt;a href="http://thatsdone-j.blogspot.jp/2013/03/gnu-ld-as-needed-and-no-as-needed.html"&gt;記事&lt;/a&gt;になります。
 これには続きがあるのですが、また別途。&lt;/p&gt;
 &lt;hr&gt;
