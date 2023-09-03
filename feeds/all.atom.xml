@@ -1,5 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-09-02T20:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] なんちゃってPrometheus ExporterでGPU利用率を採取する</title><link href="https://thatsdone.github.io/junkbox/simple_prometheus_exporter.html" rel="alternate"></link><published>2023-09-02T20:30:00+09:00</published><updated>2023-09-02T20:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-02:/junkbox/simple_prometheus_exporter.html</id><summary type="html">&lt;p&gt;なんちゃってPrometheus ExporterでGPU利用率を採取する&lt;/p&gt;</summary><content type="html">&lt;p&gt;今回はだいぶ前に作ったものの話。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-09-03T11:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Linuxでsystem callをhookしたい</title><link href="https://thatsdone.github.io/junkbox/linux_hook_systemcall_again.html" rel="alternate"></link><published>2023-09-03T11:00:00+09:00</published><updated>2023-09-03T11:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-03:/junkbox/linux_hook_systemcall_again.html</id><summary type="html">&lt;p&gt;Linuxでsystem callをhookしたいときの注意(その2)&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
+&lt;p&gt;今日は2017年にqiitaに書いた&lt;a href="https://qiita.com/thatsdone/items/23cba711af84c5b916ec"&gt;記事&lt;/a&gt;。
+前にここに移植した&lt;a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html"&gt;この記事&lt;/a&gt;の続きです。&lt;/p&gt;
+&lt;hr&gt;
+&lt;h1&gt;イントロ&lt;/h1&gt;
+&lt;p&gt;2013年の3月頃にこんな記事を書いたのを思い出したのだが、最近事情でまた動かしてみたら気づいたことがあったのでメモ。&lt;/p&gt;
+&lt;p&gt;「&lt;a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html"&gt;GNU ld の--no-as-neededと--as-neededオプションについて&lt;/a&gt;」&lt;/p&gt;
+&lt;p&gt;最初によくわかっている方向けの言い訳^H^H^H説明をしておくと、上記はLD_PRELOADを使って hook を行う場合に準備する shared object を作る際に使用するリンカ(GNU ld)の挙動がUbuntu 12.04 前後で若干変更され、ld の option 指定に注意が必要になったという話だった。当時は上記記事の例に書いた通りに動いていたのだが、どうも今は少し事情が変わっているらしいという話である。&lt;/p&gt;
+&lt;p&gt;まず、やりたいことはこの記事のタイトルの通りである。各種事情により、system call (やlibrary関数)の処理を入り口で横取り(hook)して動きを変えたいことがある。私がこれまで経験した中では、こんな用途があった。
+以下、すべて「元のプログラムには手を加えない」という前提である。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;socket API で通信するアプリケーションを、InfiniBand のSDPプロトコルを使って、内部通信処理を横取りして高速化したい。&lt;/li&gt;
+&lt;li&gt;アプリケーションが作成するTCPコネクションのオプションを、接続先によって変更したい。&lt;/li&gt;
+&lt;li&gt;外部から提供されたライブラリの挙動に問題があることがわかったが、ソースがないため改修することもできない。問題を起こす関数の処理を横取りして正しいものに差し換えたい。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;このような場合、後述するようなshared object (拡張子が .so なファイル。動的リンクライブラリと呼ばれることもある)を作っておいて、プログラム実行時に環境変数 LD_PRELOAD で指定してやると、やりたいことを実現できる。&lt;/p&gt;
+&lt;p&gt;文章で説明してもわかりにくいと思うので、絵を描いてみた。
+以下の図の左側のように動いていたプログラム(application1)の動きを、実行時に右側のように変えるということである。&lt;/p&gt;
+&lt;p&gt;&lt;img src ="/images/LD_PRELOAD1.png" alt="LD_PRELOAD1.png" style="width:640px;"/&gt;&lt;/p&gt;
+&lt;p&gt;上図のapplication1 は見ての通り、libFOOBAR.so というライブラリ(shared object)の中の funcA()という関数を使う。(実際のところ、libc.so でもかまわない) やりたいのは、図の右のように、application1 のfuncA()呼び出しを HOOK.so の中の funcA()にすり替え、HOOK.so 版の funcA()の中から前後に必要な処理を行った上で元々の libFOOBAR.so 版の funcA()を呼び出すということである。&lt;/p&gt;
+&lt;h1&gt;hook用shared objectの実際の処理&lt;/h1&gt;
+&lt;p&gt;以下、shared object (上図では HOOK.so)でどんなことをするのか説明する。&lt;/p&gt;
+&lt;h2&gt;構造&lt;/h2&gt;
+&lt;p&gt;hook用shared objectは、大きく以下の3つの要素から構成される。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;初期化ルーチン(constructor)&lt;/li&gt;
+&lt;li&gt;hook関数&lt;/li&gt;
+&lt;li&gt;終了ルーチン(destructor)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;初期化ルーチン(constructor)&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;main() 関数が呼ばれる前に実行される。&lt;/li&gt;
+&lt;li&gt;hook関数で使うために横取り対象関数のポインタを検索して保存しておくことが多い。&lt;/li&gt;
+&lt;li&gt;検索には、dynamic link loader の dlsym() を使う。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;hook関数&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;横取りした後の処理を記述する。&lt;/li&gt;
+&lt;li&gt;横取りする関数とまったく同じ名前と型定義で記述する。&lt;/li&gt;
+&lt;li&gt;適当な前処理を行った後で、前述の初期化ルーチンで保存しておいた関数ポインタを使って再び元の関数を呼び出す使い方が多い。たとえば、kernel に渡す前に適当な小細工をしたい場合や、条件に合致しない場合の fallback ルートとしての役割である。図は、このパターンの例である。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;終了ルーチン(destructor)&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;main() 関数からreturn (or exit) した後に実行される。&lt;/li&gt;
+&lt;li&gt;初期化ルーチンやhook関数で確保した資源の解放など。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;ビルド方法&lt;/h2&gt;
+&lt;p&gt;通常の単独実行可能なプログラムとは違い、shared object を作るためのリンカ・オプションを使う。
+こんな感じである。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;gcc&lt;span class="w"&gt;  &lt;/span&gt;-Wall&lt;span class="w"&gt; &lt;/span&gt;-D_GNU_SOURCE&lt;span class="w"&gt; &lt;/span&gt;-fPIC&lt;span class="w"&gt;  &lt;/span&gt;-Wl,&lt;span class="s1"&gt;&amp;#39;--no-as-needed&amp;#39;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-shared&lt;span class="w"&gt; &lt;/span&gt;-ldl&lt;span class="w"&gt; &lt;/span&gt;hook.c&lt;span class="w"&gt; &lt;/span&gt;-o&lt;span class="w"&gt; &lt;/span&gt;hook.so
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html"&gt;前の記事&lt;/a&gt;のポイントは、
+1. &lt;code&gt;--no-as-needed&lt;/code&gt; というオプションが必要になったこと。
+2. &lt;code&gt;-ldl``` オプションは&lt;/code&gt;--no-as-needed` の後ろになければならないこと。
+の2点だった。&lt;/p&gt;
+&lt;h2&gt;プログラム例&lt;/h2&gt;
+&lt;p&gt;サンプルは以下にあるものをみてほしい。&lt;/p&gt;
+&lt;p&gt;https://github.com/thatsdone/junkbox/tree/master/c/hook&lt;/p&gt;
+&lt;p&gt;write(2)をhookして、本物の write(2)を呼ぶ前に適当なバナーを出しているだけなことがわかると思う。&lt;/p&gt;
+&lt;h2&gt;使い方/実行例&lt;/h2&gt;
+&lt;p&gt;プログラム実行時に、今作ったhook用のshared objectを LD_PRELOAD で指定して実行してやる。
+こんな感じである。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;xenial0&lt;/span&gt;&lt;span class="o"&gt;:~/&lt;/span&gt;&lt;span class="n"&gt;hook$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;cat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;n&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;call_write&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="err"&gt;#&lt;/span&gt;&lt;span class="n"&gt;include&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;fcntl&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="err"&gt;#&lt;/span&gt;&lt;span class="n"&gt;include&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;unistd&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="err"&gt;#&lt;/span&gt;&lt;span class="n"&gt;include&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;string&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;main&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;argc&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello, World!&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;8&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;strlen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;9&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;xenial0&lt;/span&gt;&lt;span class="o"&gt;:~/&lt;/span&gt;&lt;span class="n"&gt;hook$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;env&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;LD_PRELOAD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;so&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;call_write&lt;/span&gt;
+&lt;span class="nl"&gt;init_hook&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;constructor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;called&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mh"&gt;0x7f903d9ca6d0&lt;/span&gt;
+&lt;span class="nl"&gt;write&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;
+&lt;span class="n"&gt;Hello&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;World&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;
+&lt;span class="nl"&gt;fini_hook&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;destructor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;called&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;
+&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;xenial0&lt;/span&gt;&lt;span class="o"&gt;:~/&lt;/span&gt;&lt;span class="n"&gt;hook$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;"Hello, World!" の前に "write: hook!" というバナーが出ているのがわかる。&lt;/p&gt;
+&lt;h1&gt;現在ではどうか？&lt;/h1&gt;
+&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html"&gt;上述の記事&lt;/a&gt;では、/bin/ls に hook.so を使い、ls の結果にヘッダを出す例を書いた。
+しかし、最近また動かしてみたところ、少なくとも Ubuntu Xenial の /bin/ls では write(2)をhookできないことがわかった。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;xenial0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt;
+&lt;span class="n"&gt;call_syscall&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;call_write&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;so&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="n"&gt;call_syscall&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;
+&lt;span class="n"&gt;call_write&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="n"&gt;hook2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;
+
+&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;xenial0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;env&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;LD_PRELOAD&lt;/span&gt;&lt;span class="o"&gt;=./&lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;so&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt;
+&lt;span class="n"&gt;init_hook&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;constructor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;called&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mh"&gt;0x7f4bdece36d0&lt;/span&gt;
+&lt;span class="n"&gt;call_syscall&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;call_write&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;so&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="n"&gt;call_syscall&lt;/span&gt;
+&lt;span class="n"&gt;call_write&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="n"&gt;hook2&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;
+&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="n"&gt;xenial0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="o"&gt;$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;"init_hook: constructor called! ...." の後にもう1行バナーが出るはずなのだがおかしい。
+実際、strace してみると、確かにwrite(2)が呼ばれているではないか...なんで？&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="nv"&gt;@xenial0&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;strace&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;ewrite&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ls&lt;/span&gt;
+&lt;span class="k"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;call_syscall\tcall_write    hook2&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;...,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;44&lt;/span&gt;&lt;span class="n"&gt;call_syscall&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;call_write&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;hook2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;so&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;44&lt;/span&gt;
+&lt;span class="k"&gt;write&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;&amp;quot;call_syscall.c\tcall_write.c  hoo&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;...,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;47&lt;/span&gt;&lt;span class="n"&gt;call_syscall&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="n"&gt;call_write&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="n"&gt;Makefile&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;47&lt;/span&gt;
+&lt;span class="o"&gt;+++&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;exited&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;with&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;+++&lt;/span&gt;
+&lt;span class="n"&gt;stack&lt;/span&gt;&lt;span class="nv"&gt;@xenial0&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~/&lt;/span&gt;&lt;span class="n"&gt;hook&lt;/span&gt;&lt;span class="err"&gt;$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;...というわけで、ちょっと調べてみた結果が以下である。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;/bin/ls は、write(2)を直接使わず、fwrite(3)を使う。&lt;/li&gt;
+&lt;li&gt;fwrite(3)は、write(2)を直接使わず、syscall(2)を使う!?&lt;/li&gt;
+&lt;li&gt;strace は syscall(SYS_write,...) とやった場合も write(2)を呼んだと表示する。&lt;/li&gt;
+&lt;li&gt;この方法で syscall(2)もhookできる。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;余談があと2つある。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;上のlsの例ではdestructor が出すメッセージが出ていない。
+実はこれは&lt;a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html"&gt;前の記事&lt;/a&gt;を書いたときから問題なのだったorz
+真相は、strace してみるとわかるが、ls の main() 関数が return (or exit) する前に標準出力(fd=1)をclose(2)しているからである。&lt;/li&gt;
+&lt;li&gt;サンプルの hook.c は printf(3) を使っているので、この中で write(2)が呼ばれて、write(2)のhookが2回出るはずなのではないか？と思うかもしれない。fwrite(3)と同じようにsyscall(2)が使われている可能性もあるが、write(2)が使われていたとしても、printf(3)とwrite(2)は同じバイナリ(libc.so)にふくまれており、既に参照先が解決されているため、LD_PRELOADの枠組みでは横取りできないのである。(systemtap みたいなことをすれば話は別)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h1&gt;まとめ&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;バイナリをいじらずに system call やライブラリ関数の呼び出しを hook することができる。&lt;/li&gt;
+&lt;li&gt;作法にのっとった shared object を作っておいてプログラム実行時に環境変数 LD_PRELOAD で指定してやる(昔からある)方法は、今でも有効。&lt;/li&gt;
+&lt;li&gt;しかし限界もある上に、バイナリ側の実装が変わるとうまく動かないこともあるので注意が必要。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;links&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;拙作のサンプル&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://github.com/thatsdone/junkbox/tree/master/c/hook"&gt;https://github.com/thatsdone/junkbox/tree/master/c/hook&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Hacker News で見つけた、若干空中戦気味の議論(笑)&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://news.ycombinator.com/item?id=2973221"&gt;https://news.ycombinator.com/item?id=2973221&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;本稿と類似の記事(英語)&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://samanbarghi.com/blog/2014/09/05/how-to-wrap-a-system-call-libc-function-in-linux/"&gt;http://samanbarghi.com/blog/2014/09/05/how-to-wrap-a-system-call-libc-function-in-linux/&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://rafalcieslak.wordpress.com/2013/04/02/dynamic-linker-tricks-using-ld_preload-to-cheat-inject-features-and-investigate-programs/"&gt;https://rafalcieslak.wordpress.com/2013/04/02/dynamic-linker-tricks-using-ld_preload-to-cheat-inject-features-and-investigate-programs/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;masami256 さんによる system call を kernel 側で置き換える話&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://kernhack.hatenablog.com/entry/2014/12/05/000346"&gt;http://kernhack.hatenablog.com/entry/2014/12/05/000346&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;syscall(2)のマニュアル&lt;ul&gt;
+&lt;li&gt;&lt;a href="http://man7.org/linux/man-pages/man2/syscall.2.html"&gt;http://man7.org/linux/man-pages/man2/syscall.2.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] なんちゃってPrometheus ExporterでGPU利用率を採取する</title><link href="https://thatsdone.github.io/junkbox/simple_prometheus_exporter.html" rel="alternate"></link><published>2023-09-02T20:30:00+09:00</published><updated>2023-09-02T20:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-02:/junkbox/simple_prometheus_exporter.html</id><summary type="html">&lt;p&gt;なんちゃってPrometheus ExporterでGPU利用率を採取する&lt;/p&gt;</summary><content type="html">&lt;p&gt;今回はだいぶ前に作ったものの話。&lt;/p&gt;
 &lt;p&gt;話は2020年にさかのぼります。
 当時、vSphereで動くGPU関連製品を使った検証をしていました。
 GPUはNVIDIA製ですが、検証対象の製品自体は独立系のものでした。&lt;/p&gt;
@@ -13,10 +164,12 @@ PGMEは、一般的なPrometheus Exporterと同様にGo言語で書かれてお�
 &lt;p&gt;…ということは、PGMEと同等の処理処理を、http.serverのGET method処理ルーチンで動かしてやればいいじゃん…と思い至って作ってみたものが以下においてあります。&lt;/p&gt;
 &lt;p&gt;https://github.com/thatsdone/junkbox/blob/master/python/PyPGME.py&lt;/p&gt;
 &lt;p&gt;眺めるとわかるのですが、do_GET() の中で nvidia-smi を呼び出し、結果をparseして、PGME互換のmetricsに整形して返しているだけです。&lt;/p&gt;
-&lt;p&gt;なお、起動引数はこんな感じで
-* '-p' : Listen port (default: 19101)
-* '-b' : Bind address (default: 0.0.0.0)
-* '-e' : Extended Attribute&lt;/p&gt;
+&lt;p&gt;なお、起動引数はこんな感じで&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;'-p' : Listen port (default: 19101)&lt;/li&gt;
+&lt;li&gt;'-b' : Bind address (default: 0.0.0.0)&lt;/li&gt;
+&lt;li&gt;'-e' : Extended Attribute&lt;/li&gt;
+&lt;/ul&gt;
 &lt;p&gt;最後の'-e'は、オリジナルのPGMEには存在しません。後述のmetrics採取例のように、電力関連の pgme_power_draw と pgme_power_limit を追加出力できるように(後から)しました。&lt;/p&gt;
 &lt;p&gt;他の目的のPrometheus Exporterが欲しくなった時のひな形としても使えるので、けっこう重宝しています(笑)&lt;/p&gt;
 &lt;p&gt;metrics採取例(IPはダミー、PyPGME.py 起動時には -p 9101と -e を指定)&lt;/p&gt;

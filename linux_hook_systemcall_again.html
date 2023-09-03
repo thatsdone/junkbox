@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] Linuxでsystem callをhookしたい | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/linux_hook_systemcall_again.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Linuxでsystem callをhookしたいときの注意(その2)">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] Linuxでsystem callをhookしたい
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2023-09-03T11:00:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Sun 03 September 2023
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。</p>
+<p>今日は2017年にqiitaに書いた<a href="https://qiita.com/thatsdone/items/23cba711af84c5b916ec">記事</a>。
+前にここに移植した<a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html">この記事</a>の続きです。</p>
+<hr>
+<h1>イントロ</h1>
+<p>2013年の3月頃にこんな記事を書いたのを思い出したのだが、最近事情でまた動かしてみたら気づいたことがあったのでメモ。</p>
+<p>「<a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html">GNU ld の--no-as-neededと--as-neededオプションについて</a>」</p>
+<p>最初によくわかっている方向けの言い訳^H^H^H説明をしておくと、上記はLD_PRELOADを使って hook を行う場合に準備する shared object を作る際に使用するリンカ(GNU ld)の挙動がUbuntu 12.04 前後で若干変更され、ld の option 指定に注意が必要になったという話だった。当時は上記記事の例に書いた通りに動いていたのだが、どうも今は少し事情が変わっているらしいという話である。</p>
+<p>まず、やりたいことはこの記事のタイトルの通りである。各種事情により、system call (やlibrary関数)の処理を入り口で横取り(hook)して動きを変えたいことがある。私がこれまで経験した中では、こんな用途があった。
+以下、すべて「元のプログラムには手を加えない」という前提である。</p>
+<ol>
+<li>socket API で通信するアプリケーションを、InfiniBand のSDPプロトコルを使って、内部通信処理を横取りして高速化したい。</li>
+<li>アプリケーションが作成するTCPコネクションのオプションを、接続先によって変更したい。</li>
+<li>外部から提供されたライブラリの挙動に問題があることがわかったが、ソースがないため改修することもできない。問題を起こす関数の処理を横取りして正しいものに差し換えたい。</li>
+</ol>
+<p>このような場合、後述するようなshared object (拡張子が .so なファイル。動的リンクライブラリと呼ばれることもある)を作っておいて、プログラム実行時に環境変数 LD_PRELOAD で指定してやると、やりたいことを実現できる。</p>
+<p>文章で説明してもわかりにくいと思うので、絵を描いてみた。
+以下の図の左側のように動いていたプログラム(application1)の動きを、実行時に右側のように変えるということである。</p>
+<p><img src ="/images/LD_PRELOAD1.png" alt="LD_PRELOAD1.png" style="width:640px;"/></p>
+<p>上図のapplication1 は見ての通り、libFOOBAR.so というライブラリ(shared object)の中の funcA()という関数を使う。(実際のところ、libc.so でもかまわない) やりたいのは、図の右のように、application1 のfuncA()呼び出しを HOOK.so の中の funcA()にすり替え、HOOK.so 版の funcA()の中から前後に必要な処理を行った上で元々の libFOOBAR.so 版の funcA()を呼び出すということである。</p>
+<h1>hook用shared objectの実際の処理</h1>
+<p>以下、shared object (上図では HOOK.so)でどんなことをするのか説明する。</p>
+<h2>構造</h2>
+<p>hook用shared objectは、大きく以下の3つの要素から構成される。</p>
+<ol>
+<li>初期化ルーチン(constructor)</li>
+<li>hook関数</li>
+<li>終了ルーチン(destructor)</li>
+</ol>
+<h2>初期化ルーチン(constructor)</h2>
+<ul>
+<li>main() 関数が呼ばれる前に実行される。</li>
+<li>hook関数で使うために横取り対象関数のポインタを検索して保存しておくことが多い。</li>
+<li>検索には、dynamic link loader の dlsym() を使う。</li>
+</ul>
+<h2>hook関数</h2>
+<ul>
+<li>横取りした後の処理を記述する。</li>
+<li>横取りする関数とまったく同じ名前と型定義で記述する。</li>
+<li>適当な前処理を行った後で、前述の初期化ルーチンで保存しておいた関数ポインタを使って再び元の関数を呼び出す使い方が多い。たとえば、kernel に渡す前に適当な小細工をしたい場合や、条件に合致しない場合の fallback ルートとしての役割である。図は、このパターンの例である。</li>
+</ul>
+<h2>終了ルーチン(destructor)</h2>
+<ul>
+<li>main() 関数からreturn (or exit) した後に実行される。</li>
+<li>初期化ルーチンやhook関数で確保した資源の解放など。</li>
+</ul>
+<h2>ビルド方法</h2>
+<p>通常の単独実行可能なプログラムとは違い、shared object を作るためのリンカ・オプションを使う。
+こんな感じである。</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>gcc<span class="w">  </span>-Wall<span class="w"> </span>-D_GNU_SOURCE<span class="w"> </span>-fPIC<span class="w">  </span>-Wl,<span class="s1">&#39;--no-as-needed&#39;</span><span class="w"> </span>-shared<span class="w"> </span>-ldl<span class="w"> </span>hook.c<span class="w"> </span>-o<span class="w"> </span>hook.so
+</code></pre></div>
+
+<p><a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html">前の記事</a>のポイントは、
+1. <code>--no-as-needed</code> というオプションが必要になったこと。
+2. <code>-ldl``` オプションは</code>--no-as-needed` の後ろになければならないこと。
+の2点だった。</p>
+<h2>プログラム例</h2>
+<p>サンプルは以下にあるものをみてほしい。</p>
+<p>https://github.com/thatsdone/junkbox/tree/master/c/hook</p>
+<p>write(2)をhookして、本物の write(2)を呼ぶ前に適当なバナーを出しているだけなことがわかると思う。</p>
+<h2>使い方/実行例</h2>
+<p>プログラム実行時に、今作ったhook用のshared objectを LD_PRELOAD で指定して実行してやる。
+こんな感じである。</p>
+<div class="highlight"><pre><span></span><code><span class="n">stack</span><span class="err">@</span><span class="n">xenial0</span><span class="o">:~/</span><span class="n">hook$</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="o">-</span><span class="n">n</span><span class="w"> </span><span class="n">call_write</span><span class="p">.</span><span class="n">c</span>
+<span class="w">     </span><span class="mi">1</span><span class="w">  </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">fcntl</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+<span class="w">     </span><span class="mi">2</span><span class="w">  </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">unistd</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+<span class="w">     </span><span class="mi">3</span><span class="w">  </span><span class="err">#</span><span class="n">include</span><span class="w"> </span><span class="o">&lt;</span><span class="n">string</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;</span>
+<span class="w">     </span><span class="mi">4</span>
+<span class="w">     </span><span class="mi">5</span><span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">)</span>
+<span class="w">     </span><span class="mi">6</span><span class="w">  </span><span class="p">{</span>
+<span class="w">     </span><span class="mi">7</span><span class="w">    </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Hello, World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="w">     </span><span class="mi">8</span><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">strlen</span><span class="p">(</span><span class="n">str</span><span class="p">));</span>
+<span class="w">     </span><span class="mi">9</span><span class="w">  </span><span class="p">}</span>
+
+<span class="n">stack</span><span class="err">@</span><span class="n">xenial0</span><span class="o">:~/</span><span class="n">hook$</span><span class="w"> </span><span class="n">env</span><span class="w"> </span><span class="n">LD_PRELOAD</span><span class="o">=</span><span class="p">.</span><span class="o">/</span><span class="n">hook</span><span class="p">.</span><span class="n">so</span><span class="w"> </span><span class="p">.</span><span class="o">/</span><span class="n">call_write</span>
+<span class="nl">init_hook</span><span class="p">:</span><span class="w"> </span><span class="n">constructor</span><span class="w"> </span><span class="n">called</span><span class="o">!</span><span class="w"> </span><span class="mh">0x7f903d9ca6d0</span>
+<span class="nl">write</span><span class="p">:</span><span class="w"> </span><span class="n">hook</span><span class="o">!</span>
+<span class="n">Hello</span><span class="p">,</span><span class="w"> </span><span class="n">World</span><span class="o">!</span>
+<span class="nl">fini_hook</span><span class="p">:</span><span class="w"> </span><span class="n">destructor</span><span class="w"> </span><span class="n">called</span><span class="o">!</span>
+<span class="n">stack</span><span class="err">@</span><span class="n">xenial0</span><span class="o">:~/</span><span class="n">hook$</span>
+</code></pre></div>
+
+<p>"Hello, World!" の前に "write: hook!" というバナーが出ているのがわかる。</p>
+<h1>現在ではどうか？</h1>
+<p><a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html">上述の記事</a>では、/bin/ls に hook.so を使い、ls の結果にヘッダを出す例を書いた。
+しかし、最近また動かしてみたところ、少なくとも Ubuntu Xenial の /bin/ls では write(2)をhookできないことがわかった。</p>
+<div class="highlight"><pre><span></span><code><span class="n">stack</span><span class="err">@</span><span class="n">xenial0</span><span class="p">:</span><span class="o">~/</span><span class="n">hook</span><span class="o">$</span><span class="w"> </span><span class="n">ls</span>
+<span class="n">call_syscall</span><span class="o">.</span><span class="n">c</span><span class="w">  </span><span class="n">call_write</span><span class="o">.</span><span class="n">c</span><span class="w">  </span><span class="n">hook</span><span class="o">.</span><span class="n">c</span><span class="w">   </span><span class="n">hook</span><span class="o">.</span><span class="n">so</span><span class="w">       </span><span class="n">call_syscall</span><span class="w">  </span>
+<span class="n">call_write</span><span class="w">      </span><span class="n">hook2</span><span class="o">.</span><span class="n">c</span><span class="w">       </span><span class="n">Makefile</span>
+
+<span class="n">stack</span><span class="err">@</span><span class="n">xenial0</span><span class="p">:</span><span class="o">~/</span><span class="n">hook</span><span class="o">$</span><span class="w"> </span><span class="n">env</span><span class="w"> </span><span class="n">LD_PRELOAD</span><span class="o">=./</span><span class="n">hook</span><span class="o">.</span><span class="n">so</span><span class="w"> </span><span class="n">ls</span>
+<span class="n">init_hook</span><span class="p">:</span><span class="w"> </span><span class="n">constructor</span><span class="w"> </span><span class="n">called</span><span class="o">!</span><span class="w"> </span><span class="mh">0x7f4bdece36d0</span>
+<span class="n">call_syscall</span><span class="o">.</span><span class="n">c</span><span class="w">  </span><span class="n">call_write</span><span class="o">.</span><span class="n">c</span><span class="w">  </span><span class="n">hook</span><span class="o">.</span><span class="n">c</span><span class="w">   </span><span class="n">hook</span><span class="o">.</span><span class="n">so</span><span class="w">       </span><span class="n">call_syscall</span>
+<span class="n">call_write</span><span class="w">      </span><span class="n">hook2</span><span class="o">.</span><span class="n">c</span><span class="w">       </span><span class="n">Makefile</span>
+<span class="n">stack</span><span class="err">@</span><span class="n">xenial0</span><span class="p">:</span><span class="o">~/</span><span class="n">hook</span><span class="o">$</span>
+</code></pre></div>
+
+<p>"init_hook: constructor called! ...." の後にもう1行バナーが出るはずなのだがおかしい。
+実際、strace してみると、確かにwrite(2)が呼ばれているではないか...なんで？</p>
+<div class="highlight"><pre><span></span><code><span class="n">stack</span><span class="nv">@xenial0</span><span class="err">:</span><span class="o">~/</span><span class="n">hook</span><span class="err">$</span><span class="w"> </span><span class="n">strace</span><span class="w"> </span><span class="o">-</span><span class="n">ewrite</span><span class="w"> </span><span class="n">ls</span>
+<span class="k">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;call_syscall\tcall_write    hook2&quot;</span><span class="p">...,</span><span class="w"> </span><span class="mi">44</span><span class="n">call_syscall</span><span class="w"> </span><span class="n">call_write</span><span class="w">    </span><span class="n">hook2</span><span class="p">.</span><span class="n">c</span><span class="w">  </span><span class="n">hook</span><span class="p">.</span><span class="n">so</span>
+<span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">44</span>
+<span class="k">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">&quot;call_syscall.c\tcall_write.c  hoo&quot;</span><span class="p">...,</span><span class="w"> </span><span class="mi">47</span><span class="n">call_syscall</span><span class="p">.</span><span class="n">c</span><span class="w">       </span><span class="n">call_write</span><span class="p">.</span><span class="n">c</span><span class="w">  </span><span class="n">hook</span><span class="p">.</span><span class="n">c</span><span class="w">   </span><span class="n">Makefile</span>
+<span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">47</span>
+<span class="o">+++</span><span class="w"> </span><span class="n">exited</span><span class="w"> </span><span class="k">with</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">+++</span>
+<span class="n">stack</span><span class="nv">@xenial0</span><span class="err">:</span><span class="o">~/</span><span class="n">hook</span><span class="err">$</span>
+</code></pre></div>
+
+<p>...というわけで、ちょっと調べてみた結果が以下である。</p>
+<ol>
+<li>/bin/ls は、write(2)を直接使わず、fwrite(3)を使う。</li>
+<li>fwrite(3)は、write(2)を直接使わず、syscall(2)を使う!?</li>
+<li>strace は syscall(SYS_write,...) とやった場合も write(2)を呼んだと表示する。</li>
+<li>この方法で syscall(2)もhookできる。</li>
+</ol>
+<p>余談があと2つある。</p>
+<ol>
+<li>上のlsの例ではdestructor が出すメッセージが出ていない。
+実はこれは<a href="https://thatsdone.github.io/junkbox/gnu_ld_no_as_needed_and_as_needed_option.html">前の記事</a>を書いたときから問題なのだったorz
+真相は、strace してみるとわかるが、ls の main() 関数が return (or exit) する前に標準出力(fd=1)をclose(2)しているからである。</li>
+<li>サンプルの hook.c は printf(3) を使っているので、この中で write(2)が呼ばれて、write(2)のhookが2回出るはずなのではないか？と思うかもしれない。fwrite(3)と同じようにsyscall(2)が使われている可能性もあるが、write(2)が使われていたとしても、printf(3)とwrite(2)は同じバイナリ(libc.so)にふくまれており、既に参照先が解決されているため、LD_PRELOADの枠組みでは横取りできないのである。(systemtap みたいなことをすれば話は別)</li>
+</ol>
+<h1>まとめ</h1>
+<ul>
+<li>バイナリをいじらずに system call やライブラリ関数の呼び出しを hook することができる。</li>
+<li>作法にのっとった shared object を作っておいてプログラム実行時に環境変数 LD_PRELOAD で指定してやる(昔からある)方法は、今でも有効。</li>
+<li>しかし限界もある上に、バイナリ側の実装が変わるとうまく動かないこともあるので注意が必要。</li>
+</ul>
+<h1>links</h1>
+<ul>
+<li>拙作のサンプル<ul>
+<li><a href="https://github.com/thatsdone/junkbox/tree/master/c/hook">https://github.com/thatsdone/junkbox/tree/master/c/hook</a></li>
+</ul>
+</li>
+<li>Hacker News で見つけた、若干空中戦気味の議論(笑)<ul>
+<li><a href="https://news.ycombinator.com/item?id=2973221">https://news.ycombinator.com/item?id=2973221</a></li>
+</ul>
+</li>
+<li>本稿と類似の記事(英語)<ul>
+<li><a href="http://samanbarghi.com/blog/2014/09/05/how-to-wrap-a-system-call-libc-function-in-linux/">http://samanbarghi.com/blog/2014/09/05/how-to-wrap-a-system-call-libc-function-in-linux/</a></li>
+<li><a href="https://rafalcieslak.wordpress.com/2013/04/02/dynamic-linker-tricks-using-ld_preload-to-cheat-inject-features-and-investigate-programs/">https://rafalcieslak.wordpress.com/2013/04/02/dynamic-linker-tricks-using-ld_preload-to-cheat-inject-features-and-investigate-programs/</a></li>
+</ul>
+</li>
+<li>masami256 さんによる system call を kernel 側で置き換える話<ul>
+<li><a href="http://kernhack.hatenablog.com/entry/2014/12/05/000346">http://kernhack.hatenablog.com/entry/2014/12/05/000346</a></li>
+</ul>
+</li>
+<li>syscall(2)のマニュアル<ul>
+<li><a href="http://man7.org/linux/man-pages/man2/syscall.2.html">http://man7.org/linux/man-pages/man2/syscall.2.html</a></li>
+</ul>
+</li>
+</ul>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>

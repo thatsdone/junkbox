@@ -77,10 +77,12 @@ PGMEは、一般的なPrometheus Exporterと同様にGo言語で書かれてお�
 <p>…ということは、PGMEと同等の処理処理を、http.serverのGET method処理ルーチンで動かしてやればいいじゃん…と思い至って作ってみたものが以下においてあります。</p>
 <p>https://github.com/thatsdone/junkbox/blob/master/python/PyPGME.py</p>
 <p>眺めるとわかるのですが、do_GET() の中で nvidia-smi を呼び出し、結果をparseして、PGME互換のmetricsに整形して返しているだけです。</p>
-<p>なお、起動引数はこんな感じで
-* '-p' : Listen port (default: 19101)
-* '-b' : Bind address (default: 0.0.0.0)
-* '-e' : Extended Attribute</p>
+<p>なお、起動引数はこんな感じで</p>
+<ul>
+<li>'-p' : Listen port (default: 19101)</li>
+<li>'-b' : Bind address (default: 0.0.0.0)</li>
+<li>'-e' : Extended Attribute</li>
+</ul>
 <p>最後の'-e'は、オリジナルのPGMEには存在しません。後述のmetrics採取例のように、電力関連の pgme_power_draw と pgme_power_limit を追加出力できるように(後から)しました。</p>
 <p>他の目的のPrometheus Exporterが欲しくなった時のひな形としても使えるので、けっこう重宝しています(笑)</p>
 <p>metrics採取例(IPはダミー、PyPGME.py 起動時には -p 9101と -e を指定)</p>
