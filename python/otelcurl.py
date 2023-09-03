@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# otelcurl: A tiny utility for testing OpenTelemetry/HTTP test
+# otelcurl.py: A tiny utility for testing OpenTelemetry/HTTP test
 #
 # License:
 #   Apache License, Version 2.0
@@ -27,18 +27,21 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+#from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='otelcurl.py')
-    parser.add_argument('--url', default='http://10.17.127.253/repo')
-    #parser.add_argument('--url', default=None)
-    parser.add_argument('-X', '--method', default='GET')
-    parser.add_argument('--data_raw', default=None)
+    parser.add_argument('--url', default=None)
+    parser.add_argument('-X', '--method', default='GET',
+                        help='Currently supported methods: GET, POST')
+    parser.add_argument('--data_raw', default=None,
+                        help='If you start the DATA_RAW with the letter @, the rest  should  be  a filename like curl.')
     parser.add_argument('--timeout', type=int, default=60)
     parser.add_argument('--endpoint', default=None,
                         help='OTLP Collector Endpoint (e.g. http://localhost:4317)')
     parser.add_argument('--console', action='store_true')
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--forward_url', default=None)
     args = parser.parse_args()
     #
     # Setup OpenTelemetry
@@ -48,7 +51,7 @@ if __name__ == "__main__":
     trace.set_tracer_provider(provider)
     tracer = trace.get_tracer(sys.argv[0])
     if args.endpoint:
-        otlp_exporter = OTLPSpanExporter(endpoint=endpoint, insecure=True)
+        otlp_exporter = OTLPSpanExporter(endpoint=args.endpoint, insecure=True)
         otlp_processor = BatchSpanProcessor(otlp_exporter)
         trace.get_tracer_provider().add_span_processor(otlp_processor)
     if args.console:
@@ -71,11 +74,14 @@ if __name__ == "__main__":
             print(r.status_code)
             #print(r.text)
         elif args.method == 'POST':
-            if args.data_raw:
-                with open(args.data_raw, 'rb') as fp:
+            if args.data_raw and args.data_raw[0] == '@':
+                with open(args.data_raw[1:], 'rb') as fp:
                     raw_bytes = fp.read()
             else:
-                raw_bytes = bytes('POSTDATA', 'utf-8')
+                raw_bytes = bytes(args.data_raw, 'utf-8')
+            headers['Content-Length'] = str(len(raw_bytes))
+            if args.forward_url:
+                headers['forward_url'] = args.forward_url
             r = requests.post(args.url,
                               headers=headers,
                               timeout=args.timeout,
