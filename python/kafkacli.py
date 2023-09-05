@@ -34,6 +34,9 @@ if __name__ == "__main__":
     parser.add_argument('-R', '--recv', action='store_true', default=False)
     parser.add_argument('-S', '--send', action='store_true', default=False)
     parser.add_argument('-m', '--message', default=None)
+    parser.add_argument('--dump_size', type=int, default=256)
+    parser.add_argument('--enable_otel', action='store_true')
+    parser.add_argument('--endpoint', default=None)
     args = parser.parse_args()
     #
     debug = False
@@ -43,10 +46,33 @@ if __name__ == "__main__":
     bootstrap_servers = args.bootstrap_servers
     interval = args.poll_timeout
 
+
+    tracer = None
+    if args.enable_otel:
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.propagate import inject
+        from opentelemetry import trace
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+        #
+        # Setup OpenTelemetry
+        #
+        resource = Resource(attributes={'service.name': sys.argv[0]})
+        provider = TracerProvider(resource=resource)
+        trace.set_tracer_provider(provider)
+        tracer = trace.get_tracer(sys.argv[0])
+        if args.endpoint:
+            otlp_exporter = OTLPSpanExporter(endpoint=args.endpoint, insecure=True)
+            otlp_processor = BatchSpanProcessor(otlp_exporter)
+            trace.get_tracer_provider().add_span_processor(otlp_processor)
+ 
     if args.recv and args.send:
         print('-R(--recv) and -S(--send) are exclusive')
         sys.exit()
-    elif not (args.recv and args.send):
+    elif (args.recv == False and args.send == False):
         args.recv = True
 
     print('# kafkacli.py : Running %s mode' % ('receiver(-R)' if args.recv else 'sender(-S)'))
@@ -76,7 +102,35 @@ if __name__ == "__main__":
                 print('RESULT KEY: ', k, type(result[k]), result[k])
                 for elm in result[k]:
                     print('ELM: ', type(elm), 'topic: ', elm.topic, 'partition: ', elm.partition)
-                    print('payload: %s' % (elm.value.decode()))
+                    #
+                    traceparent = None
                     for  h in elm.headers:
                         #print('headers: %s %s 'h, type(h))
                         print('headers: %s = %s' % (h[0], h[1].decode()))
+                        if not traceparent and h[0] == 'traceparent':
+                            traceparent = h[1].decode()
+
+                    if args.enable_otel:
+                        ctx = None
+                        if traceparent:
+                            carrier = {'traceparent': traceparent}
+                            ctx = TraceContextTextMapPropagator().extract(carrier=carrier)
+                        span1 = tracer.start_span("ConsumerRecord", context=ctx)
+                    #
+                    #print('payload: %s' % (elm.value.decode()))
+                    post_data = elm.value
+                    print('payload:')
+                    if len(post_data) > args.dump_size:
+                        dump_size = args.dump_size
+                    else:
+                        dump_size = len(post_data)
+                    dump_str = ''
+                    for i in range(0, dump_size):
+                        dump_str += '%02x ' % (post_data[i])
+                        if ((i + 1) % 16) == 0:
+                            print(dump_str)
+                            dump_str = ''
+                    if (dump_size % 16 != 0):
+                        print(dump_str)
+                    if args.enable_otel:
+                        span1.end()
