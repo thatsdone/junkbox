@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 import java.io.ByteArrayInputStream;
+//import java.util.HexFormat; Java17
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
@@ -24,9 +26,14 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.apache.hc.core5.http.message.StatusLine;
 
+import org.apache.kafka.clients.producer.ProducerRecord;
+
 @RestController
 class SpringTest1Controller {
 
+    @Autowired
+    private SpringTest1 springTest1;
+    
     @GetMapping("/hello")
     String hello() {
         return "Hello, World!";
@@ -45,6 +52,7 @@ class SpringTest1Controller {
             }
         }
 
+        //hexdump POST body
         if (data.length == 0) {
             return "POST /api/operation received.";
         }
@@ -60,9 +68,18 @@ class SpringTest1Controller {
             System.out.println(builder.toString());
         }
 
+        //forward POST body via Kafka
+        System.out.println("Sending data via Kafka: start");
+        ProducerRecord<String, byte[]> pr =
+            new ProducerRecord<>("can-topic", data);
+        springTest1.producer.send(pr);
+        System.out.println("Sending data via Kafka: end");
+        
         if (forward_url == null) {
             return "POST /api/operation received.";
         }
+
+        //forward POST body via HTTP
         try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
         HttpPost httppost = new HttpPost(forward_url);
         InputStreamEntity reqEntity =
@@ -78,7 +95,6 @@ class SpringTest1Controller {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //DEFAULT_BINARY
 
         return "POST /api/operation received.";
     }
