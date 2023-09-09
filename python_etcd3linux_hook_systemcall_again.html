@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] pythonからetcdを使いたい | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/python_etcd3linux_hook_systemcall_again.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="pythonからetcdを使いたい">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] pythonからetcdを使いたい
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2023-09-09T21:00:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Sat 09 September 2023
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>今回は、これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズではなく今年になってから気づいた話。</p>
+<p>Kubernetesの制御データを置くのにetcdを使っていることもあって、etcdをデータベースにして分散制御するというのはよくある話だと思います。</p>
+<p>Pythonの場合、<a href="https://pypi.org/">Pypi</a>で探してみると、元々...というか、etcd 2.x時代くらいまではこれが</p>
+<ul>
+<li>Pypi <a href="https://pypi.org/project/etcd/">https://pypi.org/project/etcd/</a><ul>
+<li>ソース <a href="https://github.com/dsoprea/PythonEtcdClient">https://github.com/dsoprea/PythonEtcdClient</a></li>
+</ul>
+</li>
+</ul>
+<p>使われていたようですが、残念ながら(?)2014年でリリースが止まっており、現在はこちらがつかわれているようです。フルスクラッチで作り直しているようですね。</p>
+<ul>
+<li>Pypi <a href="https://pypi.org/project/etcd3/">https://pypi.org/project/etcd3/</a><ul>
+<li>ソース <a href="https://github.com/kragniz/python-etcd3/">https://github.com/kragniz/python-etcd3/</a></li>
+<li>ドキュメント <a href="https://python-etcd3.readthedocs.io/en/latest/">https://python-etcd3.readthedocs.io/en/latest/</a></li>
+</ul>
+</li>
+</ul>
+<p>Pypiのページにもサンプルが載っていますが、素直で使いやすい仕様で作られているように思います。</p>
+<p>さて、私は、3ノードのetcdサーバのどれか１台が倒れても、もろもろ処理継続できる実験をしたかったのでした。</p>
+<p>それで当初は、readthedocsのmanualにある<a href="https://python-etcd3.readthedocs.io/en/latest/usage.html#api">etcd3.Etcd3Clientの仕様</a>を眺めながら、「あれ？3ノードにコネクション張ってFail Overさせたい時ってどうすればいいんじゃ？」とひとしきり試行錯誤の後「もしかしてサポートされてない？」とコードを読み始めたところ、
+<a href="https://github.com/kragniz/python-etcd3/blob/master/etcd3/client.py#L145">MultiEndpointEtcd3Client()</a>を使えばいいことがわかりました。</p>
+<p>練習用に作ってみたやつ(本記事執筆時点でまだTo Be Updated)が<a href="https://github.com/thatsdone/junkbox/blob/master/python/etcd3-multiclient.py">ここ</a>においてありますが、以下のような感じで etcdサーバ1台ずつ Endpoint classを作った上でリストにし、<code>MultiEndpointEtcd3Client()</code> に <code>endpoint=</code> で渡してあげればよいようです。
+最初、stringで '192.168.1.101:2379' と書いてリストにしていて動かなかったので、あれれ？と思ったのですが、やっぱりソースを眺めていて気づきました(笑)</p>
+<div class="highlight"><pre><span></span><code><span class="ss">(</span><span class="nv">snip</span><span class="ss">)</span>
+<span class="w"> </span><span class="mi">39</span><span class="w">     </span><span class="nv">eps</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>[]
+<span class="w"> </span><span class="mi">40</span><span class="w">     </span><span class="k">if</span><span class="w"> </span><span class="nv">args</span>.<span class="nv">endpoints</span>:
+<span class="w"> </span><span class="mi">41</span><span class="w">         </span><span class="k">for</span><span class="w"> </span><span class="nv">ep</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">args</span>.<span class="nv">endpoints</span>:
+<span class="w"> </span><span class="mi">42</span><span class="w">             </span><span class="nv">eps</span>.<span class="nv">append</span><span class="ss">(</span><span class="nv">etcd3</span>.<span class="nv">Endpoint</span><span class="ss">(</span><span class="nv">host</span><span class="o">=</span><span class="nv">ep</span>.<span class="nv">split</span><span class="ss">(</span><span class="s1">&#39;:&#39;</span><span class="ss">)</span>[<span class="mi">0</span>],<span class="w"> </span><span class="nv">port</span><span class="o">=</span><span class="nv">int</span><span class="ss">(</span><span class="nv">ep</span>.<span class="nv">spl</span><span class="w">    </span><span class="nv">it</span><span class="ss">(</span><span class="s1">&#39;:&#39;</span><span class="ss">)</span>[<span class="mi">1</span>]<span class="ss">)</span>,<span class="w"> </span><span class="nv">secure</span><span class="o">=</span><span class="nv">False</span><span class="ss">))</span>
+<span class="w"> </span><span class="mi">43</span><span class="w">     </span><span class="k">else</span>:
+<span class="w"> </span><span class="mi">44</span><span class="w">         </span><span class="nv">print</span><span class="ss">(</span><span class="s1">&#39;Specify -e / --endpoints&#39;</span><span class="ss">)</span>
+<span class="w"> </span><span class="mi">45</span><span class="w">         </span><span class="nv">sys</span>.<span class="k">exit</span><span class="ss">()</span>
+<span class="w"> </span><span class="mi">46</span>
+<span class="w"> </span><span class="mi">47</span><span class="w">     </span><span class="nv">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">etcd3</span>.<span class="nv">MultiEndpointEtcd3Client</span><span class="ss">(</span><span class="nv">endpoints</span><span class="o">=</span><span class="nv">eps</span>,
+<span class="w"> </span><span class="mi">48</span><span class="w">                                             </span><span class="nb">timeout</span><span class="o">=</span><span class="nv">args</span>.<span class="nb">timeout</span>,
+<span class="w"> </span><span class="mi">49</span><span class="w">                                             </span><span class="nv">failover</span><span class="o">=</span><span class="nv">True</span><span class="ss">)</span>
+<span class="ss">(</span><span class="nv">snip</span><span class="ss">)</span>
+</code></pre></div>
+
+<p>ちなこのライブラリ、etcdに対する単純なkey/valueのCRUDだけではなく、lock やtransactionも使えるようになっています。
+便利ですね :)</p>
+<p>なお、ある意味<strong>これが一番重用な話</strong>になりますが、現状Pypiからインストールできる最新版の 0.2.0 は2020/04/01にリリースされたもので、<strong>古い</strong>です。
+<code>MultiEndpointEtcd3Client()</code> も含まれていません。使いたい場合は、ソースからインストールする必要があります。</p>
+<p>そろそろ次のリリース出したほうがいいんじゃないの？と<a href="https://github.com/kragniz/python-etcd3/issues/2197">issue</a>も切ってみて、賛同の声もほどほどあるようなのですが、さてどうなりますか...</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
