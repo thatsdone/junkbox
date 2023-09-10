@@ -20,15 +20,6 @@ import datetime
 import argparse
 import requests
 
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.propagate import inject
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-#from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='otelcurl.py')
     parser.add_argument('--url', default=None)
@@ -42,50 +33,66 @@ if __name__ == "__main__":
     parser.add_argument('--console', action='store_true')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--forward_url', default=None)
+    parser.add_argument('--enable_otel', action='store_true')
     args = parser.parse_args()
     #
     # Setup OpenTelemetry
     #
-    resource = Resource(attributes={'service.name': sys.argv[0]})
-    provider = TracerProvider(resource=resource)
-    trace.set_tracer_provider(provider)
-    tracer = trace.get_tracer(sys.argv[0])
-    if args.endpoint:
-        otlp_exporter = OTLPSpanExporter(endpoint=args.endpoint, insecure=True)
-        otlp_processor = BatchSpanProcessor(otlp_exporter)
-        trace.get_tracer_provider().add_span_processor(otlp_processor)
-    if args.console:
-        console_exporter = ConsoleSpanExporter()
-        console_processor = BatchSpanProcessor(console_exporter)
-        trace.get_tracer_provider().add_span_processor(console_processor)
+    tracer = None
+    if args.enable_otel:
+        from opentelemetry.sdk.resources import Resource
+        from opentelemetry.propagate import inject
+        from opentelemetry import trace
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.sdk.trace.export import ConsoleSpanExporter
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        #from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+
+        resource = Resource(attributes={'service.name': sys.argv[0]})
+        provider = TracerProvider(resource=resource)
+        trace.set_tracer_provider(provider)
+        tracer = trace.get_tracer(sys.argv[0])
+        if args.endpoint:
+            otlp_exporter = OTLPSpanExporter(endpoint=args.endpoint, insecure=True)
+            otlp_processor = BatchSpanProcessor(otlp_exporter)
+            trace.get_tracer_provider().add_span_processor(otlp_processor)
+        if args.console:
+            console_exporter = ConsoleSpanExporter()
+            console_processor = BatchSpanProcessor(console_exporter)
+            trace.get_tracer_provider().add_span_processor(console_processor)
 
     #
     # Generate an HTTP request
     #
     headers = {}
-    with tracer.start_as_current_span("%s" % (sys.argv[0])) as span:
+    if args.enable_otel:
+        span1 = tracer.start_span("%s" % (sys.argv[0]))
         inject(headers)
         if args.debug:
             print(headers)
-        if args.method == 'GET':
-            r = requests.get(args.url,
-                         headers=headers,
-                         timeout=args.timeout)
-            print(r.status_code)
-            #print(r.text)
-        elif args.method == 'POST':
-            if args.data_raw and args.data_raw[0] == '@':
-                with open(args.data_raw[1:], 'rb') as fp:
-                    raw_bytes = fp.read()
-            else:
-                raw_bytes = bytes(args.data_raw, 'utf-8')
-            headers['Content-Length'] = str(len(raw_bytes))
-            if args.forward_url:
-                headers['forward_url'] = args.forward_url
-            r = requests.post(args.url,
-                              headers=headers,
-                              timeout=args.timeout,
-                              data=raw_bytes)
-            print(r.status_code)
-        elif args.method:
-            print('method: %s not supported.'  % (args.method))
+    if args.method == 'GET':
+        r = requests.get(args.url,
+                        headers=headers,
+                        timeout=args.timeout)
+        print(r.status_code)
+        #print(r.text)
+    elif args.method == 'POST':
+        if args.data_raw and args.data_raw[0] == '@':
+            with open(args.data_raw[1:], 'rb') as fp:
+                raw_bytes = fp.read()
+        else:
+            raw_bytes = bytes(args.data_raw, 'utf-8')
+        headers['Content-Length'] = str(len(raw_bytes))
+        if args.forward_url:
+            headers['forward_url'] = args.forward_url
+        r = requests.post(args.url,
+                          headers=headers,
+                          timeout=args.timeout,
+                          data=raw_bytes)
+        print(r.status_code)
+    elif args.method:
+        print('method: %s not supported.'  % (args.method))
+
+    if args.enable_otel:
+        span1.end()
