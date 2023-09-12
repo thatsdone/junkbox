@@ -21,7 +21,7 @@ public class QuarkusTest1Resource {
     public String getMetric(@PathParam String name) {
         return service.metrics(name);
     }
-    
+
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String metrics() {
@@ -31,9 +31,22 @@ public class QuarkusTest1Resource {
     @POST
     @Produces(MediaType.TEXT_PLAIN)
     @Path("/operation")
-    public String handlePost() {
+    public String handlePost(byte[] body) {
+        if (body.length == 0) {
+            return "POST operation received.";
+        }
+        System.out.println(String.format("handlePost(): body length: %d", body.length));
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < body.length; i++) {
+            builder.append(String.format("%02x ", body[i]));
+            if ((i + 1) % 16 == 0) {
+                System.out.println(builder.toString());
+                builder.setLength(0);
+            }
+        }
+        if ((body.length % 16) != 0) {
+            System.out.println(builder.toString());
+        }
         return "POST request received.";
     }
-
-    
 }
