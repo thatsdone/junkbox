@@ -87,11 +87,17 @@ if __name__ == "__main__":
     if args.op == 'lock':
         # stupid excercise
         print(datetime.datetime.now(), 'acquiring a lock on %s' % (args.watch_key))
-        with client.lock(args.watch_key) as lock:
+        #with client.lock(args.watch_key) as lock:
+        if True:
             print(datetime.datetime.now(), 'name', 'is_acquired', 'remaining_ttl', 'revision', 'ttl')
-            print(datetime.datetime.now(),lock.name, lock.is_acquired())
-            print(datetime.datetime.now(),lock.name, 'acquiring lock')
+            lock = client.lock(args.watch_key)
+            #print(dir(lock))
+            print(datetime.datetime.now(),lock.name, 'created lock')
+            print(datetime.datetime.now(),lock.name, lock.is_acquired(),
+                  lock.lease.remaining_ttl if lock.lease else None,
+                  lock.revision if 'revision' in dir(lock) else None, lock.ttl)
             # this takes 10 seconds?
+            print(datetime.datetime.now(),lock.name, 'acquiring lock.')
             lock.acquire()
             print(datetime.datetime.now(),lock.name, 'acquired lock.')
             print(datetime.datetime.now(),lock.name, lock.is_acquired(),
@@ -118,3 +124,6 @@ if __name__ == "__main__":
                   lock.revision, lock.ttl)
             print(datetime.datetime.now(), '# get: key: %s' % (args.watch_key))
             print(datetime.datetime.now(), client.get(args.watch_key))
+            print(datetime.datetime.now(),lock.name, 'releasing lock.')
+            lock.release()
+            print(datetime.datetime.now(),lock.name, 'released lock.')
