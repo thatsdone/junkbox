@@ -22,11 +22,13 @@
 #   $ git log --oneline -n 1
 #   e58a899 (HEAD -> master, origin/master, origin/HEAD) Merge pull request #1958 from jkawamoto/grpc
 import sys
+import time
+import datetime
 import argparse
 import etcd3
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='etcd3-test1.py')
+    parser = argparse.ArgumentParser(description='etcd3-multiclient.py')
     parser.add_argument('-e', '--endpoints', nargs="*", default=None)
     parser.add_argument('-o', '--op', default='status')
     parser.add_argument('-w', '--watch_key',default='/key1')
@@ -80,3 +82,39 @@ if __name__ == "__main__":
         print(client.delete(args.watch_key))
         print('# get: key: %s' % (args.watch_key))
         print(client.get(args.watch_key))
+
+
+    if args.op == 'lock':
+        # stupid excercise
+        print(datetime.datetime.now(), 'acquiring a lock on %s' % (args.watch_key))
+        with client.lock(args.watch_key) as lock:
+            print(datetime.datetime.now(), 'name', 'is_acquired', 'remaining_ttl', 'revision', 'ttl')
+            print(datetime.datetime.now(),lock.name, lock.is_acquired())
+            print(datetime.datetime.now(),lock.name, 'acquiring lock')
+            # this takes 10 seconds?
+            lock.acquire()
+            print(datetime.datetime.now(),lock.name, 'acquired lock.')
+            print(datetime.datetime.now(),lock.name, lock.is_acquired(),
+                  lock.lease.remaining_ttl if lock.lease else None,
+                  lock.revision, lock.ttl)
+            print(datetime.datetime.now(),lock.name, 'sleeping...')
+            time.sleep(10)
+            print(datetime.datetime.now(),lock.name, 'releasing lock.')
+            lock.release()
+            print(datetime.datetime.now(),lock.name, 'released lock.')
+            print(datetime.datetime.now(),lock.name, lock.is_acquired(),
+                  lock.lease.remaining_ttl if lock.lease else None,
+                  lock.revision, lock.ttl)
+            print(datetime.datetime.now(),lock.name, 'sleeping...')
+            time.sleep(10)
+            print(datetime.datetime.now(),lock.name, lock.is_acquired(),
+                  lock.lease.remaining_ttl if lock.lease else None,
+                  lock.revision, lock.ttl)
+            print(datetime.datetime.now(),lock.name, 'acquiring lock')
+            lock.acquire()
+            print(datetime.datetime.now(),lock.name, 'acquired lock.')
+            print(datetime.datetime.now(),lock.name, lock.is_acquired(),
+                  lock.lease.remaining_ttl if lock.lease else None,
+                  lock.revision, lock.ttl)
+            print(datetime.datetime.now(), '# get: key: %s' % (args.watch_key))
+            print(datetime.datetime.now(), client.get(args.watch_key))
