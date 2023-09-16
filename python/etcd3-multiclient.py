@@ -70,6 +70,16 @@ if __name__ == "__main__":
             if watch_count >= args.watch_count:
                 cancel()
 
+    if args.op == 'watchprefix':
+        print('Watching key prefix: %s for %d events.' % (args.watch_key, args.watch_count))
+        watch_count = 0
+        events_iterator, cancel = client.watch_prefix(args.watch_key)
+        for event in events_iterator:
+            print(event._event)
+            watch_count += 1
+            if watch_count >= args.watch_count:
+                cancel()
+
     if args.op == 'client':
         #print(args.watch_key)
         print('# get: key: %s' % (args.watch_key))
