@@ -34,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('-w', '--watch_key',default='/key1')
     parser.add_argument('-c', '--watch_count', type=int, default=10)
     parser.add_argument('-t', '--timeout', type=int, default=5)
+    parser.add_argument('--value', default=None)
     args = parser.parse_args()
 
     eps = []
@@ -127,3 +128,29 @@ if __name__ == "__main__":
             print(datetime.datetime.now(),lock.name, 'releasing lock.')
             lock.release()
             print(datetime.datetime.now(),lock.name, 'released lock.')
+
+    if args.op == 'transaction':
+        if args.value:
+            v = args.value
+        else:
+            v = 'dummyvalue'
+
+        print('put: key: %s value: %s' % (args.watch_key, v))
+        print('put: result: ', client.put(args.watch_key, v))
+        print('get: result: key: %s value: %s' % (args.watch_key, client.get(args.watch_key)[0].decode()))
+        print('transaction: using %s ' % (args.watch_key))
+        ret = client.transaction(
+            compare = [
+                client.transactions.value(args.watch_key) == 'foovalue',
+                client.transactions.version(args.watch_key) > 0,
+            ],
+            success = [
+                client.transactions.put(args.watch_key, 'success'),
+            ],
+            failure = [
+                client.transactions.put(args.watch_key, 'failure'),
+            ]
+        )
+        print('transaction: result: ', ret)
+        print(client.get(args.watch_key)[0].decode())
+
