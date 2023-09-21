@@ -16,25 +16,53 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 
+import java.lang.reflect.InvocationTargetException;
+
 @SpringBootApplication
 public class SpringTest1 {
 
     public static String banner = "Shared data!!";
     public static KafkaProducer<String, byte[]> producer = null;
+    public static String topic = null;
 
 	public static void main(String... args) {
-
         //
-        Properties prop = new Properties();
-        prop.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                         "172.20.105.120:29092");
-        prop.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                         StringSerializer.class.getName());
-        prop.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                         ByteArraySerializer.class.getName());
+        String externalClassName = System.getenv("EXTERNAL_CLASS_NAME");
+        System.out.println("getenv EXTERNAL_CLASS_NAME: " +  externalClassName);
+        String externalClassMethod = System.getenv("EXTERNAL_CLASS_METHOD");
+        System.out.println("getenv EXTERNAL_CLASS_MTHOD: " +  externalClassMethod);
+        String kafkaServer = System.getenv("KAFKA_SERVER");
+        System.out.println("getenv KAFKA_SERVER: " +  kafkaServer);
+        topic = System.getenv("KAFKA_TOPIC");
+        System.out.println("getenv KAFKA_TOPIC: " +  topic);
         //
-        //KafkaProducer<String, byte[]> producer = new KafkaProducer<>(prop);
-        producer = new KafkaProducer<>(prop);
+        if (externalClassName != null && externalClassMethod != null) {
+            try {
+                Class<?> dyncls = Class.forName(externalClassName);
+                Object dynobj = dyncls.newInstance();
+                String dyndata = (String)dyncls.getMethod(externalClassMethod).invoke(dynobj);
+                System.out.println(dyndata);
+            } catch (ClassNotFoundException | InstantiationException |
+                     IllegalAccessException | NoSuchMethodException |
+                     InvocationTargetException e) {
+                e.printStackTrace();
+                System.exit(0);
+            }
+        }
+	
+        //
+        if (kafkaServer != null) {
+            Properties prop = new Properties();
+            prop.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                             kafkaServer);
+            prop.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                             StringSerializer.class.getName());
+            prop.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                             ByteArraySerializer.class.getName());
+            //
+            //KafkaProducer<String, byte[]> producer = new KafkaProducer<>(prop);
+            producer = new KafkaProducer<>(prop);
+        }
 
 		SpringApplication.run(SpringTest1.class, args);
 	}
