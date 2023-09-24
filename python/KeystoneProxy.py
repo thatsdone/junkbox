@@ -107,21 +107,33 @@ class KeyStoneProxy(BaseHTTPRequestHandler):
                 print(r.headers)
             self.protocol_version = 'HTTP/1.1'
             self.send_response(r.status_code)
-            #self.send_response(HTTPStatus.OK)
             for key in r.headers.keys():
+                if key == 'Content-Length':
+                    continue
                 self.send_header(key, r.headers[key])
                 if args.debug:
                     print(key, r.headers[key])
-            self.end_headers()
-            if args.append_endpoints:
-                print(r.text)
+            uresult = r.text
+            if args.append_catalog:
+                if args.debug:
+                    print(r.text)
                 result = json.loads(r.text)
-                for elm in result['token']['catalog']:
-                    print(elm['name'], elm['id'])
-                    for ep in elm['endpoints']:
-                        print('    ', ep['id'], ep['interface'],
-                              ep['region_id'], ep['region'], ep['url'])
-            self.wfile.write(r.text.encode('utf-8'))
+                if args.debug:
+                    for elm in result['token']['catalog']:
+                        print(elm['name'], elm['id'])
+                        for ep in elm['endpoints']:
+                            print('    ', ep['id'], ep['interface'],
+                                  ep['region_id'], ep['region'], ep['url'])
+                for elm in httpd.append_catalog['catalog']:
+                    if args.debug:
+                        print('Appending...: %s' % (elm))
+                    result['token']['catalog'].append(elm)
+                uresult = json.dumps(result)
+                if args.debug:
+                    print(uresult)
+            self.send_header('Content-Length', len(uresult))
+            self.end_headers()
+            self.wfile.write(uresult.encode('utf-8'))
 
 
 if __name__ == "__main__":
@@ -134,7 +146,7 @@ if __name__ == "__main__":
     parser.add_argument('-0', '--bind', default='0.0.0.0')
     parser.add_argument('--os_auth_url', default=None)
     parser.add_argument('--timeout', type=int, default=10)
-    parser.add_argument('--append_endpoints', default=None)
+    parser.add_argument('--append_catalog', default=None)
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
 
@@ -149,11 +161,9 @@ if __name__ == "__main__":
           % (args.bind, args.port))
 
     httpd = HTTPServer((bind_address, port), KeyStoneProxy)
-    if args.append_endpoints:
-        print('Loading...: %s' % (args.append_endpoints))
-        with open(args.append_endpoints) as fd:
-            httpd.conf = yaml.load(fd, Loader=yaml.SafeLoader)
-        if args.debug:
-            print(httpd.conf)
+    if args.append_catalog:
+        print('Loading...: %s' % (args.append_catalog))
+        with open(args.append_catalog) as fd:
+            httpd.append_catalog = yaml.load(fd, Loader=yaml.SafeLoader)
 
     httpd.serve_forever()
