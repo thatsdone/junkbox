@@ -25,6 +25,7 @@ import yaml
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
 from http import HTTPStatus
+import ssl
 #
 #
 #
@@ -148,6 +149,7 @@ if __name__ == "__main__":
     parser.add_argument('--timeout', type=int, default=10)
     parser.add_argument('--append_catalog', default=None)
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--cert', default=None)
     args = parser.parse_args()
 
     port = args.port
@@ -161,6 +163,12 @@ if __name__ == "__main__":
           % (args.bind, args.port))
 
     httpd = HTTPServer((bind_address, port), KeyStoneProxy)
+    if args.cert:
+        httpd.socket = ssl.wrap_socket(httpd.socket,
+                                       server_side=True,
+                                       certfile=args.cert,
+                                       ssl_version=ssl.PROTOCOL_TLS)
+
     if args.append_catalog:
         print('Loading...: %s' % (args.append_catalog))
         with open(args.append_catalog) as fd:
