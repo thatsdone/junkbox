@@ -109,7 +109,7 @@ class KeyStoneProxy(BaseHTTPRequestHandler):
             self.protocol_version = 'HTTP/1.1'
             self.send_response(r.status_code)
             for key in r.headers.keys():
-                if key == 'Content-Length':
+                if key == 'Content-Length' or key == 'content-length':
                     continue
                 self.send_header(key, r.headers[key])
                 if args.debug:
@@ -132,7 +132,7 @@ class KeyStoneProxy(BaseHTTPRequestHandler):
                 uresult = json.dumps(result)
                 if args.debug:
                     print(uresult)
-            self.send_header('Content-Length', len(uresult))
+            self.send_header('content-length', len(uresult))
             self.end_headers()
             self.wfile.write(uresult.encode('utf-8'))
 
