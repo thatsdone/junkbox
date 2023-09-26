@@ -69,10 +69,10 @@ class SpringTest1Controller {
         }
 
         //forward POST body via Kafka
-        if (springTest1.producer != null && springTest1.topic != null) {
+        if (springTest1.producer != null && springTest1.producer_topic != null) {
             System.out.println("Sending data via Kafka: start");
             ProducerRecord<String, byte[]> pr =
-                new ProducerRecord<>(springTest1.topic, data);
+                new ProducerRecord<>(springTest1.producer_topic, data);
             springTest1.producer.send(pr);
             System.out.println("Sending data via Kafka: end");
         }

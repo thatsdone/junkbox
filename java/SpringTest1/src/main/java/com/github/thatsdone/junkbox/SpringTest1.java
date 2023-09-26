@@ -23,7 +23,7 @@ public class SpringTest1 {
 
     public static String banner = "Shared data!!";
     public static KafkaProducer<String, byte[]> producer = null;
-    public static String topic = null;
+    public static String producer_topic = null;
 
 	public static void main(String... args) {
         //
@@ -33,8 +33,8 @@ public class SpringTest1 {
         System.out.println("getenv EXTERNAL_CLASS_MTHOD: " +  externalClassMethod);
         String kafkaServer = System.getenv("KAFKA_SERVER");
         System.out.println("getenv KAFKA_SERVER: " +  kafkaServer);
-        topic = System.getenv("KAFKA_TOPIC");
-        System.out.println("getenv KAFKA_TOPIC: " +  topic);
+        producer_topic = System.getenv("KAFKA_PRODUCER_TOPIC");
+        System.out.println("getenv KAFKA_PRODUCER_TOPIC: " +  producer_topic);
         //
         if (externalClassName != null && externalClassMethod != null) {
             try {
