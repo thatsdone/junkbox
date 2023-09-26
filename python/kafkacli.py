@@ -25,6 +25,13 @@ bootstrap_servers = '127.0.0.1:9092'
 
 #max_request_size=1024*1024
 
+def get_traceparent(span):
+    span_ctx = span.get_span_context()
+    return '%s-%s-%s-%s' % (format(0, "02x"),
+                            format(span_ctx.trace_id, "032x"),
+                            format(span_ctx.span_id, "016x"),
+                            format(span_ctx.trace_flags, "02x"))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='kafkacli.py')
     parser.add_argument('-t', '--topic', default='my-topic')
@@ -37,6 +44,7 @@ if __name__ == "__main__":
     parser.add_argument('--dump_size', type=int, default=256)
     parser.add_argument('--enable_otel', action='store_true')
     parser.add_argument('--endpoint', default=None)
+    parser.add_argument('--console', action='store_true')
     args = parser.parse_args()
     #
     debug = False
@@ -45,7 +53,6 @@ if __name__ == "__main__":
     topic = args.topic
     bootstrap_servers = args.bootstrap_servers
     interval = args.poll_timeout
-
 
     tracer = None
     if args.enable_otel:
@@ -68,7 +75,11 @@ if __name__ == "__main__":
             otlp_exporter = OTLPSpanExporter(endpoint=args.endpoint, insecure=True)
             otlp_processor = BatchSpanProcessor(otlp_exporter)
             trace.get_tracer_provider().add_span_processor(otlp_processor)
- 
+        if args.console:
+            console_exporter = ConsoleSpanExporter()
+            console_processor = BatchSpanProcessor(console_exporter)
+            trace.get_tracer_provider().add_span_processor(console_processor)
+
     if args.recv and args.send:
         print('-R(--recv) and -S(--send) are exclusive')
         sys.exit()
@@ -81,17 +92,23 @@ if __name__ == "__main__":
     print('# poll timeout: %d (s)' % (args.poll_timeout))
 
     if args.send:
+        traceparent = 'dummy_otel_not_enabled'
+        if args.enable_otel:
+            #with tracer.start_as_current_span("ProducerRecord") as span1:
+            span1 = tracer.start_span("ProducerRecord", context=None)
+            traceparent = get_traceparent(span1)
         producer = KafkaProducer(bootstrap_servers=bootstrap_servers)
         if args.message:
             raw_bytes=bytes(args.message, 'utf-8')
         else:
             raw_bytes=bytes('payload_data', 'utf-8')
-        #print(type(raw_bytes), raw_bytes)
-        value1 =  bytes('value1', 'utf-8')
-        value2 =  bytes('value2', 'utf-8')
-        future = producer.send(topic, value=raw_bytes , headers=[('key1', value1), ('key2', value2)])
+        future = producer.send(topic, value=raw_bytes,
+                               headers=[('traceparent', bytes(traceparent, 'utf-8'))])
         result = future.get(timeout=10)
         print(result)
+
+        if args.enable_otel:
+            span1.end()
 
     elif args.recv:
         consumer = KafkaConsumer(bootstrap_servers=bootstrap_servers)
