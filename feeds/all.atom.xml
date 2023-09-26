@@ -1,5 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-09-09T21:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] pythonからetcdを使いたい</title><link href="https://thatsdone.github.io/junkbox/python_etcd3linux_hook_systemcall_again.html" rel="alternate"></link><published>2023-09-09T21:00:00+09:00</published><updated>2023-09-09T21:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-09:/junkbox/python_etcd3linux_hook_systemcall_again.html</id><summary type="html">&lt;p&gt;pythonからetcdを使いたい&lt;/p&gt;</summary><content type="html">&lt;p&gt;今回は、これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズではなく今年になってから気づいた話。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2023-09-26T19:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] L2 over SSH</title><link href="https://thatsdone.github.io/junkbox/l2_over_ssh.html" rel="alternate"></link><published>2023-09-26T19:00:00+09:00</published><updated>2023-09-26T19:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-26:/junkbox/l2_over_ssh.html</id><summary type="html">&lt;p&gt;ssh で L2 tunnelする&lt;/p&gt;</summary><content type="html">&lt;p&gt;これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズ。&lt;/p&gt;
+&lt;p&gt;今日は、なんと10年前(!)にblogspotに書いた&lt;a href="https://thatsdone-j.blogspot.com/2013/01/l2-over-ssh.html"&gt;記事&lt;/a&gt;。
+同僚と「sshって通すとなんでもできちゃうよ…」と話していて、思い出しました。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;このところ ssh tunnel ネタが多いが、実は ssh を使って port forwarding だけではなく、L3トンネルや L2‘トンネルを作れるのはそんなに知られていないように思う。実際、自分も Software Design 2012/10月号の、川本(@togakushi)さんの記事「SSH力をつけよう！」を読むまで知らなかった。&lt;/p&gt;
+&lt;p&gt;余談だが、この記事は本当にすばらしい。chef 特集につられて買った号だったのだが、編集部の気合いを感じた一冊だった。&lt;/p&gt;
+&lt;p&gt;まず、L3トンネルのやり方から。
+port forwarding とは違い、今度はオプションに -L ではなく -w を使う。
+例えば&lt;/p&gt;
+&lt;p&gt;$ ssh -w 0:0   root@remote_host&lt;/p&gt;
+&lt;p&gt;とすれば、ローカルとリモートの双方に tun0 という tunnel device (tun) が作成され、
+-w の指定値は、&lt;/p&gt;
+&lt;p&gt;$ ssh -w any:any   root@remote_host&lt;/p&gt;
+&lt;p&gt;のように、any:any とすれば、tun1 とか tun2 とか、ローカルリモートそれぞれで tunnel device 番号の空きの若いものから自動的に採番してくれる。&lt;/p&gt;
+&lt;p&gt;こうして作成した tunX にそれぞれ適切に IP address を割り当てれば IP レベル(L3 レベル)で通信できるようになる。&lt;/p&gt;
+&lt;p&gt;ところで、この仮想化の時代、L3トンネルが張れるなら、L2 トンネルも張れないのか？と思うのが、人情だと思う。Software Design の記事では、スペースの関係か触れられていないのだが、実は、以下のように ssh のオプション指定によって、tunnnel device (tunX)だけでなく、Encapsulation が Ethernet に見えるような L2 tunnel、つまり tap も作成できる。&lt;/p&gt;
+&lt;p&gt;$ ssh -w any:any  -o Tunnel=ethernet  root@remote_host&lt;/p&gt;
+&lt;p&gt;tap を作成する場合もやはり -w は必要で、指定値は tun の時と同じように使われる。
+つまり、tap1 なり tap9 なりと（空いていれば)好きな番号の tap device を作れる。
+(1/17追記)
+なお、/etc/ssh/sshd_config や /etc/ssh/ssh_config に TunnelPermit や Tunnel 等の指定値が明示的に記述されていると強制的に tun になってしまうことがあるので注意のこと。&lt;/p&gt;
+&lt;p&gt;さて、実はここからが本題である。
+下図のようにHOST1 と HOST2 があるとして、この２台の間は、proxy なり、NATなり、(多段)port forwarding なりの何らかの手段で ssh 接続可能だとする。(多段)port forwarding については前にも書いたので参考まで。&lt;/p&gt;
+&lt;p&gt;図の赤い線で結んだssh 接続の間には proxy があっても NATがあってもよい。とにかく、HOST1とHOST2の間でssh接続し、上で説明したオプションを指定して tap を接続してしまうことによって、仮想的に１枚のL2面を作れたことになる。（通信品質についてはいわずもがななので、そこはつっこまないように)&lt;/p&gt;
+&lt;p&gt;さらに図のように、作成した tap をbridge で VMの仮想NICに接続してしまえば、踏み台の向こうの環境で動いているVMに対して、L2レベルで接続できるので、例えば HOST2 から HOST1 上のVMに対してDHCPでアドレスを払いだす…等といったことも可能である。
+(HOST2の構成が図とはちょっと違うのだが)実際やってみたら、問題なく動くし、やろうと思えば３ノード以上でフルメッシュ構成にするのも可能である。(ループが発生しないように若干注意が必要だが...)&lt;/p&gt;
+&lt;p&gt;&lt;img src ="/images/ssh-l2-tunnel.png" alt="ssh-l2-tunnel.png" style="width:640px;"/&gt;&lt;/p&gt;
+&lt;p&gt;世の中では、VXLAN だの STT だの NVGRE といった L2 over L3 技術や、SPB やら TRILL (やそれらの拡張)といった L2 over L2 技術で百花繚乱状態だが、こういう poor man's solution もあるよということで（笑)&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] pythonからetcdを使いたい</title><link href="https://thatsdone.github.io/junkbox/python_etcd3linux_hook_systemcall_again.html" rel="alternate"></link><published>2023-09-09T21:00:00+09:00</published><updated>2023-09-09T21:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-09:/junkbox/python_etcd3linux_hook_systemcall_again.html</id><summary type="html">&lt;p&gt;pythonからetcdを使いたい&lt;/p&gt;</summary><content type="html">&lt;p&gt;今回は、これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズではなく今年になってから気づいた話。&lt;/p&gt;
 &lt;p&gt;Kubernetesの制御データを置くのにetcdを使っていることもあって、etcdをデータベースにして分散制御するというのはよくある話だと思います。&lt;/p&gt;
 &lt;p&gt;Pythonの場合、&lt;a href="https://pypi.org/"&gt;Pypi&lt;/a&gt;で探してみると、元々...というか、etcd 2.x時代くらいまではこれが&lt;/p&gt;
 &lt;ul&gt;
