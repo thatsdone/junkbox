@@ -1,41 +1,29 @@
-package com.github.thatsdone.junkbox;
-
-
 /**
- * Hello world!
+ * SpringTest1.java : An excercise program for Spring Framework
  *
  */
+package com.github.thatsdone.junkbox;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.Properties;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
-
+import java.util.*;
 import java.lang.reflect.InvocationTargetException;
 
+import com.github.thatsdone.junkbox.SpringTest1Kafka;
+
 @SpringBootApplication
-public class SpringTest1 {
+public class SpringTest1 extends Thread {
 
     public static String banner = "Shared data!!";
-    public static KafkaProducer<String, byte[]> producer = null;
-    public static String producer_topic = null;
-
+    
 	public static void main(String... args) {
         //
         String externalClassName = System.getenv("EXTERNAL_CLASS_NAME");
         System.out.println("getenv EXTERNAL_CLASS_NAME: " +  externalClassName);
         String externalClassMethod = System.getenv("EXTERNAL_CLASS_METHOD");
         System.out.println("getenv EXTERNAL_CLASS_MTHOD: " +  externalClassMethod);
-        String kafkaServer = System.getenv("KAFKA_SERVER");
-        System.out.println("getenv KAFKA_SERVER: " +  kafkaServer);
-        producer_topic = System.getenv("KAFKA_PRODUCER_TOPIC");
-        System.out.println("getenv KAFKA_PRODUCER_TOPIC: " +  producer_topic);
-        //
+        // dynamic class loading test
         if (externalClassName != null && externalClassMethod != null) {
             try {
                 Class<?> dyncls = Class.forName(externalClassName);
@@ -50,18 +38,13 @@ public class SpringTest1 {
             }
         }
 	
-        //
-        if (kafkaServer != null) {
-            Properties prop = new Properties();
-            prop.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                             kafkaServer);
-            prop.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                             StringSerializer.class.getName());
-            prop.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                             ByteArraySerializer.class.getName());
-            //
-            //KafkaProducer<String, byte[]> producer = new KafkaProducer<>(prop);
-            producer = new KafkaProducer<>(prop);
+        // Kafka setup
+        if (System.getenv("KAFKA_SERVER") != null) {
+            SpringTest1Kafka t1 = new SpringTest1Kafka();
+            if(System.getenv("KAFKA_CONSUMER_TOPIC") != null) {
+                t1.start();
+                System.out.println("Started a thread for Kafka consumer");
+            }
         }
 
 		SpringApplication.run(SpringTest1.class, args);

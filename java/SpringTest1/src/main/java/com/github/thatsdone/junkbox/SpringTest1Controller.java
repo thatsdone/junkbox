@@ -28,11 +28,16 @@ import org.apache.hc.core5.http.message.StatusLine;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 
+import com.github.thatsdone.junkbox.SpringTest1Kafka;
+
 @RestController
 class SpringTest1Controller {
 
     @Autowired
     private SpringTest1 springTest1;
+    @Autowired
+    private SpringTest1Kafka springTest1Kafka;
+
     
     @GetMapping("/hello")
     String hello() {
@@ -69,11 +74,11 @@ class SpringTest1Controller {
         }
 
         //forward POST body via Kafka
-        if (springTest1.producer != null && springTest1.producer_topic != null) {
+        if (springTest1Kafka.producer != null && springTest1Kafka.producer_topic != null) {
             System.out.println("Sending data via Kafka: start");
             ProducerRecord<String, byte[]> pr =
-                new ProducerRecord<>(springTest1.producer_topic, data);
-            springTest1.producer.send(pr);
+                new ProducerRecord<>(springTest1Kafka.producer_topic, data);
+            springTest1Kafka.producer.send(pr);
             System.out.println("Sending data via Kafka: end");
         }
 
