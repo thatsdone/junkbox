@@ -50,12 +50,17 @@ $ du  target/SpringTest3  target/SpringTest3.stripped
     * native: 35~50 ms
     * jar: 2~3 seconds
     * Obviously, it depends on local filesystem cache.
-* Below section in pom.xml is essential for Native Image.
+* Below in <build><plugins>section in pom.xml is essential for Native Image.
 ```
 <plugin>
   <groupId>org.graalvm.buildtools</groupId>
   <artifactId>native-maven-plugin</artifactId>
 </plugin>
 ```
-* Below section in pom.xml is intended for stand alone
-
+* Below in <build><plugins> section of pom.xml is intended for stand alone execution.
+```
+<plugin>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-maven-plugin</artifactId>
+</plugin>
+```
