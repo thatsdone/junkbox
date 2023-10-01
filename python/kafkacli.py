@@ -19,6 +19,7 @@ import sys
 import argparse
 from kafka import KafkaProducer
 from kafka import KafkaConsumer
+import time
 
 topic = 'my-topic'
 bootstrap_servers = '127.0.0.1:9092'
@@ -114,6 +115,8 @@ if __name__ == "__main__":
         consumer = KafkaConsumer(bootstrap_servers=bootstrap_servers)
         consumer.subscribe(topics=[topic])
         while True:
+            if args.debug:
+                print('Calling poll(): ', time.time())
             result = consumer.poll(timeout_ms=args.poll_timeout*1000, max_records=1024)
             for k in result:
                 print('RESULT KEY: ', k, type(result[k]), result[k])
