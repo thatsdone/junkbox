@@ -34,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('-w', '--watch_key',default='/key1')
     parser.add_argument('-c', '--watch_count', type=int, default=10)
     parser.add_argument('-t', '--timeout', type=int, default=10)
+    parser.add_argument('--lock_timeout', type=int, default=5)
     parser.add_argument('--value', default=None)
     parser.add_argument('--sleep', type=int, default=10)
     args = parser.parse_args()
@@ -110,7 +111,7 @@ if __name__ == "__main__":
                   lock.revision if 'revision' in dir(lock) else None, lock.ttl)
             # this takes 10 seconds?
             print(datetime.datetime.now(),lock.name, 'acquiring lock.')
-            lock.acquire(timeout=args.timeout)
+            lock.acquire(timeout=args.lock_timeout)
             print(datetime.datetime.now(),lock.name, 'acquired lock.')
             print(datetime.datetime.now(),lock.name, lock.is_acquired(),
                   lock.lease.remaining_ttl if lock.lease else None,
