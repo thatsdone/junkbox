@@ -33,14 +33,20 @@ import org.eclipse.paho.mqttv5.common.MqttMessage;
 import org.eclipse.paho.mqttv5.common.packet.MqttProperties;
 import org.eclipse.paho.mqttv5.common.packet.UserProperty;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.HelpFormatter;
+
 
 public class PahoTest1 implements  MqttCallback {
 
-    public PahoTest1() throws InterruptedException {
+    public PahoTest1(String broker, String subTopic,
+                     String pubTopic) throws InterruptedException {
 
-        String subTopic = System.getenv("MQTT_SUB_TOPIC");
-        String pubTopic = System.getenv("MQTT_PUB_TOPIC");
-        String broker  = System.getenv("MQTT_BROKER");
         String content = "Hello World from PahoTest1";
         String clientId = "PahoTest1";
         int qos = 1;
@@ -115,8 +121,46 @@ public class PahoTest1 implements  MqttCallback {
         }
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        new PahoTest1();
+    public static void main(String[] args) throws InterruptedException, ParseException {
+        Option help = new Option("help", "print this message");
+        Options options = new Options();
+        options.addOption(help);
+        options.addOption("b", true, "MQTT Broker");
+        options.addOption("s", true, "Topic to subscribe");
+        options.addOption("p", true, "Topic to publish");
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = parser.parse(options, args);
+
+        String broker = null;
+        String subTopic = null;
+        String pubTopic = null;
+
+        if (cmd.hasOption("help")) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("PahoTest1", options);
+            System.exit(0);
+        }
+        if (cmd.hasOption("b")) {
+            broker = cmd.getOptionValue("b");
+        } else {
+            broker  = System.getenv("MQTT_BROKER");
+        }
+        if (cmd.hasOption("s")) {
+            subTopic = cmd.getOptionValue("s");
+        } else {
+            subTopic = System.getenv("MQTT_SUB_TOPIC");
+        }
+        if (cmd.hasOption("p")) {
+            pubTopic = cmd.getOptionValue("b");
+        } else {
+            pubTopic = System.getenv("MQTT_PUB_TOPIC");
+        }
+        if (broker == null || subTopic == null || pubTopic == null) {
+            System.out.println("Specify broker/subTopic/pubTopic");
+            System.exit(0);
+        }
+
+        new PahoTest1(broker, subTopic, pubTopic);
     }
 
     @Override

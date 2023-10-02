@@ -9,12 +9,23 @@ I wrote this in order to know how to use UserProperty of MQTTv5 especially.
 1. Build
     * `mvn clean package`
 2. Run
-    * Specify 3 environment variables
+    * Specify 3 environment variables or options
         1. MQTT_BROKER (ex. tcp://192.168.1.1:1833)
         2. MQTT_PUB_TOPIC (ex. pubtopic1)
         3. MQTT_SUB_TOPIC (ex. subtopic1)
     * `java -cp target/PahoTest1-1.0-SNAPSHOT-jar-with-dependencies.jar com.github.thatsdone.junkbox.PahoTest1`
 3. Use other program to subscribe and publish to the above topics (pub/sub)
+
+```
+$ java -cp target/PahoTest1-1.0-SNAPSHOT-jar-with-dependencies.jar com.github.thatsdone.junkbox.PahoTest1 -help
+usage: PahoTest1
+ -b <arg>   MQTT Broker
+ -help      print this message
+ -p <arg>   Topic to publish
+ -s <arg>   Topic to subscribe
+```
+
+
 ## TODO
 * Add option support using Apache Commons CLI.
 
