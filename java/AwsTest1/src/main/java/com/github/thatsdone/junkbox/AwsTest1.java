@@ -10,8 +10,6 @@ package com.github.thatsdone.junkbox;
  *   Masanori Itoh <masanori.itoh@gmail.com>
  */
 
-import java.util.List;
-//
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -19,9 +17,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.HelpFormatter;
-
-import com.github.thatsdone.junkbox.AwsTest1S3;
-import com.github.thatsdone.junkbox.AwsTest1DynamoDB;
 
 public class AwsTest1 {
 
@@ -56,6 +51,9 @@ public class AwsTest1 {
             } else if (service.equals("sqs")) {
                 AwsTest1SQS sqs = new AwsTest1SQS();
                 sqs.run(cmd);
+            } else if (service.equals("kinesis")) {
+                AwsTest1Kinesis kinesis = new AwsTest1Kinesis();
+                kinesis.run(cmd);
             }
         } else {
             //default
