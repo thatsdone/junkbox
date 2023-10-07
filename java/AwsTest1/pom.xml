@@ -40,6 +40,13 @@
       <version>${awsksdkv2.version}</version>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/sqs -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sqs</artifactId>
+      <version>${awsksdkv2.version}</version>
+    </dependency>
+
     <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
     <dependency>
       <groupId>commons-cli</groupId>

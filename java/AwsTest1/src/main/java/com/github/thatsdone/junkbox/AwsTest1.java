@@ -47,13 +47,15 @@ public class AwsTest1 {
         }
         if (cmd.hasOption("S")) {
             String service = cmd.getOptionValue("S");
-            if (service.equals("S3")) {
-                System.out.println("DEBUG: executing S3 handler");
+            if (service.equals("s3")) {
                 AwsTest1S3 s3 = new AwsTest1S3();
                 s3.run(cmd);
             } else if (service.equals("dynamo")) {
                 AwsTest1DynamoDB dynamo = new AwsTest1DynamoDB();
                 dynamo.run(cmd);
+            } else if (service.equals("sqs")) {
+                AwsTest1SQS sqs = new AwsTest1SQS();
+                sqs.run(cmd);
             }
         } else {
             //default
