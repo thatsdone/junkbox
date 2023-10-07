@@ -36,6 +36,7 @@ public class AwsTest1 {
         options.addOption("s", true, "secretKey");
         options.addOption("r", true, "region");
         options.addOption("p", true, "profile");
+        options.addOption("S", true, "AWS service (default: S3)");
 
         cmd = parser.parse(options, args);
         if (cmd.hasOption("help")) {
@@ -43,7 +44,15 @@ public class AwsTest1 {
             formatter.printHelp("AwsTest1", options);
             System.exit(0);
         }
-        AwsTest1S3 s3 = new AwsTest1S3();
-        s3.run(cmd);
+        if (cmd.hasOption("S")) {
+            if (cmd.getOptionValue("") == "S3") {
+                AwsTest1S3 s3 = new AwsTest1S3();
+                s3.run(cmd);
+            }
+        } else {
+            //default
+            AwsTest1S3 s3 = new AwsTest1S3();
+            s3.run(cmd);
+        }
     }
 }
