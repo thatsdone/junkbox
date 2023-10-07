@@ -21,6 +21,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.HelpFormatter;
 
 import com.github.thatsdone.junkbox.AwsTest1S3;
+import com.github.thatsdone.junkbox.AwsTest1DynamoDB;
 
 public class AwsTest1 {
 
@@ -45,9 +46,14 @@ public class AwsTest1 {
             System.exit(0);
         }
         if (cmd.hasOption("S")) {
-            if (cmd.getOptionValue("") == "S3") {
+            String service = cmd.getOptionValue("S");
+            if (service.equals("S3")) {
+                System.out.println("DEBUG: executing S3 handler");
                 AwsTest1S3 s3 = new AwsTest1S3();
                 s3.run(cmd);
+            } else if (service.equals("dynamo")) {
+                AwsTest1DynamoDB dynamo = new AwsTest1DynamoDB();
+                dynamo.run(cmd);
             }
         } else {
             //default

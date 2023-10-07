@@ -9,33 +9,35 @@
 
   <name>AwsTest1</name>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+
+    <awsksdkv2.version>2.20.161</awsksdkv2.version>
+  </properties>
+
   <dependencies>
-    <!--
-    <dependency>
-    <groupId>com.amazonaws</groupId>
-    <artifactId>aws-java-sdk-core</artifactId>
-    <version>1.12.560</version>
-    </dependency>
-    <dependency>
-    <groupId>com.amazonaws</groupId>
-    <artifactId>aws-java-sdk-s3</artifactId>
-    <version>1.12.560</version>
-    </dependency>
-    -->
 
     <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/sdk-core -->
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>sdk-core</artifactId>
-      <version>2.20.157</version>
+      <version>${awsksdkv2.version}</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/s3 -->
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>s3</artifactId>
-      <version>2.20.157</version>
-      <!-- <scope>test</scope> -->
+      <version>${awsksdkv2.version}</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb -->
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>dynamodb</artifactId>
+      <version>${awsksdkv2.version}</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
@@ -58,12 +60,6 @@
     </dependency>
 
   </dependencies>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
 
   <build>
     <plugins>
