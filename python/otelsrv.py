@@ -81,8 +81,8 @@ class OtelSrv(BaseHTTPRequestHandler):
             if ((i + 1) % 16) == 0:
                 print(dump_str)
                 dump_str = ''
-            if (dump_size % 16 != 0):
-                print(dump_str)
+        if (dump_size % 16 != 0):
+            print(dump_str)
         if args.enable_otel:
             span1.end()
 
