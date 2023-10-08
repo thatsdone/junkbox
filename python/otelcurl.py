@@ -20,6 +20,13 @@ import datetime
 import argparse
 import requests
 
+def get_traceparent(span):
+    span_ctx = span.get_span_context()
+    return '%s-%s-%s-%s' % (format(0, "02x"),
+                            format(span_ctx.trace_id, "032x"),
+                            format(span_ctx.span_id, "016x"),
+                            format(span_ctx.trace_flags, "02x"))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='otelcurl.py')
     parser.add_argument('--url', default=None)
@@ -69,6 +76,8 @@ if __name__ == "__main__":
     if args.enable_otel:
         span1 = tracer.start_span("%s" % (sys.argv[0]))
         inject(headers)
+        traceparent = get_traceparent(span1)
+        headers['traceparent'] = traceparent
         if args.debug:
             print(headers)
     if args.method == 'GET':
