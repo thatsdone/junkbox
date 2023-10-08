@@ -54,6 +54,9 @@ public class AwsTest1 {
             } else if (service.equals("kinesis")) {
                 AwsTest1Kinesis kinesis = new AwsTest1Kinesis();
                 kinesis.run(cmd);
+            } else if (service.equals("sns")) {
+                AwsTest1SNS sns = new AwsTest1SNS();
+                sns.run(cmd);
             }
         } else {
             //default
