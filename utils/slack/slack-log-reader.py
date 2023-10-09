@@ -9,18 +9,23 @@
 #   * 2022/05/09 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TODO:
-#   * ...
 # REFERENCES:
-#   * 
-#
+#   * https://api.slack.com/apis
 import sys
+import argparse
 import json
 import datetime
 
 if __name__ == '__main__':
-    filename  = sys.argv[1]
-    
+    parser = argparse.ArgumentParser(description='slack-log-reader.py')
+    parser.add_argument('-f', '--filename', default=None)
+    args = parser.parse_args()
+
+    filename  = args.filename
+    if not filename:
+        print('Specify log data filanem via -f')
+        sys.exit()
+
     with open(filename, 'r') as fp:
         data = json.load(fp)
 

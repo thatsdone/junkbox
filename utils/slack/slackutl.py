@@ -9,11 +9,8 @@
 #   * 2022/05/09 v0.1 Initial version
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-# TODO:
-#   * ...
 # REFERENCES:
-#   * 
-#
+#   * https://api.slack.com/apis
 import sys
 import os
 import time
@@ -32,7 +29,7 @@ if __name__ == "__main__":
     token = None
     channel = None
     ts = None
-    
+
     parser = argparse.ArgumentParser(description='slackutl.py')
     parser.add_argument('-c', '--config', default='slackutl.yaml')
     parser.add_argument('-u', '--url', default=None)
@@ -48,14 +45,14 @@ if __name__ == "__main__":
         if not os.path.isfile(args.config):
             print('ERROR: config file does not exist. %s' % (args.config))
             sys.exit()
-    
+
     try:
         conf = None
         with open(args.config, 'r') as ymlconf:
             conf=yaml.load(ymlconf, Loader=yaml.SafeLoader)
 
         if args.channel:
-            channel = args.channel            
+            channel = args.channel
         elif not args.channel and 'channel' in conf.keys():
             channel = conf['channel']
 
@@ -67,10 +64,10 @@ if __name__ == "__main__":
     #
     #
     #
-    if not channel:
-        print('Specify channel.')
+    if not channel or not token:
+        print('Specify channel and token.')
         sys.exit()
-        
+
     if not args.timestamp:
         ts = time.time()
         #print('DEBUG: Using current time for ts: %s' % (ts))
@@ -89,12 +86,12 @@ if __name__ == "__main__":
         url = "https://slack.com/api/conversations.history"
         payload['channel']  = channel
         payload['ts']  = ts
-        
+
     elif args.operation == 'write':
         if not args.message:
             print('Specify message to write.')
             sys.exit()
-        url = "https://slack.com/api/chat.postMessage" 
+        url = "https://slack.com/api/chat.postMessage"
         msg = '%s' % (args.message)
         payload['channel'] = channel
         payload['text'] = message
@@ -118,11 +115,19 @@ if __name__ == "__main__":
             (key, value) = kv.split('=')
             print(key, value)
             payload[key] = value
+    else:
+        print('Unknown operation : ', args.operation)
+        sys.exit()
     #
     res = requests.post(url, headers=header, params=payload)
     #
-    print(res.text)
+    if args.operation != 'history':
+        print(res.text)
+    #response = json.loads(res.text)
+    #print(len(response['messages']))
     #
     if args.operation == 'history':
-        with open('slackutl-%s.json' % (ts), 'wt') as fp:
+        ts_asc = time.strftime('%Y%m%d-%H%M%S', time.localtime(ts))
+        with open('slackutl-%s-%s.json' % (ts_asc, ts), 'wt') as fp:
             fp.write(res.text)
+        print('slackutl-%s-%s.json' % (ts_asc, ts))
