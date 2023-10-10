@@ -37,7 +37,7 @@ public class Mpmt1
         @Override
         public void run() {
 	    long ts_orig = System.currentTimeMillis();
-	    System.out.println("worker::run(): ts: " + ts_orig
+	    System.out.println("worker::run: ts: " + ts_orig
 			       + " index = " + index
 			       + " isVirtual: "
 			       + Thread.currentThread().isVirtual());
@@ -46,7 +46,7 @@ public class Mpmt1
             while (true) {
                 ts = System.currentTimeMillis();
                 if ((ts - ts_orig) > this.duration) {
-                    System.out.println("worker: " + this.index + " expired. " + count);
+                    System.out.println("worker::run: " + this.index + " expired. " + count);
                     return;
                 }
                 count++;
@@ -98,9 +98,9 @@ public class Mpmt1
 	String vp = System.getProperty("jdk.virtualThreadScheduler.parallelism");
 	String vt = System.getProperty("jdk.virtualThreadScheduler.maxPoolSize");
 	String mr = System.getProperty("jdk.virtualThreadScheduler.minRunnable");
-	System.out.printf("parallelism: %s maxPollSize: %s minRunnable: %s\n",
+	System.out.printf("main: parallelism: %s maxPollSize: %s minRunnable: %s\n",
 			  vp, vt, mr);
-	System.out.printf("availableProcessors: %d maxMemory: %d totalMemory: %d freeMemory: %d\n",
+	System.out.printf("main: availableProcessors: %d maxMemory: %d totalMemory: %d freeMemory: %d\n",
 			  Runtime.getRuntime().availableProcessors(),
 			  Runtime.getRuntime().maxMemory(),
 			  Runtime.getRuntime().totalMemory(),
@@ -114,7 +114,7 @@ public class Mpmt1
         }
 
         for (i = 0; i < num_context; i++) {
-            System.out.println("starting: " + i);
+            System.out.println("main: starting: " + i);
 	    Thread t = workers.get(i);
 	    if (vthread) {
 		Thread.ofVirtual().start(t);
@@ -124,15 +124,15 @@ public class Mpmt1
         }
 
 	if (vthread) {
-	    System.out.println("Virtual Thread mode. Sleeping...");
+	    System.out.println("main: Virtual Thread mode. Sleeping...");
 	    Thread.sleep(sleep * 1000L);
 	}
 
-	System.out.println("Calling join() to each thread.");
+	System.out.println("main: Calling join() to each thread.");
         for (i = 0; i < num_context; i++) {
             Thread t = workers.get(i);
             t.join();
-            System.out.println("thread join() returned. " + i + " " + t);
+            System.out.println("main: thread join() returned. " + i + " " + t);
         }
     }
 }
