@@ -6,7 +6,7 @@ profiles:
     repository: 'your_ghe_repository'
     token: 'ghp_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
-  - name: 'git_source'
+  - name: 'gitlab_source'
     url: 'http://gitlab.example.com'
     scm_type: 'gitlab'
     organization: 'some_organization_at_source'
