@@ -64,6 +64,7 @@ func main() {
 	var port = flag.Int("b", 8080, "bind port")
 	var address = flag.String("a", "0.0.0.0", "bind address")
 	var F_flag = flag.String("F", "", "forward to URL")
+	var use_mux = flag.Bool("M", false, "Use mux")
 	flag.Parse()
 	
 	listen_url := fmt.Sprintf("%s:%d", *address, *port)
@@ -75,8 +76,16 @@ func main() {
 	fmt.Printf("Forwarding evrything to: %s\n", forward_to)
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/api", handleRequest)
-	ret := http.ListenAndServe(listen_url, mux)
-	fmt.Println(ret)
+	if (*use_mux) {
+		fmt.Println("Using Multiplexing Request Handlers")
+		mux := http.NewServeMux()
+		mux.HandleFunc("/api", handleRequest)
+		http.ListenAndServe(listen_url, mux)
+		//fmt.Println(ret)
+	} else {
+		fmt.Println("Using simple Go HTTP server")
+		http.HandleFunc("/api", handleRequest)
+		http.ListenAndServe(listen_url, nil)
+		
+	}
 }
