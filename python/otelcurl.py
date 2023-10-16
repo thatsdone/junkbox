@@ -43,6 +43,8 @@ if __name__ == "__main__":
     parser.add_argument('--forward_url', default=None)
     parser.add_argument('--enable_otel', action='store_true')
     parser.add_argument('--service_name', default=None)
+    parser.add_argument('--operation_name', default=None)
+    parser.add_argument('--jaeger', action='store_true')
     args = parser.parse_args()
     #
     # Setup OpenTelemetry
@@ -56,17 +58,34 @@ if __name__ == "__main__":
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
         from opentelemetry.sdk.trace.export import ConsoleSpanExporter
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
         #from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
-        basename = os.path.basename(sys.argv[0])
-        resource = Resource(attributes={'service.name': basename})
+        if args.service_name:
+            service_name = args.service_name
+        else:
+            service_name = os.path.basename(sys.argv[0])
+        if args.operation_name:
+            operation_name = args.operation_name
+        else:
+            operation_name = service_name
+
+        resource = Resource(attributes={'service.name': service_name})
         provider = TracerProvider(resource=resource)
         trace.set_tracer_provider(provider)
-        tracer = trace.get_tracer(basename)
-        if args.endpoint:
+        tracer = trace.get_tracer(service_name)
+        if not args.endpoint and not args.jaeger and not args.console:
+            print('Warning: No exporter specified regardless of OTEL enabled.')
+
+        if args.endpoint and not args.jaeger:
             otlp_exporter = OTLPSpanExporter(endpoint=args.endpoint, insecure=True)
             otlp_processor = BatchSpanProcessor(otlp_exporter)
             trace.get_tracer_provider().add_span_processor(otlp_processor)
+        if args.endpoint and args.jaeger:
+            jaeger_exporter = JaegerExporter(collector_endpoint=args.endpoint,
+                                             insecure=True)
+            jaeger_processor = BatchSpanProcessor(jaeger_exporter)
+            trace.get_tracer_provider().add_span_processor(jaeger_processor)
         if args.console:
             console_exporter = ConsoleSpanExporter()
             console_processor = BatchSpanProcessor(console_exporter)
@@ -77,7 +96,7 @@ if __name__ == "__main__":
     #
     headers = {}
     if args.enable_otel:
-        span1 = tracer.start_span("%s" % (basename))
+        span1 = tracer.start_span("%s" % (operation_name))
         inject(headers)
         traceparent = get_traceparent(span1)
         headers['traceparent'] = traceparent
