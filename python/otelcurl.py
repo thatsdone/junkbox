@@ -15,6 +15,7 @@
 # Dependencies:
 #   See below imports (opentelemetry)
 import sys
+import os
 import time
 import datetime
 import argparse
@@ -41,6 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--forward_url', default=None)
     parser.add_argument('--enable_otel', action='store_true')
+    parser.add_argument('--service_name', default=None)
     args = parser.parse_args()
     #
     # Setup OpenTelemetry
@@ -56,10 +58,11 @@ if __name__ == "__main__":
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
         #from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
-        resource = Resource(attributes={'service.name': sys.argv[0]})
+        basename = os.path.basename(sys.argv[0])
+        resource = Resource(attributes={'service.name': basename})
         provider = TracerProvider(resource=resource)
         trace.set_tracer_provider(provider)
-        tracer = trace.get_tracer(sys.argv[0])
+        tracer = trace.get_tracer(basename)
         if args.endpoint:
             otlp_exporter = OTLPSpanExporter(endpoint=args.endpoint, insecure=True)
             otlp_processor = BatchSpanProcessor(otlp_exporter)
@@ -74,7 +77,7 @@ if __name__ == "__main__":
     #
     headers = {}
     if args.enable_otel:
-        span1 = tracer.start_span("%s" % (sys.argv[0]))
+        span1 = tracer.start_span("%s" % (basename))
         inject(headers)
         traceparent = get_traceparent(span1)
         headers['traceparent'] = traceparent
