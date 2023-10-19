@@ -35,16 +35,18 @@ if __name__ == "__main__":
                         help='Currently supported methods: GET, POST')
     parser.add_argument('--data_raw', default=None,
                         help='If you start the DATA_RAW with the letter @, the rest  should  be  a filename like curl.')
+    parser.add_argument('--headers', nargs='*', default=None)
+    parser.add_argument('--result', action='store_true')
     parser.add_argument('--timeout', type=int, default=60)
     parser.add_argument('--endpoint', default=None,
                         help='OTLP Collector Endpoint (e.g. http://localhost:4317)')
     parser.add_argument('--console', action='store_true')
-    parser.add_argument('--debug', action='store_true')
     parser.add_argument('--forward_url', default=None)
     parser.add_argument('--enable_otel', action='store_true')
     parser.add_argument('--service_name', default=None)
     parser.add_argument('--operation_name', default=None)
     parser.add_argument('--jaeger', action='store_true')
+    parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
     #
     # Setup OpenTelemetry
@@ -95,19 +97,30 @@ if __name__ == "__main__":
     # Generate an HTTP request
     #
     headers = {}
+    if args.headers:
+        for h in args.headers:
+            if h.find(':') > 0:
+                k, v = h.split(':')
+                headers[k] = v
+            else:
+                print('header element ignored: %s' % (h))
+
     if args.enable_otel:
         span1 = tracer.start_span("%s" % (operation_name))
-        inject(headers)
         traceparent = get_traceparent(span1)
         headers['traceparent'] = traceparent
-        if args.debug:
-            print(headers)
+
+    if args.debug:
+        print('headers: ', headers)
+
     if args.method == 'GET':
         r = requests.get(args.url,
                         headers=headers,
                         timeout=args.timeout)
         print(r.status_code)
-        #print(r.text)
+        if args.result:
+            print(r.text)
+
     elif args.method == 'POST':
         if args.data_raw and args.data_raw[0] == '@':
             with open(args.data_raw[1:], 'rb') as fp:
@@ -122,6 +135,9 @@ if __name__ == "__main__":
                           timeout=args.timeout,
                           data=raw_bytes)
         print(r.status_code)
+        if args.result:
+            print(r.text)
+
     elif args.method:
         print('method: %s not supported.'  % (args.method))
 
