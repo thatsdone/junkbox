@@ -18,6 +18,7 @@
 #   (meaning threading or multiprocessing mode).
 #   This is the case for both console and OTLP exporter cases at least.
 import sys
+import os
 import argparse
 import threading
 import multiprocessing
@@ -32,6 +33,8 @@ from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 #from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 #
+global args
+
 def get_traceparent(span):
     span_ctx = span.get_span_context()
     return '%s-%s-%s-%s' % (format(0, "02x"),
@@ -40,6 +43,7 @@ def get_traceparent(span):
                             format(span_ctx.trace_flags, "02x"))
 
 def init_opentelemetry(service_name=None):
+    print('init_opentelemetry() called. pid: %s' % (os.getpid()))
     if not service_name:
         service_name = args.service_name
 
@@ -55,30 +59,30 @@ def init_opentelemetry(service_name=None):
         console_exporter = ConsoleSpanExporter()
         console_processor = BatchSpanProcessor(console_exporter)
         trace.get_tracer_provider().add_span_processor(console_processor)
-
     return tracer
 
 def worker(tracer, idx):
     print('worker() called. idx=%d' % (idx))
 
+    # in case of threading, initialize opentelemetry here
+    service_name = 'otemp/%d' % (idx)
     if not tracer and not args.use_thread:
-        tracer = init_opentelemetry(service_name='otelmpmt/%d' % (idx))
+        tracer = init_opentelemetry(service_name=service_name)
 
     ctx=None
-    headers11 = {}
     with tracer.start_as_current_span('span11', context=ctx) as span11:
         # Note(thatsdone): don't care what I'm doing below. Anyway, some work.
+        headers11 = {}
         inject(headers11)
         span11_context = span11.get_span_context()
-        print('span11 traceparent(inject): %s' % (headers11['traceparent']))
-        print('span11 traceparent(manual): %s ' % ( get_traceparent(span11)))
+        print('%s: span11 traceparent(inject): %s' % (service_name, headers11['traceparent']))
+        print('%s: span11 traceparent(manual): %s ' % (service_name, get_traceparent(span11)))
         span11.set_status(Status(StatusCode.OK))
 
-global args
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='oteltest.py')
-    parser.add_argument('--service_name', default='oteltest.py')
+    parser = argparse.ArgumentParser(description='otelmp.py')
+    parser.add_argument('--service_name', default='otelmp.py')
     parser.add_argument('--otlp_exporter', default=None)
     parser.add_argument('-C', '--console', action='store_true')
     parser.add_argument('-n', '--num_context', type=int, default=5)
@@ -86,6 +90,7 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
     #
+    print('%s started. pid: %s' % (os.path.basename(sys.argv[0]), os.getpid()))
     if not args.console and not args.otlp_exporter:
         print('Specify either of --console or --otlp_exporter')
         sys.exit()
@@ -101,7 +106,7 @@ if __name__ == "__main__":
         if args.use_thread:
             w = threading.Thread(target=worker, args=(tracer, idx,))
         else:
-            w = multiprocessing.Process(target=worker, args=(None, idx,))
+            w = multiprocessing.Process(target=worker, args=(None, idx))
 
         w.name = 'worker/%d' % (idx)
         workers.append(w)
