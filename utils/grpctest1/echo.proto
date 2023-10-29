@@ -1,0 +1,40 @@
+// echo.proto: An exercise bi-directional gRPC 
+//
+// License:
+//   Apache License, Version 2.0
+// History:
+//   * 2023/10/15 v0.1 Initial version.
+// Author:
+//   Masanori Itoh <masanori.itoh@gmail.com>
+
+syntax = "proto3";
+
+service EchoService {
+  rpc Echo(stream EchoRequest) returns (stream EchoReply) {}
+}
+
+enum commandType {
+  PING = 0;
+  CMD = 1;
+  DATA = 2;
+}
+
+enum commandStatus {
+  SUCCESS = 0;
+  FAIL = 1;
+}
+
+
+
+message EchoRequest {
+  string name = 1;
+  commandType type = 2;
+  bytes payload = 3;
+}
+
+message EchoReply {
+  string name = 1;
+  commandType type = 2;
+  commandStatus status = 3;
+  bytes payload = 4;
+}
