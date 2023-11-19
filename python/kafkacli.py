@@ -16,10 +16,14 @@
 #   * kafka-pytyon : https://kafka-python.readthedocs.io/
 #
 import sys
+import io
+import time
 import argparse
 from kafka import KafkaProducer
 from kafka import KafkaConsumer
-import time
+import avro.schema
+from avro.io import DatumWriter
+from avro.io import DatumReader
 
 topic = 'my-topic'
 bootstrap_servers = '127.0.0.1:9092'
@@ -32,6 +36,47 @@ def get_traceparent(span):
                             format(span_ctx.trace_id, "032x"),
                             format(span_ctx.span_id, "016x"),
                             format(span_ctx.trace_flags, "02x"))
+
+default_avro_schema = """{
+   "type" : "record",
+   "name" : "kafkacli",
+   "fields" : [
+     {
+       "name" : "id",
+       "type" : "string"
+     },
+     {
+     "name" : "timestamp",
+     "type" : "long"
+     },
+     {
+     "name" : "message",
+     "type" : "bytes"
+      }
+   ]
+}"""
+
+def create_avro_message(schema, id, timestamp, payload):
+    writer = avro.io.DatumWriter(schema)
+    bytes_writer = io.BytesIO()
+    encoder = avro.io.BinaryEncoder(bytes_writer)
+    msg = {
+        "id": id,
+        "timestamp": timestamp,
+        "message": payload
+    }
+    writer.write(msg, encoder)
+    raw_bytes = bytes_writer.getvalue()
+    return raw_bytes
+
+def show_avro_message(schema, avro_payload):
+    raw_data = io.BytesIO(avro_payload)
+    decoder = avro.io.BinaryDecoder(raw_data)
+    reader = avro.io.DatumReader(schema)
+    decoded_data = reader.read(decoder)
+    #
+    for k in decoded_data.keys():
+        print('%s : %s' % (k, decoded_data[k]))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='kafkacli.py')
@@ -46,6 +91,8 @@ if __name__ == "__main__":
     parser.add_argument('--enable_otel', action='store_true')
     parser.add_argument('--endpoint', default=None)
     parser.add_argument('--console', action='store_true')
+    parser.add_argument('--enable_avro', action='store_true')
+    parser.add_argument('--avro_schema', default=None)
     args = parser.parse_args()
     #
     debug = False
@@ -54,6 +101,12 @@ if __name__ == "__main__":
     topic = args.topic
     bootstrap_servers = args.bootstrap_servers
     interval = args.poll_timeout
+    if args.enable_avro:
+        if args.avro_schema:
+            with open(args.avro_schema, "rt") as avsc:
+                avro_schema = avro.schema.Parse(avsc.read())
+        else:
+            avro_schema = avro.schema.Parse(default_avro_schema)
 
     tracer = None
     if args.enable_otel:
@@ -103,6 +156,11 @@ if __name__ == "__main__":
             raw_bytes=bytes(args.message, 'utf-8')
         else:
             raw_bytes=bytes('payload_data', 'utf-8')
+
+        if args.enable_avro:
+            raw_bytes = create_avro_message (avro_schema,
+                                             "1", int(time.time()), raw_bytes)
+        print('===', raw_bytes, '---')
         future = producer.send(topic, value=raw_bytes,
                                headers=[('traceparent', bytes(traceparent, 'utf-8'))])
         result = future.get(timeout=10)
@@ -139,6 +197,9 @@ if __name__ == "__main__":
                     #
                     #print('payload: %s' % (elm.value.decode()))
                     post_data = elm.value
+                    if args.enable_avro:
+                        show_avro_message(avro_schema, post_data)
+
                     print('payload:')
                     if len(post_data) > args.dump_size:
                         dump_size = args.dump_size
