@@ -18,12 +18,14 @@
  */
 #include <iostream>
 using namespace std;
+#include <getopt.h>
 
 #include "opentelemetry/exporters/otlp/otlp_grpc_exporter_factory.h"
 #include "opentelemetry/sdk/trace/processor.h"
 #include "opentelemetry/sdk/trace/simple_processor_factory.h"
 #include "opentelemetry/sdk/trace/tracer_provider_factory.h"
 #include "opentelemetry/trace/provider.h"
+#include "opentelemetry/sdk/resource/resource.h"
 
 namespace trace     = opentelemetry::trace;
 namespace trace_sdk = opentelemetry::sdk::trace;
@@ -31,6 +33,8 @@ namespace otlp = opentelemetry::exporter::otlp;
 
 int main()
 {
+
+    
     opentelemetry::exporter::otlp::OtlpGrpcExporterOptions opts;
 
     opts.use_ssl_credentials = false;
@@ -38,8 +42,16 @@ int main()
 
     auto exporter  = otlp::OtlpGrpcExporterFactory::Create(opts);
     auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
+    auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes
+      {
+        {"service.name", "oteltest1"}
+      };
+    auto resource = opentelemetry::sdk::resource::Resource::Create(resource_attributes);
+    auto received_attributes = resource.GetAttributes();
+
     std::shared_ptr<opentelemetry::trace::TracerProvider> provider =
-      trace_sdk::TracerProviderFactory::Create(std::move(processor));
+      trace_sdk::TracerProviderFactory::Create(std::move(processor),
+					       resource);
     trace::Provider::SetTracerProvider(provider);
     auto tracer = provider->GetTracer("otetest1", "1.0.0");
     auto span = tracer->StartSpan("main");
