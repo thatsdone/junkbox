@@ -9,16 +9,15 @@
  *   Masanori Itoh <masanori.itoh@gmail.com>
  * REFERENCES:
  *   * https://opentelemetry.io/docs/instrumentation/cpp/exporters/
- * NOTES:
- *  How to build.
- *    `g++  oteltest1.cpp -lopentelemetry_exporter_otlp_grpc -lopentelemetry_trace *  -o oteltest1`
  * TODO:
  *   * Blushup
  *   * Write README
  */
 #include <iostream>
 using namespace std;
-#include <getopt.h>
+
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 
 #include "opentelemetry/exporters/otlp/otlp_grpc_exporter_factory.h"
 #include "opentelemetry/sdk/trace/processor.h"
@@ -26,30 +25,41 @@ using namespace std;
 #include "opentelemetry/sdk/trace/tracer_provider_factory.h"
 #include "opentelemetry/trace/provider.h"
 #include "opentelemetry/sdk/resource/resource.h"
-
 namespace trace     = opentelemetry::trace;
 namespace trace_sdk = opentelemetry::sdk::trace;
 namespace otlp = opentelemetry::exporter::otlp;
+namespace resource_sdk  = opentelemetry::sdk::resource;
 
-int main()
+int main(int argc, char **argv)
 {
+    po::options_description desc("oteltest1 options");
+    desc.add_options()
+      ("help", "print help message")
+      ("exporter", po::value<std::string>()->default_value("localhost:4317"),
+       "OTEL/gRPC exporeter endpoint.")
+      ("service_name", po::value<std::string>()->default_value("otetest1"),
+       "service_name")
+      ;
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    if (vm.count("exporter")) {
+      cout << vm["exporter"].as<std::string>() << std::endl;
+    }
 
-    
-    opentelemetry::exporter::otlp::OtlpGrpcExporterOptions opts;
-
+    otlp::OtlpGrpcExporterOptions opts;
     opts.use_ssl_credentials = false;
-    opts.endpoint = "localhost:4317";
-
+    opts.endpoint = vm["service_name"].as<std::string>();
     auto exporter  = otlp::OtlpGrpcExporterFactory::Create(opts);
     auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
-    auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes
+    auto resource_attributes = resource_sdk::ResourceAttributes
       {
-        {"service.name", "oteltest1"}
+        {"service.name", vm["service_name"].as<std::string>()}
       };
-    auto resource = opentelemetry::sdk::resource::Resource::Create(resource_attributes);
+    auto resource = resource_sdk::Resource::Create(resource_attributes);
     auto received_attributes = resource.GetAttributes();
 
-    std::shared_ptr<opentelemetry::trace::TracerProvider> provider =
+    std::shared_ptr<trace::TracerProvider> provider =
       trace_sdk::TracerProviderFactory::Create(std::move(processor),
 					       resource);
     trace::Provider::SetTracerProvider(provider);
