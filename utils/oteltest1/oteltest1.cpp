@@ -16,15 +16,16 @@
 #include <iostream>
 using namespace std;
 
-#include <boost/program_options.hpp>
-namespace po = boost::program_options;
-
+#include <getopt.h>
+#include "opentelemetry/sdk/version/version.h"
 #include "opentelemetry/exporters/otlp/otlp_grpc_exporter_factory.h"
 #include "opentelemetry/sdk/trace/processor.h"
 #include "opentelemetry/sdk/trace/simple_processor_factory.h"
 #include "opentelemetry/sdk/trace/tracer_provider_factory.h"
 #include "opentelemetry/trace/provider.h"
 #include "opentelemetry/sdk/resource/resource.h"
+#include "opentelemetry/trace/span_startoptions.h"
+#include "opentelemetry/trace/context.h"
 namespace trace     = opentelemetry::trace;
 namespace trace_sdk = opentelemetry::sdk::trace;
 namespace otlp = opentelemetry::exporter::otlp;
@@ -32,29 +33,35 @@ namespace resource_sdk  = opentelemetry::sdk::resource;
 
 int main(int argc, char **argv)
 {
-    po::options_description desc("oteltest1 options");
-    desc.add_options()
-      ("help", "print help message")
-      ("exporter", po::value<std::string>()->default_value("localhost:4317"),
-       "OTEL/gRPC exporeter endpoint.")
-      ("service_name", po::value<std::string>()->default_value("otetest1"),
-       "service_name")
-      ;
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-    if (vm.count("exporter")) {
-      cout << vm["exporter"].as<std::string>() << std::endl;
+    std::string endpoint = "localhost:4317";
+    std::string service_name = "oteltest1";
+
+    const option longopts[] = {
+      {"endpoint", required_argument, nullptr  , 'e'},
+      {"service_name", required_argument, nullptr, 'S'}
+    };
+
+    while (1) {
+      const int opt = getopt_long(argc, argv, "e:S:", longopts, 0);
+      if (opt < 0) {
+	break;
+      }
+      switch (opt) {
+      case 'e':
+	endpoint = std::string(optarg);
+      case 'S':
+	service_name = std::string(optarg);
+      }
     }
 
     otlp::OtlpGrpcExporterOptions opts;
     opts.use_ssl_credentials = false;
-    opts.endpoint = vm["service_name"].as<std::string>();
+    opts.endpoint = std::move(endpoint);
     auto exporter  = otlp::OtlpGrpcExporterFactory::Create(opts);
     auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
     auto resource_attributes = resource_sdk::ResourceAttributes
       {
-        {"service.name", vm["service_name"].as<std::string>()}
+        {"service.name", std::move(service_name)}
       };
     auto resource = resource_sdk::Resource::Create(resource_attributes);
     auto received_attributes = resource.GetAttributes();
@@ -63,10 +70,15 @@ int main(int argc, char **argv)
       trace_sdk::TracerProviderFactory::Create(std::move(processor),
 					       resource);
     trace::Provider::SetTracerProvider(provider);
-    auto tracer = provider->GetTracer("otetest1", "1.0.0");
-    auto span = tracer->StartSpan("main");
+    auto tracer = provider->GetTracer("otetest1", OPENTELEMETRY_SDK_VERSION);
+    auto span_main = tracer->StartSpan("main");
+    cout << "span_main" << endl;
 
-    cout << "Hello World";
+    trace::StartSpanOptions options;
+    options.parent = span_main->GetContext();
+    auto span_child1 = tracer->StartSpan("child1", options);
+
+    cout << "span_child1" << endl;
 
     return 0;
 }
