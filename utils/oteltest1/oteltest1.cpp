@@ -16,6 +16,7 @@
  *   * use link
  */
 #include <iostream>
+#include <vector>
 using namespace std;
 
 #include <getopt.h>
@@ -28,6 +29,7 @@ using namespace std;
 #include "opentelemetry/sdk/trace/simple_processor_factory.h"
 #include "opentelemetry/sdk/trace/tracer_provider_factory.h"
 #include "opentelemetry/trace/provider.h"
+#include "opentelemetry/sdk/trace/processor.h"
 #include "opentelemetry/sdk/resource/resource.h"
 #include "opentelemetry/trace/span_startoptions.h"
 #include "opentelemetry/trace/context.h"
@@ -41,12 +43,14 @@ int main(int argc, char **argv)
 {
     std::string endpoint = "localhost:4317";
     std::string service_name = "oteltest1";
-    bool console = false;
+    bool console_processor = false;
+    bool otlp_processor = false;
 
     const option longopts[] = {
       {"endpoint", required_argument, nullptr  , 'e'},
       {"service_name", required_argument, nullptr, 'S'},
-      {"console", optional_argument, nullptr, 'C'}
+      {"console", optional_argument, nullptr, 'C'},
+      {"otlp", optional_argument, nullptr, 'o'}
     };
 
     while (1) {
@@ -60,23 +64,27 @@ int main(int argc, char **argv)
       case 'S':
 	service_name = std::string(optarg);
       case 'C':
-	console = true;
+	console_processor = true;
+      case 'o':
+	otlp_processor = true;
       }
     }
 
-    //temporaly
-    //if (console) {
+    std::vector<std::unique_ptr<trace_sdk::SpanProcessor>> processors;
+
+    if (console_processor) {
       auto exporter = trace_exporter::OStreamSpanExporterFactory::Create();
-      /**
-    } else {
+      auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
+      processors.push_back(std::move(processor));
+    }
+    if (otlp_processor) {
       otlp::OtlpGrpcExporterOptions opts;
       opts.use_ssl_credentials = false;
       opts.endpoint = std::move(endpoint);
       auto exporter  = otlp::OtlpGrpcExporterFactory::Create(opts);
-      processor.
+      auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
+      processors.push_back(std::move(processor));
     }
-    */
-    auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
 
     auto resource_attributes = resource_sdk::ResourceAttributes
       {
@@ -85,7 +93,7 @@ int main(int argc, char **argv)
     auto resource = resource_sdk::Resource::Create(resource_attributes);
 
     std::shared_ptr<trace::TracerProvider> provider =
-      trace_sdk::TracerProviderFactory::Create(std::move(processor),
+      trace_sdk::TracerProviderFactory::Create(std::move(processors),
 					       resource);
     //TODO(thatsdone): create NULL provider and use AddProcessor()s
 
@@ -105,6 +113,10 @@ int main(int argc, char **argv)
     span_child1->SetAttribute("attribute_key2", "attribute_value2");
 
     cout << "span_child1" << endl;
+
+    //AddLink : Looks like AddLink requires ABI V2
+    //auto span_child2 = tracer->StartSpan("child2");
+    //span_child2.AddLink(span_main->GetContext(), nullptr);
 
     span_child1->End();
     //child span: end
