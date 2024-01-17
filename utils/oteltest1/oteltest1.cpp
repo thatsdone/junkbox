@@ -38,6 +38,7 @@ namespace trace_sdk = opentelemetry::sdk::trace;
 namespace otlp = opentelemetry::exporter::otlp;
 namespace trace_exporter = opentelemetry::exporter::trace;
 namespace resource_sdk  = opentelemetry::sdk::resource;
+namespace common  = opentelemetry::common;
 
 int main(int argc, char **argv)
 {
@@ -114,9 +115,11 @@ int main(int argc, char **argv)
 
     cout << "span_child1" << endl;
 
-    //AddLink : Looks like AddLink requires ABI V2
-    //auto span_child2 = tracer->StartSpan("child2");
-    //span_child2.AddLink(span_main->GetContext(), nullptr);
+    common::NoopKeyValueIterable links;
+    //Note(thatsdone): AddLink() requires ABI Version 2
+    //use -DOPENTELEMETRY_ABI_VERSION_NO=2
+    auto span_child2 = tracer->StartSpan("child2");
+    span_child2->AddLink(span_main->GetContext(), links);
 
     span_child1->End();
     //child span: end
