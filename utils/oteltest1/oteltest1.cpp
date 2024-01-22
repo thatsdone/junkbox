@@ -27,6 +27,8 @@ using namespace std;
 #include "opentelemetry/exporters/ostream/span_exporter_factory.h"
 #include "opentelemetry/sdk/trace/processor.h"
 #include "opentelemetry/sdk/trace/simple_processor_factory.h"
+#include "opentelemetry/sdk/trace/batch_span_processor_factory.h"
+#include "opentelemetry/sdk/trace/batch_span_processor_options.h"
 #include "opentelemetry/sdk/trace/tracer_provider_factory.h"
 #include "opentelemetry/trace/provider.h"
 #include "opentelemetry/sdk/trace/processor.h"
@@ -44,41 +46,59 @@ int main(int argc, char **argv)
 {
     std::string endpoint = "localhost:4317";
     std::string service_name = "oteltest1";
-    bool console_processor = false;
-    bool otlp_processor = false;
+    bool console_exporter = false;
+    bool otlp_exporter = false;
+    bool batch_processor = false;
 
     const option longopts[] = {
       {"endpoint", required_argument, nullptr  , 'e'},
       {"service_name", required_argument, nullptr, 'S'},
       {"console", optional_argument, nullptr, 'C'},
-      {"otlp", optional_argument, nullptr, 'o'}
+      {"otlp", optional_argument, nullptr, 'o'},
+      {"batch", optional_argument, nullptr, 'B'}
     };
 
     while (1) {
-      const int opt = getopt_long(argc, argv, "e:S:", longopts, 0);
+      const int opt = getopt_long(argc, argv, "e:S:CoB", longopts, 0);
       if (opt < 0) {
-	break;
+        break;
       }
       switch (opt) {
       case 'e':
-	endpoint = std::string(optarg);
+        endpoint = std::string(optarg);
+        break;
       case 'S':
-	service_name = std::string(optarg);
+        service_name = std::string(optarg);
+        break;
       case 'C':
-	console_processor = true;
+        console_exporter = true;
+        break;
       case 'o':
-	otlp_processor = true;
+        otlp_exporter = true;
+        break;
+      case 'B':
+        batch_processor = true;
+        break;
       }
     }
 
     std::vector<std::unique_ptr<trace_sdk::SpanProcessor>> processors;
 
-    if (console_processor) {
+    if (console_exporter) {
       auto exporter = trace_exporter::OStreamSpanExporterFactory::Create();
       auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
       processors.push_back(std::move(processor));
+      if (batch_processor) {
+        //FIXME(thatsdone): the below causes SEGV.
+        trace_sdk::BatchSpanProcessorOptions options{};
+        options.max_queue_size = 25;
+        options.schedule_delay_millis = std::chrono::milliseconds(5000);
+        options.max_export_batch_size = 10;
+        auto processor1 = trace_sdk::BatchSpanProcessorFactory::Create(std::move(exporter), options);
+        processors.push_back(std::move(processor1));
+      }
     }
-    if (otlp_processor) {
+    if (otlp_exporter) {
       otlp::OtlpGrpcExporterOptions opts;
       opts.use_ssl_credentials = false;
       opts.endpoint = std::move(endpoint);
