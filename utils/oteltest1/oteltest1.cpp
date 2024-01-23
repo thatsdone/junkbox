@@ -85,40 +85,50 @@ int main(int argc, char **argv)
     std::vector<std::unique_ptr<trace_sdk::SpanProcessor>> processors;
 
     if (console_exporter) {
-      auto exporter = trace_exporter::OStreamSpanExporterFactory::Create();
-      auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
-      processors.push_back(std::move(processor));
+      auto os_exporter = trace_exporter::OStreamSpanExporterFactory::Create();
       if (batch_processor) {
-        //FIXME(thatsdone): the below causes SEGV.
         trace_sdk::BatchSpanProcessorOptions options{};
         options.max_queue_size = 25;
         options.schedule_delay_millis = std::chrono::milliseconds(5000);
         options.max_export_batch_size = 10;
-        auto processor1 = trace_sdk::BatchSpanProcessorFactory::Create(std::move(exporter), options);
-        processors.push_back(std::move(processor1));
+        auto batch_processor = trace_sdk::BatchSpanProcessorFactory::Create(std::move(os_exporter), options);
+        processors.push_back(std::move(batch_processor));
+      } else {
+	auto simple_processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(os_exporter));
+	processors.push_back(std::move(simple_processor));
       }
     }
     if (otlp_exporter) {
       otlp::OtlpGrpcExporterOptions opts;
       opts.use_ssl_credentials = false;
       opts.endpoint = std::move(endpoint);
-      auto exporter  = otlp::OtlpGrpcExporterFactory::Create(opts);
-      auto processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
-      processors.push_back(std::move(processor));
+      auto ot_exporter  = otlp::OtlpGrpcExporterFactory::Create(opts);
+      if (batch_processor) {
+        trace_sdk::BatchSpanProcessorOptions options{};
+        options.max_queue_size = 25;
+        options.schedule_delay_millis = std::chrono::milliseconds(5000);
+        options.max_export_batch_size = 10;
+        auto batch_processor = trace_sdk::BatchSpanProcessorFactory::Create(std::move(ot_exporter), options);
+        processors.push_back(std::move(batch_processor));
+      } else {
+	auto simple_processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(ot_exporter));
+	processors.push_back(std::move(simple_processor));
+      }
     }
 
-    auto resource_attributes = resource_sdk::ResourceAttributes
-      {
-        {"service.name", std::move(service_name)}
-      };
+    auto resource_attributes = resource_sdk::ResourceAttributes {
+        {
+          "service.name", std::move(service_name)
+        }
+    };
     auto resource = resource_sdk::Resource::Create(resource_attributes);
 
+    //TODO(thatsdone): create NULL provider and use AddProcessor()s
     std::shared_ptr<trace::TracerProvider> provider =
       trace_sdk::TracerProviderFactory::Create(std::move(processors),
 					       resource);
-    //TODO(thatsdone): create NULL provider and use AddProcessor()s
-
     trace::Provider::SetTracerProvider(provider);
+    //
     auto tracer = provider->GetTracer("otetest1", OPENTELEMETRY_SDK_VERSION);
     //
     //main span
@@ -128,9 +138,9 @@ int main(int argc, char **argv)
 
     //child span
     //do context propagation
-    trace::StartSpanOptions options;
-    options.parent = span_main->GetContext();
-    auto span_child1 = tracer->StartSpan("child1", options);
+    trace::StartSpanOptions span_options;
+    span_options.parent = span_main->GetContext();
+    auto span_child1 = tracer->StartSpan("child1", span_options);
     span_child1->SetAttribute("attribute_key2", "attribute_value2");
 
     cout << "span_child1" << endl;
