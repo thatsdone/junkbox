@@ -14,6 +14,7 @@ This example shows how to use various features of OpenTelemetry C++.
   * Tracer
 * OStream exporter
 * OTEL/gRPC exporter
+* Batch/Simple processor
 * Span
   * Basic StartSpan() and End()
   * Context Propagation (across function calls within a single process)
@@ -59,15 +60,15 @@ $ cpack -C debug
 ```
 $ sudo dpkg -i opentelemetry-cpp-1.13.0-ubuntu-24.04-x86_64.deb
 ```
-Note that version number varies depending on the environment.
+Note that the version numbers above depend on your environment.
 
 ## Build
 
-Just executre `make` command.
+Just execute `make` command.
 
 
 ## TODO
-* Context Propagation  with remote processes
+* Context Propagation  with remote processes through:
   * HTTP (including gRPC/HTTP2, HTTP3)
   * Other protocols (MQTT, Kafka...)
 * Use cmake (create CMakeList.txt)

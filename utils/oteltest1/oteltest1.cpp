@@ -12,11 +12,10 @@
  * TODO:
  *   * continue to blush up
  *   * Write README
- *   * set attribute
- *   * use link
  */
 #include <iostream>
 #include <vector>
+#include <typeinfo>
 using namespace std;
 
 #include <getopt.h>
@@ -42,20 +41,40 @@ namespace trace_exporter = opentelemetry::exporter::trace;
 namespace resource_sdk  = opentelemetry::sdk::resource;
 namespace common  = opentelemetry::common;
 
+
+std::unique_ptr<trace_sdk::SpanProcessor>
+get_processor(std::unique_ptr<trace_sdk::SpanExporter> exporter, bool batch)
+{
+  std::unique_ptr<trace_sdk::SpanProcessor> processor = nullptr;
+
+  if (batch) {
+    trace_sdk::BatchSpanProcessorOptions options{};
+    options.max_queue_size = 25;
+    options.schedule_delay_millis = std::chrono::milliseconds(5000);
+    options.max_export_batch_size = 10;
+    processor = trace_sdk::BatchSpanProcessorFactory::Create(std::move(exporter), options);
+    ;
+  } else {
+    processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(exporter));
+  }
+  return processor;
+}
+
+
 int main(int argc, char **argv)
 {
     std::string endpoint = "localhost:4317";
     std::string service_name = "oteltest1";
     bool console_exporter = false;
     bool otlp_exporter = false;
-    bool batch_processor = false;
+    bool use_batch = false;
 
     const option longopts[] = {
       {"endpoint", required_argument, nullptr  , 'e'},
       {"service_name", required_argument, nullptr, 'S'},
       {"console", optional_argument, nullptr, 'C'},
       {"otlp", optional_argument, nullptr, 'o'},
-      {"batch", optional_argument, nullptr, 'B'}
+      {"use_batch", optional_argument, nullptr, 'B'}
     };
 
     while (1) {
@@ -77,45 +96,31 @@ int main(int argc, char **argv)
         otlp_exporter = true;
         break;
       case 'B':
-        batch_processor = true;
+        use_batch = true;
         break;
       }
     }
 
+    // prepare span processors with appropriate exporter
     std::vector<std::unique_ptr<trace_sdk::SpanProcessor>> processors;
+    std::unique_ptr<trace_sdk::SpanProcessor> processor = nullptr;
+    std::unique_ptr<trace_sdk::SpanExporter> exporter = nullptr;
 
     if (console_exporter) {
-      auto os_exporter = trace_exporter::OStreamSpanExporterFactory::Create();
-      if (batch_processor) {
-        trace_sdk::BatchSpanProcessorOptions options{};
-        options.max_queue_size = 25;
-        options.schedule_delay_millis = std::chrono::milliseconds(5000);
-        options.max_export_batch_size = 10;
-        auto batch_processor = trace_sdk::BatchSpanProcessorFactory::Create(std::move(os_exporter), options);
-        processors.push_back(std::move(batch_processor));
-      } else {
-	auto simple_processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(os_exporter));
-	processors.push_back(std::move(simple_processor));
-      }
+      exporter = trace_exporter::OStreamSpanExporterFactory::Create();
+      processor = get_processor(std::move(exporter), use_batch);
+      processors.push_back(std::move(processor));
     }
     if (otlp_exporter) {
       otlp::OtlpGrpcExporterOptions opts;
       opts.use_ssl_credentials = false;
       opts.endpoint = std::move(endpoint);
-      auto ot_exporter  = otlp::OtlpGrpcExporterFactory::Create(opts);
-      if (batch_processor) {
-        trace_sdk::BatchSpanProcessorOptions options{};
-        options.max_queue_size = 25;
-        options.schedule_delay_millis = std::chrono::milliseconds(5000);
-        options.max_export_batch_size = 10;
-        auto batch_processor = trace_sdk::BatchSpanProcessorFactory::Create(std::move(ot_exporter), options);
-        processors.push_back(std::move(batch_processor));
-      } else {
-	auto simple_processor = trace_sdk::SimpleSpanProcessorFactory::Create(std::move(ot_exporter));
-	processors.push_back(std::move(simple_processor));
-      }
+      exporter = otlp::OtlpGrpcExporterFactory::Create(opts);
+      processor = get_processor(std::move(exporter), use_batch);
+      processors.push_back(std::move(processor));
     }
 
+    // prepare resource with service.name
     auto resource_attributes = resource_sdk::ResourceAttributes {
         {
           "service.name", std::move(service_name)
@@ -136,23 +141,30 @@ int main(int argc, char **argv)
     cout << "span_main" << endl;
     span_main->SetAttribute("attribute_key1", "attribute_value1");
 
-    //child span
+    //child span(1)
     //do context propagation
     trace::StartSpanOptions span_options;
     span_options.parent = span_main->GetContext();
-    auto span_child1 = tracer->StartSpan("child1", span_options);
+    auto span_child1 = tracer->StartSpan("child1", std::move(span_options));
     span_child1->SetAttribute("attribute_key2", "attribute_value2");
 
     cout << "span_child1" << endl;
 
+    //child span(1)
     common::NoopKeyValueIterable links;
     //Note(thatsdone): AddLink() requires ABI Version 2
     //use -DOPENTELEMETRY_ABI_VERSION_NO=2
     auto span_child2 = tracer->StartSpan("child2");
+    //use Link, not context propagation. This should be an independent trace
+    //decoupled from main_span.
     span_child2->AddLink(span_main->GetContext(), links);
+    cout << "span_child2" << endl;
 
+    span_child2->End();
+    //child span(2): end
+    
     span_child1->End();
-    //child span: end
+    //child span(1): end
 
     span_main->End();
     //main span: end
