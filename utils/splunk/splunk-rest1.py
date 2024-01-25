@@ -21,7 +21,7 @@ import json
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='splunk-rest1.py')
-    parser.add_argument('-h', '--host', default=None)
+    parser.add_argument('--host', default=None)
     parser.add_argument('-p', '--port', type=int, default=8089)
     parser.add_argument('--insecure', action='store_true')
     parser.add_argument('-U', '--username', default='admin')
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     # execute search
     auth={'Authorization': 'Splunk %s' % session_key}
     search = {
-        "search": 'search %s' % args.search,
+        "search": 'search %s | fields *' % args.search,
         "exec_mode": "oneshot",
         "output_mode": "json"
         }
