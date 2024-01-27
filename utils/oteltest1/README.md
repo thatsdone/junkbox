@@ -72,4 +72,5 @@ Just execute `make` command.
   * HTTP (including gRPC/HTTP2, HTTP3)
   * Other protocols (MQTT, Kafka...)
 * Use cmake (create CMakeList.txt)
+* Context injection/extraction to/from propagator
 * ...
