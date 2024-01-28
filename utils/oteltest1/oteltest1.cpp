@@ -34,13 +34,22 @@ using namespace std;
 #include "opentelemetry/sdk/resource/resource.h"
 #include "opentelemetry/trace/span_startoptions.h"
 #include "opentelemetry/trace/context.h"
+//
+#include "opentelemetry/context/propagation/text_map_propagator.h"
+//#include "opentelemetry/context/propagation/global_propagator.h"
+#include "opentelemetry/trace/propagation/http_trace_context.h"
+#include "opentelemetry/baggage/propagation/baggage_propagator.h"
+#include "opentelemetry/baggage/baggage_context.h"
+
+
 namespace trace     = opentelemetry::trace;
 namespace trace_sdk = opentelemetry::sdk::trace;
 namespace otlp = opentelemetry::exporter::otlp;
 namespace trace_exporter = opentelemetry::exporter::trace;
 namespace resource_sdk  = opentelemetry::sdk::resource;
 namespace common  = opentelemetry::common;
-
+namespace context  = opentelemetry::context;
+namespace nostd = opentelemetry::nostd;
 
 std::unique_ptr<trace_sdk::SpanProcessor>
 get_processor(std::unique_ptr<trace_sdk::SpanExporter> exporter, bool batch)
@@ -135,11 +144,20 @@ int main(int argc, char **argv)
     trace::Provider::SetTracerProvider(provider);
     //
     auto tracer = provider->GetTracer("otetest1", OPENTELEMETRY_SDK_VERSION);
+
     //
     //main span
     auto span_main = tracer->StartSpan("main");
     cout << "span_main" << endl;
     span_main->SetAttribute("attribute_key1", "attribute_value1");
+
+    //remote context propagation(using Baggage)
+    std::string header = "traceparent=00-0f9da3bc644903c4e4914e75e66a47e0-05eb0528645163a5-01";
+    auto baggage = opentelemetry::baggage::Baggage::FromHeader(header);
+    std::string value;
+    baggage->GetValue("traceparent", value);
+    cout << "traceparent: " + value << endl;
+
 
     //child span(1)
     //do context propagation
