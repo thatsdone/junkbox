@@ -25,29 +25,29 @@ if __name__ == "__main__":
     parser.add_argument('--host', default=None)
     parser.add_argument('--port', type=int, default=0)
     parser.add_argument('--region', default='ap-northeast-1')
-    parser.add_argument('--access_key_id', default='dumy')
-    parser.add_argument('--secret_access_key', default='dumy')
+    parser.add_argument('--access_key_id', default=None)
+    parser.add_argument('--secret_access_key', default=None)
+    parser.add_argument('--profile', default=None)
     args = parser.parse_args()
 
-    session = boto3.Session()
-    dynamodb = None
-    if args.use_client:
-        dynamodb = session.client(
-            service_name='dynamodb',
-            region_name=args.region,
-            aws_access_key_id=args.access_key_id,
-            aws_secret_access_key=args.secret_access_key,
-            endpoint_url = 'http://%s:%d' % (args.host, args.port)
-        )
-        resp = dynamodb.list_tables()
+    session = boto3.Session(profile_name=args.profile,
+                            region_name=args.region,
+                            aws_access_key_id=args.access_key_id,
+                            aws_secret_access_key=args.secret_access_key)
 
+    endpoint_url = 'http://%s:%d' % (args.host, args.port) if args.host and args.port else None
+    sclient = None
+
+    if args.use_client:
+        sclient = session.client(service_name=args.service,
+                                  endpoint_url = endpoint_url)
+        # dynamodb
+        resp = sclient.list_tables()
     else:
-        dynamodb = session.resource(args.service,
-                                    region_name=args.region,
-                                    aws_access_key_id=args.access_key_id,
-                                    aws_secret_access_key=args.secret_access_key,
-                                    endpoint_url = 'http://%s:%d' % (args.host, args.port))
-        resp = dynamodb.tables.all()
+        sclient = session.resource(args.service,
+                                   endpoint_url = endpoint_url)
+        # dynamodb
+        resp = sclient.tables.all()
 
     print(resp)
 
