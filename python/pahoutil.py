@@ -60,7 +60,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='pahoutil.py')
     parser.add_argument('-o', '--operation', default='server')
     parser.add_argument('--debug', action='store_true')
-    parser.add_argument('-m', '--mode', default='server')
     parser.add_argument('--mqtt_version', type=int, default=5)
     parser.add_argument('--host', default=None)
     parser.add_argument('--port', type=int, default=1883)
