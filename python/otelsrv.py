@@ -36,10 +36,17 @@ class OtelSrv(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.send_header('Content-Type', 'text/plain')
 
+        if args.print_headers:
+            for elm in self.headers:
+                print(elm, self.headers[elm])
 
     def do_POST(self):
         global tracer
         global args
+
+        if args.print_headers:
+            for elm in self.headers:
+                print(elm, self.headers[elm])
 
         traceparent = None
         if 'traceparent' in self.headers:
@@ -97,6 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('--bind_port', type=int, default=8080)
     parser.add_argument('--dump_size', type=int, default=256)
     parser.add_argument('--enable_otel', action='store_true')
+    parser.add_argument('--print_headers', action='store_true')
     args = parser.parse_args()
     #
     # Setup OpenTelemetry
