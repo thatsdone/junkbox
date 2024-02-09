@@ -68,6 +68,11 @@ if __name__ == "__main__":
     parser.add_argument('--timeout', type=int, default=60)
     parser.add_argument('--message', default='Hello, world!')
     parser.add_argument('--interval', type=int, default=10)
+    parser.add_argument('--tls', action='store_true')
+    parser.add_argument('--cacert', default=None)
+    parser.add_argument('--cert', default=None)
+    parser.add_argument('--key', default=None)
+    parser.add_argument('--tls_secure', action='store_true')
     args = parser.parse_args()
 
     print(f'Using... host: {args.host} port: {args.port} mqtt version: {args.mqtt_version} topic: {args.topic} qos: {args.qos}')
@@ -85,6 +90,15 @@ if __name__ == "__main__":
         mqttc.on_publish = on_publish
         mqttc.on_subscribe = on_subscribe
         mqttc.on_log = on_log
+
+        if args.tls:
+            if not args.cacert:
+                print('Specify --cacert')
+                sys.exit()
+            mqttc.tls_set(ca_certs=args.cacert,
+                          certfile=args.cert, keyfile=args.key)
+            if not args.tls_secure:
+                mqttc.tls_insecure_set(True)
 
         mqttc.connect(args.host, args.port, args.timeout)
         mqttc.message_callback_add(args.topic, message)
@@ -104,6 +118,15 @@ if __name__ == "__main__":
         mqttc.on_publish = on_publish
         mqttc.on_subscribe = on_subscribe
         mqttc.on_log = on_log
+
+        if args.tls:
+            if not args.cacert:
+                print('Specify --cacert')
+                sys.exit()
+            mqttc.tls_set(ca_certs=args.cacert,
+                          certfile=args.cert, keyfile=args.key)
+            if not args.tls_secure:
+                mqttc.tls_insecure_set(True)
 
         properties=Properties(PacketTypes.CONNECT)
         properties.SessionExpiryInterval=args.interval
