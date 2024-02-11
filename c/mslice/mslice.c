@@ -94,12 +94,13 @@ void parse_env()
   char *dest_addr;
   char *local_addr;
   int ret;
+  char *debug_env;
 
   if (env == NULL) {
     return;
   }
-  if (atoi(getenv("MSLICE_DEBUG")) != 0) {
-    debug = 1;
+  if ((debug_env = getenv("MSLICE_DEBUG")) != NULL) {
+    debug = atoi(debug_env);
   }
 
   destinfos =  malloc(sizeof(struct destinfo) * MAX_DESTINFO);
@@ -158,44 +159,56 @@ void parse_env()
  * A function pointer with the same function prototype with connect(2)
  * to save the original connect(2) entry.
  */
-ssize_t (*org)(int fd, const void *buf, size_t count) = 0;
+int (*org)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) = 0;
 
 __attribute__((constructor))
 static void init_hook()
 {
   parse_env();
-  org = (ssize_t(*)(int, const void *, size_t))dlsym(RTLD_NEXT, "connect");
-  printf("DEBUG: %s: constructor called! %p\n", __func__, org);
+
+  org = (int(*)(int sockfd, const struct sockaddr *addr, socklen_t addrlen))dlsym(RTLD_NEXT, "connect");  
+  if (debug) printf("DEBUG: %s: constructor called! %p\n", __func__, org);
 }
 
 __attribute__((destructor))
 static void fini_hook()
 {
-  printf("DEBUG: %s: destructor called!\n", __func__);
+  if (debug) printf("DEBUG: %s: destructor called!\n", __func__);
 }
 
 
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
   int ret = 0;
   struct sockaddr_in saddr;
+  struct sockaddr_in local_saddr;
   socklen_t slen;
   struct destinfo *dinfo = NULL;
 
   if(debug) printf("DEBUG: %s: hook!\n", __func__);
 
+
+  if (addr->sa_family != AF_INET) {
+    return org(sockfd, addr, addrlen);
+  }
+  
   ret = getsockname(sockfd, &saddr, &slen);
   if (debug) printf("DEBUG: ret = %d %08x\n", ret, saddr.sin_addr.s_addr);
   dinfo = check((struct in_addr*)&((struct sockaddr_in *)addr)->sin_addr.s_addr);
   /* TODO(thatsdone): call bind(2) if dinfo is not NULL */
   if (dinfo != NULL) {
-    printf("DEBUG: %08x\n", dinfo->dest.s_addr);
     if (debug) {
       printf("DEBUG: %08x is in %08x/%d\n",
              ((struct sockaddr_in *)addr)->sin_addr.s_addr,
              dinfo->dest.s_addr,
              dinfo->size);
     }
+    local_saddr.sin_family = addr->sa_family;
+    local_saddr.sin_addr.s_addr = dinfo->local.s_addr;
+    ret = bind(sockfd, &local_saddr, sizeof(struct sockaddr_in));
+    if (debug) printf("DEBUG: bind(2) returns %d (%d)\n", ret, errno);
+    if (ret < 0) {
+      printf("WARNING: bind(2) failed\n");
+    }
   }
-  ret = (int)org(sockfd, addr, addrlen);
-  return ret;
+  return org(sockfd, addr, addrlen);
 }
