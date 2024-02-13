@@ -44,23 +44,24 @@ using namespace std;
 #include "opentelemetry/ext/http/common/url_parser.h"
 #include "opentelemetry/baggage/propagation/baggage_propagator.h"
 
-namespace trace     = opentelemetry::trace;
-namespace trace_sdk = opentelemetry::sdk::trace;
-namespace otlp = opentelemetry::exporter::otlp;
+namespace nostd          = opentelemetry::nostd;
+namespace trace          = opentelemetry::trace;
+namespace trace_sdk      = opentelemetry::sdk::trace;
+namespace otlp           = opentelemetry::exporter::otlp;
 namespace trace_exporter = opentelemetry::exporter::trace;
-namespace resource_sdk  = opentelemetry::sdk::resource;
-namespace common  = opentelemetry::common;
-namespace context  = opentelemetry::context;
-namespace propagation  = opentelemetry::context::propagation;
-
-namespace http_client  = opentelemetry::ext::http::client;
+namespace resource_sdk   = opentelemetry::sdk::resource;
+namespace common         = opentelemetry::common;
+namespace context        = opentelemetry::context;
+namespace propagation    = opentelemetry::context::propagation;
+//
+namespace http_client    = opentelemetry::ext::http::client;
 
 //
 #include <curlpp/cURLpp.hpp>
 #include <curlpp/Easy.hpp>
 #include <curlpp/Options.hpp>
 
-//taken from examples/http/tracer_common.hof opentelemetrcy-cpp
+//taken from examples/http/tracer_common.h of opentelemetrcy-cpp
 namespace {
 template <typename T>
 class HttpTextMapCarrier : public opentelemetry::context::propagation::TextMapCarrier
@@ -126,13 +127,14 @@ get_processor(std::unique_ptr<trace_sdk::SpanExporter> exporter, bool batch)
 
 int main(int argc, char **argv)
 {
-    bool enable_otel = true;
+    //bool enable_otel = true;
     std::string endpoint = "localhost:4317";
-    std::string service_name = "oteltest1";
+    std::string service_name = "otelcurl";
     bool console_exporter = false;
     bool otlp_exporter = false;
     bool use_batch = false;
     std::string url = "";
+    std::string method = "GET";
 
     const option longopts[] = {
       {"url", required_argument, nullptr},
@@ -146,7 +148,7 @@ int main(int argc, char **argv)
     };
 
     while (1) {
-      const int opt = getopt_long(argc, argv, "e:S:CoB", longopts, 0);
+      const int opt = getopt_long(argc, argv, "e:S:CoBX:", longopts, 0);
       if (opt < 0) {
         break;
       }
@@ -165,6 +167,9 @@ int main(int argc, char **argv)
         break;
       case 'B':
         use_batch = true;
+        break;
+      case 'X':
+        method = std::string(optarg);
         break;
       }
     }
@@ -198,22 +203,31 @@ int main(int argc, char **argv)
       processors.push_back(std::move(processor));
     }
 
-    // prepare resource with service.name
+    // prepare resource attribute with service.name
     auto resource_attributes = resource_sdk::ResourceAttributes {
         {
           "service.name", std::move(service_name)
         }
     };
+    // create resource with the resource_attribute above
     auto resource = resource_sdk::Resource::Create(resource_attributes);
 
-    //TODO(thatsdone): create NULL provider and use AddProcessor()s
+    // create provider
+    //TODO(thatsdone): create NULL provider and use AddProcessor()
     std::shared_ptr<trace::TracerProvider> provider =
       trace_sdk::TracerProviderFactory::Create(std::move(processors),
                                                resource);
+    // set provider
     trace::Provider::SetTracerProvider(provider);
-    //
+
+    // set propagator
     propagation::GlobalTextMapPropagator::SetGlobalPropagator(
-							      opentelemetry::nostd::shared_ptr<opentelemetry::context::propagation::TextMapPropagator>(new opentelemetry::trace::propagation::HttpTraceContext()));
+      opentelemetry::nostd::shared_ptr<propagation::TextMapPropagator>(
+        new opentelemetry::trace::propagation::HttpTraceContext()
+      )
+    );
+
+    //
     auto tracer = provider->GetTracer("otelcurl", OPENTELEMETRY_SDK_VERSION);
 
     //main span
@@ -223,35 +237,39 @@ int main(int argc, char **argv)
     cout << "span_main" << endl;
     span_main->SetAttribute("attribute_key1", "attribute_value1");
 
-    // trace_id
+    // extract trace_id/span_id/trace_state (for research)
+    //   trace_id
     auto span_ctx = span_main->GetContext();
     char trace_id_in_span[opentelemetry::trace::TraceId::kSize *2];
     span_ctx.trace_id().ToLowerBase16(trace_id_in_span);
     std::string trace_id_text_in_span{trace_id_in_span, sizeof(trace_id_in_span)};
     cout << trace_id_text_in_span << endl;
-    // span_id
+    //   span_id
     char span_id_in_span[opentelemetry::trace::SpanId::kSize *2];
     span_ctx.span_id().ToLowerBase16(span_id_in_span);
     std::string span_id_text_in_span{span_id_in_span, sizeof(span_id_in_span)};
     cout << span_id_text_in_span << endl;
-    // trace_state
+    //   trace_state
     cout << span_ctx.trace_state() << endl;
-
+    
     auto ctx =  context::RuntimeContext::GetCurrent();
     HttpTextMapCarrier<http_client::Headers> carrier;
     auto prop = context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
     prop->Inject(carrier, ctx);
+
+    // dump HTTP header in the TextMapCarrier(for research)
     cout << "dump headers... "  << endl;
     for (auto it = carrier.headers_.begin() ; it != carrier.headers_.end(); ++it) {
       cout << (*it).first + " : " + (*it).second << endl;
     }
     cout << "end"  << endl;
 
+    // main logic of HTTP operations
     try {
       curlpp::Cleanup cleaner;
       curlpp::Easy request;
 
-      request.setOpt(new curlpp::options::Url(url))
+      request.setOpt(new curlpp::options::Url(url));
       request.setOpt(new curlpp::options::Verbose(true));
       std::list<std::string> header;
       //header.push_back("Content-Type: application/octet-stream");
