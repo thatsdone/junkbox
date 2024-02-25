@@ -16,6 +16,7 @@
 #
 import sys, os, getopt, errno
 import subprocess
+import argparse
 
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
@@ -108,26 +109,15 @@ class PyPGME(BaseHTTPRequestHandler):
 #
 if __name__ == "__main__":
 
-    bind_address = '0.0.0.0'
-    port = 19101
-
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "p:b:e")
-    except getopt.GetoptError as err:
-        print(str(err))
-        sys.exit(2)
-
-    for o, a in opts:
-        if o == '-p':
-            port = int(a)
-        elif o == '-b':
-            bind_address = a
-        elif o == '-e':
-            # toggle extended_attrs
-            if extended_attrs:
-                extended_attrs = False
-            else:
-                extended_attrs = True
+    parser = argparse.ArgumentParser(description='PyPGME.py')
+    parser.add_argument('-b', '--bind_address', default='0.0.0.0')
+    parser.add_argument('-p', '--port', type=int, default=19101)
+    parser.add_argument('-e', '--extended_attribute', action='store_true')
+    args = parser.parse_args()
+    
+    bind_address = args.bind_address
+    port = args.port
+    extended_attrs = args.extended_attribute
 
     httpd = HTTPServer((bind_address, port), PyPGME)
 
