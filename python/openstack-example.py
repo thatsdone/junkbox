@@ -16,7 +16,8 @@
 #  Add more examples...
 import sys
 import os
-# import argparse
+import argparse
+import urllib3
 
 
 class OSExample:
@@ -37,7 +38,7 @@ class OSExample:
         self.os_image_api_version = '2'
         self.cert_verify = False
 
-    def example(self):
+    def example(self, args=None):
         from keystoneauth1.identity import v3
         from keystoneauth1 import session
         from keystoneclient.v3 import client as keystoneclient
@@ -81,7 +82,13 @@ class OSExample:
 #
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description='openstack-example.py')
+    parser.add_argument('-o', '--operation', default='keystone')
+    args = parser.parse_args()
+
+    urllib3.disable_warnings()
+
     ose = OSExample()
 
     ose.get_os_credentials()
-    ose.example()
+    ose.example(args=args)
