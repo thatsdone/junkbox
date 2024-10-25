@@ -110,7 +110,7 @@ func main() {
 	forward_to = *F_flag
 	if forward_to != "" && forward_to[len(forward_to)-1:] == "/" {
 		forward_to = forward_to[:len(forward_to)-1]
-		fmt.Printf("Forwarding evrything to: %s\n", forward_to)
+		fmt.Printf("Forwarding everything to: %s\n", forward_to)
 	}
 	if (*R_flag) {
 		use_roundtripper = *R_flag
