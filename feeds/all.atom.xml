@@ -1,9 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2024-10-14T16:52:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] How to manage GRUB default kernel</title><link href="https://thatsdone.github.io/junkbox/manage_grub_default.html" rel="alternate"></link><published>2024-10-14T16:52:00+09:00</published><updated>2024-10-14T16:52:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-10-14:/junkbox/manage_grub_default.html</id><summary type="html">&lt;p&gt;GRUBのbootに使われるkernelを管理する&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、かなり久しぶりにvanilla kernelをビルドする機会があり、
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2024-11-20T18:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Linux Kernel Build TIPs</title><link href="https://thatsdone.github.io/junkbox/ja-linux-kernel-build-tips.html" rel="alternate"></link><published>2024-11-20T18:10:00+09:00</published><updated>2024-11-20T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-11-20:/junkbox/ja-linux-kernel-build-tips.html</id><summary type="html">&lt;p&gt;Category: tech
+Slug: linux_kernel_build_tips
+Author: thatsdone
+Summary: Linux Kernel Build時のハマリポイント&lt;/p&gt;
+&lt;p&gt;ある意味、先月の&lt;a href="https://thatsdone.github.io/junkbox/manage_grub_default.html"&gt;この記事&lt;/a&gt;の続き。&lt;/p&gt;
+&lt;p&gt;6.12がリリースされたので、PREEMPT_RTとsched_extを試そうとしていて、必要なCONFIGを有効にするのに
+少し見落としがあったのでメモ。&lt;/p&gt;
+&lt;h2&gt;前提&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;ビルド …&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;Category: tech
+Slug: linux_kernel_build_tips
+Author: thatsdone
+Summary: Linux Kernel Build時のハマリポイント&lt;/p&gt;
+&lt;p&gt;ある意味、先月の&lt;a href="https://thatsdone.github.io/junkbox/manage_grub_default.html"&gt;この記事&lt;/a&gt;の続き。&lt;/p&gt;
+&lt;p&gt;6.12がリリースされたので、PREEMPT_RTとsched_extを試そうとしていて、必要なCONFIGを有効にするのに
+少し見落としがあったのでメモ。&lt;/p&gt;
+&lt;h2&gt;前提&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;ビルド環境: Ubuntu 24.04.1(amd64)&lt;/li&gt;
+&lt;li&gt;ツール類: 基本的にUbuntu bund版&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;PREEMPT_RTの有効化&lt;/h2&gt;
+&lt;p&gt;長らく開発が続いてきて、とうとう&lt;a href="https://www.managedserver.eu/preempt_rt-real-time-linux-and-finally-part-of-the-linux-kernel/"&gt;6.12でmerge&lt;/a&gt;されて話題になっていたReal-Time機能のPREEMPT_RTを使ってみたいと思ったのが発端。&lt;/p&gt;
+&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、冒頭の"General Setup"の中で、私の条件では上から18番目、"BPF Subsystem"の次に出てくる
+"Preemption Model"が該当する。&lt;/p&gt;
+&lt;p&gt;"Fully Preemptive Kernel (Real-Time)" を選択すればよい。&lt;/p&gt;
+&lt;p&gt;選べる詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
+&lt;h2&gt;PREEMPT_RTで遊ぶには&lt;/h2&gt;
+&lt;p&gt;realtime taskを動かせばよいのだが、
+例えば&lt;a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/rt-tests"&gt;rt-tests&lt;/a&gt;に含まれる&lt;a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/cyclictest/start"&gt;cyclictest&lt;/a&gt;とかがよくつかわれるようだ。&lt;/p&gt;
+&lt;h2&gt;sched_ext(CONFIG_SCHED_CLASS_EXT)の有効化&lt;/h2&gt;
+&lt;p&gt;sched_extを使うと、eBPFでオレスケジューラを書いたりすることができる。&lt;/p&gt;
+&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、PREEMPT_RTと同じく "General Setup"の中で、"Preemption Model"の2つ下に出てくる"Extensible Scheduling Class"が該当する。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ハマりポイント&lt;/strong&gt;として、上記の項目がでてこないことがあるのだが、私の場合は&lt;strong&gt;paholeがインストールされていなかった&lt;/strong&gt;のが原因だった。&lt;code&gt;sudo apt install pahole&lt;/code&gt; した後で&lt;code&gt;make menuconfig&lt;/code&gt;すると選べるようになる。&lt;/p&gt;
+&lt;p&gt;同じく選べるための詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
+&lt;h2&gt;sched_extで遊ぶには&lt;/h2&gt;
+&lt;p&gt;Linux kernelの src/sched_ext にサンプルが一式ついている。README.mdに書いてある通りの使い方で素直に動くはず。&lt;/p&gt;
+&lt;p&gt;以下、参考リンク&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.kernel.org/doc/html/next/scheduler/sched-ext.html"&gt;https://www.kernel.org/doc/html/next/scheduler/sched-ext.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/sched-ext/scx"&gt;https://github.com/sched-ext/scx&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;そのほか&lt;/h2&gt;
+&lt;p&gt;もっとあったような気がするので別途追記/更新予定。&lt;/p&gt;</content><category term="misc"></category></entry><entry><title>[ja] How to manage GRUB default kernel</title><link href="https://thatsdone.github.io/junkbox/manage_grub_default.html" rel="alternate"></link><published>2024-10-14T16:52:00+09:00</published><updated>2024-10-14T16:52:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-10-14:/junkbox/manage_grub_default.html</id><summary type="html">&lt;p&gt;GRUBのbootに使われるkernelを管理する&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、かなり久しぶりにvanilla kernelをビルドする機会があり、
 kernelを切り替えて使いたい場合のGRUBの設定で気づいたことがあったのでメモ。&lt;/p&gt;
 &lt;p&gt;最近...といっても、20.04くらいからだろうか。submenu というものが導入され、昔のノウハウが効かなくなっている模様。&lt;/p&gt;
 &lt;p&gt;2024/10/14時点での情報。&lt;/p&gt;
-&lt;h1&gt;Ubuntu 24.04 LTS時点での答&lt;/h1&gt;
+&lt;h2&gt;Ubuntu 24.04 LTS時点での答&lt;/h2&gt;
 &lt;p&gt;以下の手順でdefaultでbootに使われるkernelを切り替え可能。&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;/etc/default/grub の GRUB_DEFAULT に saved を設定する&lt;ul&gt;
@@ -22,7 +65,7 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 &lt;li&gt;&lt;code&gt;# reboot&lt;/code&gt; する&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;これで指定したkernelがdefaultに切り替わる。&lt;/p&gt;
-&lt;h1&gt;一時的に次にbootするkernelを切り替える場合&lt;/h1&gt;
+&lt;h2&gt;一時的に次にbootするkernelを切り替える場合&lt;/h2&gt;
 &lt;p&gt;kernelそのものをいじっている場合など、次のboot時のみ一時的に切り替えたい等の場合は、&lt;code&gt;grub-reboot&lt;/code&gt; コマンドが使える。&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;/etc/default/grub の GRUB_DEFAULT が saved になっていることを確認する&lt;/li&gt;
@@ -31,7 +74,7 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 &lt;li&gt;&lt;code&gt;# reboot&lt;/code&gt; する&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;もう一度rebootすると、元のdefault kernelで起動される。&lt;/p&gt;
-&lt;h1&gt;サンプル /boot/grub/grub.cfg&lt;/h1&gt;
+&lt;h2&gt;サンプル /boot/grub/grub.cfg&lt;/h2&gt;
 &lt;p&gt;以下は私の、Ubuntu 22.04 から 24.04へ do-release-upgrade した環境の /boot/grub/grub.cfg の例。&lt;/p&gt;
 &lt;p&gt;162行目の &lt;code&gt;$menuentry_id_option&lt;/code&gt; の後ろの &lt;code&gt;gnulinux-advanced-32227d3a-e56d-453c-b030-d3c44576fa3f'&lt;/code&gt; が上記のSUBMENU_IDの例。&lt;/p&gt;
 &lt;p&gt;この環境では、そのままだと 163行目の 'Ubuntu, with Linux 6.8.0-45-generic' が使われるのだが、
@@ -76,7 +119,7 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 &lt;span class="mi"&gt;203&lt;/span&gt;&lt;span class="w"&gt;         &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h1&gt;References&lt;/h1&gt;
+&lt;h2&gt;References&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Grubで前に起動したシステムを記憶する&lt;ul&gt;
 &lt;li&gt;https://www.terakin.com/ja/blog/archives/129&lt;/li&gt;

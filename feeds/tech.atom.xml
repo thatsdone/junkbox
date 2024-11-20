@@ -3,7 +3,7 @@
 kernelを切り替えて使いたい場合のGRUBの設定で気づいたことがあったのでメモ。&lt;/p&gt;
 &lt;p&gt;最近...といっても、20.04くらいからだろうか。submenu というものが導入され、昔のノウハウが効かなくなっている模様。&lt;/p&gt;
 &lt;p&gt;2024/10/14時点での情報。&lt;/p&gt;
-&lt;h1&gt;Ubuntu 24.04 LTS時点での答&lt;/h1&gt;
+&lt;h2&gt;Ubuntu 24.04 LTS時点での答&lt;/h2&gt;
 &lt;p&gt;以下の手順でdefaultでbootに使われるkernelを切り替え可能。&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;/etc/default/grub の GRUB_DEFAULT に saved を設定する&lt;ul&gt;
@@ -22,7 +22,7 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 &lt;li&gt;&lt;code&gt;# reboot&lt;/code&gt; する&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;これで指定したkernelがdefaultに切り替わる。&lt;/p&gt;
-&lt;h1&gt;一時的に次にbootするkernelを切り替える場合&lt;/h1&gt;
+&lt;h2&gt;一時的に次にbootするkernelを切り替える場合&lt;/h2&gt;
 &lt;p&gt;kernelそのものをいじっている場合など、次のboot時のみ一時的に切り替えたい等の場合は、&lt;code&gt;grub-reboot&lt;/code&gt; コマンドが使える。&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;/etc/default/grub の GRUB_DEFAULT が saved になっていることを確認する&lt;/li&gt;
@@ -31,7 +31,7 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 &lt;li&gt;&lt;code&gt;# reboot&lt;/code&gt; する&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;もう一度rebootすると、元のdefault kernelで起動される。&lt;/p&gt;
-&lt;h1&gt;サンプル /boot/grub/grub.cfg&lt;/h1&gt;
+&lt;h2&gt;サンプル /boot/grub/grub.cfg&lt;/h2&gt;
 &lt;p&gt;以下は私の、Ubuntu 22.04 から 24.04へ do-release-upgrade した環境の /boot/grub/grub.cfg の例。&lt;/p&gt;
 &lt;p&gt;162行目の &lt;code&gt;$menuentry_id_option&lt;/code&gt; の後ろの &lt;code&gt;gnulinux-advanced-32227d3a-e56d-453c-b030-d3c44576fa3f'&lt;/code&gt; が上記のSUBMENU_IDの例。&lt;/p&gt;
 &lt;p&gt;この環境では、そのままだと 163行目の 'Ubuntu, with Linux 6.8.0-45-generic' が使われるのだが、
@@ -76,7 +76,7 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 &lt;span class="mi"&gt;203&lt;/span&gt;&lt;span class="w"&gt;         &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h1&gt;References&lt;/h1&gt;
+&lt;h2&gt;References&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Grubで前に起動したシステムを記憶する&lt;ul&gt;
 &lt;li&gt;https://www.terakin.com/ja/blog/archives/129&lt;/li&gt;
