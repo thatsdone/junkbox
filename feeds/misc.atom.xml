@@ -1,48 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - misc</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/misc.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2024-11-20T18:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Linux Kernel Build TIPs</title><link href="https://thatsdone.github.io/junkbox/ja-linux-kernel-build-tips.html" rel="alternate"></link><published>2024-11-20T18:10:00+09:00</published><updated>2024-11-20T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-11-20:/junkbox/ja-linux-kernel-build-tips.html</id><summary type="html">&lt;p&gt;Category: tech
-Slug: linux_kernel_build_tips
-Author: thatsdone
-Summary: Linux Kernel Build時のハマリポイント&lt;/p&gt;
-&lt;p&gt;ある意味、先月の&lt;a href="https://thatsdone.github.io/junkbox/manage_grub_default.html"&gt;この記事&lt;/a&gt;の続き。&lt;/p&gt;
-&lt;p&gt;6.12がリリースされたので、PREEMPT_RTとsched_extを試そうとしていて、必要なCONFIGを有効にするのに
-少し見落としがあったのでメモ。&lt;/p&gt;
-&lt;h2&gt;前提&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;ビルド …&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;p&gt;Category: tech
-Slug: linux_kernel_build_tips
-Author: thatsdone
-Summary: Linux Kernel Build時のハマリポイント&lt;/p&gt;
-&lt;p&gt;ある意味、先月の&lt;a href="https://thatsdone.github.io/junkbox/manage_grub_default.html"&gt;この記事&lt;/a&gt;の続き。&lt;/p&gt;
-&lt;p&gt;6.12がリリースされたので、PREEMPT_RTとsched_extを試そうとしていて、必要なCONFIGを有効にするのに
-少し見落としがあったのでメモ。&lt;/p&gt;
-&lt;h2&gt;前提&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;ビルド環境: Ubuntu 24.04.1(amd64)&lt;/li&gt;
-&lt;li&gt;ツール類: 基本的にUbuntu bund版&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;PREEMPT_RTの有効化&lt;/h2&gt;
-&lt;p&gt;長らく開発が続いてきて、とうとう&lt;a href="https://www.managedserver.eu/preempt_rt-real-time-linux-and-finally-part-of-the-linux-kernel/"&gt;6.12でmerge&lt;/a&gt;されて話題になっていたReal-Time機能のPREEMPT_RTを使ってみたいと思ったのが発端。&lt;/p&gt;
-&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、冒頭の"General Setup"の中で、私の条件では上から18番目、"BPF Subsystem"の次に出てくる
-"Preemption Model"が該当する。&lt;/p&gt;
-&lt;p&gt;"Fully Preemptive Kernel (Real-Time)" を選択すればよい。&lt;/p&gt;
-&lt;p&gt;選べる詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
-&lt;h2&gt;PREEMPT_RTで遊ぶには&lt;/h2&gt;
-&lt;p&gt;realtime taskを動かせばよいのだが、
-例えば&lt;a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/rt-tests"&gt;rt-tests&lt;/a&gt;に含まれる&lt;a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/cyclictest/start"&gt;cyclictest&lt;/a&gt;とかがよくつかわれるようだ。&lt;/p&gt;
-&lt;h2&gt;sched_ext(CONFIG_SCHED_CLASS_EXT)の有効化&lt;/h2&gt;
-&lt;p&gt;sched_extを使うと、eBPFでオレスケジューラを書いたりすることができる。&lt;/p&gt;
-&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、PREEMPT_RTと同じく "General Setup"の中で、"Preemption Model"の2つ下に出てくる"Extensible Scheduling Class"が該当する。&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;ハマりポイント&lt;/strong&gt;として、上記の項目がでてこないことがあるのだが、私の場合は&lt;strong&gt;paholeがインストールされていなかった&lt;/strong&gt;のが原因だった。&lt;code&gt;sudo apt install pahole&lt;/code&gt; した後で&lt;code&gt;make menuconfig&lt;/code&gt;すると選べるようになる。&lt;/p&gt;
-&lt;p&gt;同じく選べるための詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
-&lt;h2&gt;sched_extで遊ぶには&lt;/h2&gt;
-&lt;p&gt;Linux kernelの src/sched_ext にサンプルが一式ついている。README.mdに書いてある通りの使い方で素直に動くはず。&lt;/p&gt;
-&lt;p&gt;以下、参考リンク&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a href="https://www.kernel.org/doc/html/next/scheduler/sched-ext.html"&gt;https://www.kernel.org/doc/html/next/scheduler/sched-ext.html&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="https://github.com/sched-ext/scx"&gt;https://github.com/sched-ext/scx&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;そのほか&lt;/h2&gt;
-&lt;p&gt;もっとあったような気がするので別途追記/更新予定。&lt;/p&gt;</content><category term="misc"></category></entry><entry><title>[en/ja] Resuming Again/(ふたたび)再開します</title><link href="https://thatsdone.github.io/junkbox/resuming_again.html" rel="alternate"></link><published>2021-09-23T17:30:00+09:00</published><updated>2021-09-23T17:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-09-23:/junkbox/resuming_again.html</id><summary type="html">&lt;p&gt;resuming this page again&lt;/p&gt;</summary><content type="html">&lt;p&gt;It's been one and a half year since I posted the last article.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - misc</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/misc.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2021-09-23T17:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[en/ja] Resuming Again/(ふたたび)再開します</title><link href="https://thatsdone.github.io/junkbox/resuming_again.html" rel="alternate"></link><published>2021-09-23T17:30:00+09:00</published><updated>2021-09-23T17:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-09-23:/junkbox/resuming_again.html</id><summary type="html">&lt;p&gt;resuming this page again&lt;/p&gt;</summary><content type="html">&lt;p&gt;It's been one and a half year since I posted the last article.&lt;/p&gt;
 &lt;p&gt;As the last post was on Feb. 15, 2020, I guess I could not afford to make time for fun things
 because of physical stress because of COVID-19 and increased meetings.&lt;/p&gt;
 &lt;p&gt;This year, I have already made presentations twice, and I'm writing including those topics.
