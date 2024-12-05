@@ -13,7 +13,8 @@
 #   Masanori Itoh <masanori.itoh@gmail.com>
 #
 # Dependencies:
-#   * kafka-pytyon : https://kafka-python.readthedocs.io/
+#   * kafka-pytyon-ng : As of '24/12, kafka-python 2.0 still have a problem.
+#   * avro
 #
 import sys
 import io
