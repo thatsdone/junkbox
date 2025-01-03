@@ -45,7 +45,11 @@ $ curl http://YOUR_IP_ADDRESS:18081/check
 Note that the BlockingQueue is shared between Kafka poller thread and
 Spring Boot controller thread.
 
-
+## References
+* Spring Boot Logging
+  * https://docs.spring.io/spring-boot/reference/features/logging.html
+* SLF4J set loglevel
+  * https://stackoverflow.com/questions/45997759/how-to-change-slf4j-logging-level
 
 
 

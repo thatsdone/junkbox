@@ -4,6 +4,9 @@
  */
 package com.github.thatsdone.junkbox;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -18,12 +21,14 @@ import com.github.thatsdone.junkbox.SpringTest4Kafka;
 @SpringBootApplication
 public class SpringTest4 extends Thread {
 
-    public static String banner = "Shared data!!";
+    private static final Logger logger =
+        LoggerFactory.getLogger(SpringTest4.class);
+    
     public static BlockingQueue q = null;
 
     public int getQueueSize() {
         if (q == null) {
-            System.out.printf("ERROR: q is null\n");
+            logger.error("q is null\n");
             return 0;
         }
         return q.size();
@@ -32,7 +37,7 @@ public class SpringTest4 extends Thread {
         String ret = null;
 
         if (q == null) {
-            System.out.printf("ERROR: q is null\n");
+            logger.error("q is null\n");
             return ret;
         }
 
@@ -54,6 +59,8 @@ public class SpringTest4 extends Thread {
         // Create a BlockingQueue for inter threads communication
         q = new LinkedBlockingQueue();
 
+        logger.info("main() started.");
+        
         // Kafka setup
         // NOTE: If we defined a constructor with arguments, Spring Framework
         // complains.

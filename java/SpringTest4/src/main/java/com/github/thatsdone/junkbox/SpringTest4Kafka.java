@@ -4,6 +4,9 @@
  */
 package com.github.thatsdone.junkbox;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -26,6 +29,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class SpringTest4Kafka extends Thread {
 
+    private static final Logger logger =
+        LoggerFactory.getLogger(SpringTest4Kafka.class);
+    
     public static KafkaConsumer<String, String> consumer = null;
 
     public static String kafkaServer = null;
@@ -38,11 +44,11 @@ public class SpringTest4Kafka extends Thread {
     public SpringTest4Kafka() {
         
         kafkaServer = System.getenv("KAFKA_SERVER");
-        System.out.println("getenv KAFKA_SERVER: " +  kafkaServer);
+        logger.debug("getenv KAFKA_SERVER: {}", kafkaServer);
         kafkaTopic = System.getenv("KAFKA_TOPIC");
-        System.out.println("getenv KAFKA_TOPIC: " +  kafkaTopic);
+        logger.debug("getenv KAFKA_TOPIC: {}",  kafkaTopic);
         kafkaGroup = System.getenv("KAFKA_GROUP");
-        System.out.println("getenv KAFKA_GROUP: " +  kafkaGroup);
+        logger.debug("getenv KAFKA_GROUP: {}", kafkaGroup);
 
     }
 
@@ -61,10 +67,10 @@ public class SpringTest4Kafka extends Thread {
         int noRecordsCount = 0;
         Duration poll_interval = Duration.ofMillis(interval);
 	
-        System.out.printf("DEBUG: run(): Thread started.\n");
+        logger.debug("run(): Thread started.");
 
         if (kafkaServer == null || kafkaTopic == null) {
-            System.out.printf("DEBUG: No valid kafka configuration.\n");
+            logger.error("No valid kafka configuration.");
             return;
         }
         
@@ -82,30 +88,30 @@ public class SpringTest4Kafka extends Thread {
         
         while (true) {
 
-            System.out.printf("DEBUG: calling KafkaConsumer.poll().\n");
+            logger.debug("calling KafkaConsumer.poll().");
 
             ConsumerRecords<String, String> consumerRecords =
                 consumer.poll(poll_interval);
 
-            System.out.printf("DEBUG: poll() returned. count: %d\n",
+            logger.debug("poll() returned. count: {}",
                               consumerRecords.count());
 
             for (ConsumerRecord<String, String> record:
                      consumerRecords.records(kafkaTopic)) {
                 
-                System.out.printf("DEBUG: CR (%d, %d, %d, %d) %s\n",
-                                  record.key(),
-                                  record.value().length(),
-                                  record.partition(),
-                                  record.offset(),
-                                  record.value());
+                logger.debug("ConsumerRecord ({}, {}, {}, {}) {}",
+                             record.key(),
+                             record.value().length(),
+                             record.partition(),
+                             record.offset(),
+                             record.value());
                 //hand the message via BlockingQueue
                 try {
                     queue.put(record.value());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                System.out.printf("DEBUG: size of queue: %d\n", queue.size());
+                logger.debug("size of queue: {}", queue.size());
             }
         }
     }

@@ -1,5 +1,8 @@
 package com.github.thatsdone.junkbox;
     
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Base64;
@@ -23,15 +26,18 @@ import com.github.thatsdone.junkbox.SpringTest4Kafka;
 @RestController
 class SpringTest4Controller {
 
+    private static final Logger logger =
+        LoggerFactory.getLogger(SpringTest4Controller.class);
+    
     @Autowired
     private SpringTest4 springTest4;
 
     
     @GetMapping("/check")
     String check() {
-        System.out.printf("DEBUG: before poll()/take(): size: %d\n", springTest4.getQueueSize());
+        logger.debug("before poll()/take(): size: {}", springTest4.getQueueSize());
         String msg = springTest4.take();
-        System.out.printf("DEBUG: after poll()/take(): size: %d\n", springTest4.getQueueSize());
+        logger.debug("DEBUG: after poll()/take(): size: {}", springTest4.getQueueSize());
         return msg;
     }
 
