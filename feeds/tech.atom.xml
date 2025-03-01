@@ -360,7 +360,7 @@ PGMEは、一般的なPrometheus Exporterと同様にGo言語で書かれてお�
 &lt;p&gt;ESXi ShellはミニマムなLinux Distributionなわけで、確認したところ Python3 も入っていました。&lt;/p&gt;
 &lt;p&gt;また、Python には標準で &lt;a href="https://docs.python.org/3/library/http.server.html"&gt;http.server&lt;/a&gt;がついてきます。&lt;/p&gt;
 &lt;p&gt;…ということは、PGMEと同等の処理処理を、http.serverのGET method処理ルーチンで動かしてやればいいじゃん…と思い至って作ってみたものが以下においてあります。&lt;/p&gt;
-&lt;p&gt;https://github.com/thatsdone/junkbox/blob/master/python/PyPGME.py&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/thatsdone/PyPGME"&gt;https://github.com/thatsdone/PyPGME&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;眺めるとわかるのですが、do_GET() の中で nvidia-smi を呼び出し、結果をparseして、PGME互換のmetricsに整形して返しているだけです。&lt;/p&gt;
 &lt;p&gt;なお、起動引数はこんな感じで&lt;/p&gt;
 &lt;ul&gt;
