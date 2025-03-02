@@ -22,7 +22,24 @@
 &lt;p&gt;&lt;strong&gt;ハマりポイント&lt;/strong&gt;として、上記の項目がでてこないことがあるのだが、私の場合は&lt;strong&gt;paholeがインストールされていなかった&lt;/strong&gt;のが原因だった。&lt;code&gt;sudo apt install pahole&lt;/code&gt; した後で&lt;code&gt;make menuconfig&lt;/code&gt;すると選べるようになる。&lt;/p&gt;
 &lt;p&gt;同じく選べるための詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
 &lt;h2&gt;sched_extで遊ぶには&lt;/h2&gt;
-&lt;p&gt;Linux kernelの src/sched_ext にサンプルが一式ついている。README.mdに書いてある通りの使い方で素直に動くはず。&lt;/p&gt;
+&lt;p&gt;Linux kernelの tools/sched_ext にサンプルが一式ついている。README.mdに書いてある通りの使い方で素直に動く。&lt;/p&gt;
+&lt;p&gt;ビルドして起動したkernelで、無事にsched_extが有効になっているかどうかは sysfs 経由で確認できる。
+&lt;code&gt;/sys/kernel/sched_ext&lt;/code&gt; が存在し、stateの中身で enabled/disabledがわかる。
+以下は初期状態(=disabled)で、これから設定して使う。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;ls&lt;span class="w"&gt; &lt;/span&gt;-al&lt;span class="w"&gt; &lt;/span&gt;/sys/kernel/sched_ext
+total&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
+drwxr-xr-x&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Mar&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;08&lt;/span&gt;:43&lt;span class="w"&gt; &lt;/span&gt;.
+drwxr-xr-x&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;18&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Mar&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;08&lt;/span&gt;:10&lt;span class="w"&gt; &lt;/span&gt;..
+-r--r--r--&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;4096&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Mar&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;08&lt;/span&gt;:25&lt;span class="w"&gt; &lt;/span&gt;enable_seq
+-r--r--r--&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;4096&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Mar&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;08&lt;/span&gt;:25&lt;span class="w"&gt; &lt;/span&gt;hotplug_seq
+-r--r--r--&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;4096&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Mar&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;08&lt;/span&gt;:25&lt;span class="w"&gt; &lt;/span&gt;nr_rejected
+-r--r--r--&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;4096&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Mar&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;08&lt;/span&gt;:25&lt;span class="w"&gt; &lt;/span&gt;state
+-r--r--r--&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;root&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;4096&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Mar&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;08&lt;/span&gt;:25&lt;span class="w"&gt; &lt;/span&gt;switch_all
+$&lt;span class="w"&gt; &lt;/span&gt;cat&lt;span class="w"&gt;   &lt;/span&gt;/sys/kernel/sched_ext/state
+disabled
+$
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
 &lt;p&gt;以下、参考リンク&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href="https://www.kernel.org/doc/html/next/scheduler/sched-ext.html"&gt;https://www.kernel.org/doc/html/next/scheduler/sched-ext.html&lt;/a&gt;&lt;/li&gt;

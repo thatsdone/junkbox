@@ -86,7 +86,24 @@
 <p><strong>ハマりポイント</strong>として、上記の項目がでてこないことがあるのだが、私の場合は<strong>paholeがインストールされていなかった</strong>のが原因だった。<code>sudo apt install pahole</code> した後で<code>make menuconfig</code>すると選べるようになる。</p>
 <p>同じく選べるための詳細条件の確認は kernel/Kconfig.preempt を参照。</p>
 <h2>sched_extで遊ぶには</h2>
-<p>Linux kernelの src/sched_ext にサンプルが一式ついている。README.mdに書いてある通りの使い方で素直に動くはず。</p>
+<p>Linux kernelの tools/sched_ext にサンプルが一式ついている。README.mdに書いてある通りの使い方で素直に動く。</p>
+<p>ビルドして起動したkernelで、無事にsched_extが有効になっているかどうかは sysfs 経由で確認できる。
+<code>/sys/kernel/sched_ext</code> が存在し、stateの中身で enabled/disabledがわかる。
+以下は初期状態(=disabled)で、これから設定して使う。</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ls<span class="w"> </span>-al<span class="w"> </span>/sys/kernel/sched_ext
+total<span class="w"> </span><span class="m">0</span>
+drwxr-xr-x<span class="w">  </span><span class="m">2</span><span class="w"> </span>root<span class="w"> </span>root<span class="w">    </span><span class="m">0</span><span class="w"> </span>Mar<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">08</span>:43<span class="w"> </span>.
+drwxr-xr-x<span class="w"> </span><span class="m">18</span><span class="w"> </span>root<span class="w"> </span>root<span class="w">    </span><span class="m">0</span><span class="w"> </span>Mar<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">08</span>:10<span class="w"> </span>..
+-r--r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">4096</span><span class="w"> </span>Mar<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">08</span>:25<span class="w"> </span>enable_seq
+-r--r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">4096</span><span class="w"> </span>Mar<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">08</span>:25<span class="w"> </span>hotplug_seq
+-r--r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">4096</span><span class="w"> </span>Mar<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">08</span>:25<span class="w"> </span>nr_rejected
+-r--r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">4096</span><span class="w"> </span>Mar<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">08</span>:25<span class="w"> </span>state
+-r--r--r--<span class="w">  </span><span class="m">1</span><span class="w"> </span>root<span class="w"> </span>root<span class="w"> </span><span class="m">4096</span><span class="w"> </span>Mar<span class="w">  </span><span class="m">2</span><span class="w"> </span><span class="m">08</span>:25<span class="w"> </span>switch_all
+$<span class="w"> </span>cat<span class="w">   </span>/sys/kernel/sched_ext/state
+disabled
+$
+</code></pre></div>
+
 <p>以下、参考リンク</p>
 <ul>
 <li><a href="https://www.kernel.org/doc/html/next/scheduler/sched-ext.html">https://www.kernel.org/doc/html/next/scheduler/sched-ext.html</a></li>
