@@ -96,7 +96,7 @@ if __name__ == "__main__":
         url = "https://slack.com/api/chat.postMessage"
         msg = '%s' % (args.message)
         payload['channel'] = channel
-        payload['text'] = message
+        payload['text'] = msg
 
     elif args.operation == 'delete':
         # See https://api.slack.com/methods/chat.delete
