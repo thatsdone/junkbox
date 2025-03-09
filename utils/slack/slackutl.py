@@ -80,14 +80,16 @@ if __name__ == "__main__":
     payload = dict()
 
     if args.operation == 'history':
+        # See https://api.slack.com/methods/conversations.history
         if not ts:
-            print('Specify ts (timestamp) of the message to delete.')
+            print('Specify ts (timestamp) of the newest message to begin.')
             sys.exit()
         url = "https://slack.com/api/conversations.history"
         payload['channel']  = channel
         payload['ts']  = ts
 
     elif args.operation == 'write':
+        # See https://api.slack.com/methods/chat.postMessage
         if not args.message:
             print('Specify message to write.')
             sys.exit()
@@ -97,6 +99,7 @@ if __name__ == "__main__":
         payload['text'] = message
 
     elif args.operation == 'delete':
+        # See https://api.slack.com/methods/chat.delete
         if not ts:
             print('Specify ts (timestamp) of the message to delete.')
             sys.exit()
@@ -105,6 +108,8 @@ if __name__ == "__main__":
         payload['ts'] = ts
 
     elif args.operation == 'generic':
+        # See https://api.slack.com/methods
+        # You need to specify API endpoint URL by yourself.
         if not args.url:
             print('Specify at least url via -u.')
             sys.exit()
