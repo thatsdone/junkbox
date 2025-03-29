@@ -11,6 +11,8 @@
 #   * 2025/03/15 v0.1 Initial version
 # Authour:
 #   Masanori Itoh <masanori.itoh@gmail.com>
+# References:
+#   * https://docs.docker.com/docker-hub/usage/pulls/#view-hourly-pull-rate-and-limit
 #
 import sys, os, getopt, errno
 import argparse
@@ -46,9 +48,9 @@ class DockerAPIRateLimit(BaseHTTPRequestHandler):
 
 
         (status_code, ratelimit, remaining, source) = get_rate_limit()
-        #print('%s\n%s\n%s\n%s\n' % (status_code, ratelimit, remaining, source))
+
         msg = ''
-        if status_code == 200:
+        if status_code == HTTPStatus.OK:
             msg += "# TYPE docker_api_ratelimit_limit gauge\n"
             msg += "# HELP docker_api_ratelimit_limit\n"
             msg += "docker_api_ratelimit_limit{source=\"%s\"} %d\n" % (source, int(ratelimit.split(';')[0]))
@@ -65,13 +67,13 @@ def get_rate_limit():
 
     # get a token
     token_url = 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:ratelimitpreview/test:pull'
-    r = requests.get(token_url)#,verify=False)
+    r = requests.get(token_url)
     rr = json.loads(r.text)
     # query rate limit status
     headers = {}
     headers['Authorization'] = "Bearer %s" % (rr['token'])
     rate_url = 'https://registry-1.docker.io/v2/ratelimitpreview/test/manifests/latest'
-    rrr = requests.get(rate_url, headers=headers)#,verify=False)
+    rrr = requests.get(rate_url, headers=headers)
     if rrr.status_code == 200:
         return rrr.status_code, rrr.headers['ratelimit-limit'], rrr.headers['ratelimit-remaining'], rrr.headers['docker-ratelimit-source']
     else:
