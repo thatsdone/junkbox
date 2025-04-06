@@ -2,15 +2,19 @@
 <feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2024-11-20T18:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Linux Kernel Build TIPs</title><link href="https://thatsdone.github.io/junkbox/linux_kernel_build_tips.html" rel="alternate"></link><published>2024-11-20T18:10:00+09:00</published><updated>2024-11-20T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-11-20:/junkbox/linux_kernel_build_tips.html</id><summary type="html">&lt;p&gt;Linux Kernel Build時のハマリポイント&lt;/p&gt;</summary><content type="html">&lt;p&gt;ある意味、先月の&lt;a href="https://thatsdone.github.io/junkbox/manage_grub_default.html"&gt;この記事&lt;/a&gt;の続き。&lt;/p&gt;
 &lt;p&gt;6.12がリリースされたので、PREEMPT_RTとsched_extを試そうとしていて、必要なCONFIGを有効にするのに
 少し見落としがあったのでメモ。&lt;/p&gt;
+&lt;p&gt;※'25/04/06: この記事を書いた当時に6.12で遊び、その後6.13、6.14ときて、RUSTでも気づいたことがあったので追記。&lt;/p&gt;
 &lt;h2&gt;前提&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;ビルド環境: Ubuntu 24.04.1(amd64)&lt;/li&gt;
-&lt;li&gt;ツール類: 基本的にUbuntu bund版&lt;/li&gt;
+&lt;li&gt;ツール類: 基本的にUbuntu bundle版&lt;ul&gt;
+&lt;li&gt;ただし、後述のRust関連だけ、upstreamから持ってきている&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2&gt;PREEMPT_RTの有効化&lt;/h2&gt;
 &lt;p&gt;長らく開発が続いてきて、とうとう&lt;a href="https://www.managedserver.eu/preempt_rt-real-time-linux-and-finally-part-of-the-linux-kernel/"&gt;6.12でmerge&lt;/a&gt;されて話題になっていたReal-Time機能のPREEMPT_RTを使ってみたいと思ったのが発端。&lt;/p&gt;
-&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、冒頭の"General Setup"の中で、私の条件では上から18番目、"BPF Subsystem"の次に出てくる
-"Preemption Model"が該当する。&lt;/p&gt;
+&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、冒頭の"General Setup"の中で、私の条件では上から18番目、
+"BPF Subsystem"の次に出てくる"Preemption Model"が該当する。&lt;/p&gt;
 &lt;p&gt;"Fully Preemptive Kernel (Real-Time)" を選択すればよい。&lt;/p&gt;
 &lt;p&gt;選べる詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
 &lt;h2&gt;PREEMPT_RTで遊ぶには&lt;/h2&gt;
@@ -18,7 +22,7 @@
 例えば&lt;a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/rt-tests"&gt;rt-tests&lt;/a&gt;に含まれる&lt;a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/cyclictest/start"&gt;cyclictest&lt;/a&gt;とかがよくつかわれるようだ。&lt;/p&gt;
 &lt;h2&gt;sched_ext(CONFIG_SCHED_CLASS_EXT)の有効化&lt;/h2&gt;
 &lt;p&gt;sched_extを使うと、eBPFでオレスケジューラを書いたりすることができる。&lt;/p&gt;
-&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、PREEMPT_RTと同じく "General Setup"の中で、"Preemption Model"の2つ下に出てくる"Extensible Scheduling Class"が該当する。&lt;/p&gt;
+&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、PREEMPT_RTと同じく "General setup"の中で、"Preemption Model"の2つ下に出てくる"Extensible Scheduling Class"が該当する。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;ハマりポイント&lt;/strong&gt;として、上記の項目がでてこないことがあるのだが、私の場合は&lt;strong&gt;paholeがインストールされていなかった&lt;/strong&gt;のが原因だった。&lt;code&gt;sudo apt install pahole&lt;/code&gt; した後で&lt;code&gt;make menuconfig&lt;/code&gt;すると選べるようになる。&lt;/p&gt;
 &lt;p&gt;同じく選べるための詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
 &lt;h2&gt;sched_extで遊ぶには&lt;/h2&gt;
@@ -45,8 +49,47 @@ $
 &lt;li&gt;&lt;a href="https://www.kernel.org/doc/html/next/scheduler/sched-ext.html"&gt;https://www.kernel.org/doc/html/next/scheduler/sched-ext.html&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="https://github.com/sched-ext/scx"&gt;https://github.com/sched-ext/scx&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
+&lt;h2&gt;Rustで遊ぶには&lt;/h2&gt;
+&lt;p&gt;私は仕事で機能安全が求められるような組み込みとセンタ側の両方に足を突っ込んでいるのだが、機能安全界隈でもRustが話題になっている関係もあって、遅ればせながら(kernelでも)Rustで遊んでみることにした。&lt;/p&gt;
+&lt;p&gt;以下、.configに必要な設定を入れるまでの道のり。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ツールチェーン関連&lt;/li&gt;
+&lt;li&gt;rustコンパイラ/LLVM&lt;ul&gt;
+&lt;li&gt;もちろんツールチェーンが必要になる。以下で配っているstable用のものを使うのが安全だと思う。&lt;/li&gt;
+&lt;li&gt;https://mirrors.edge.kernel.org/pub/tools/llvm/rust/&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;bindgen&lt;ul&gt;
+&lt;li&gt;x86_64では、当時利用していた llvm-19.1.7-rust-1.85.0-x86_64 付属の bindgenでは不具合があって必要な項目が出てこず選択できなかったため、下記のbindgenのreleaseから 0.71.1 を持ってきて入れ替えて使った&lt;ul&gt;
+&lt;li&gt;https://github.com/rust-lang/rust-bindgen/wreleases&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;arm64では、llvm-19.1.7-rust-1.86.0-aarch64 (rustのversionが0.01違うのに注意)にはそもそもbindgenが含まれていなかった。Ubuntu 24.04付属の bindgen は0.66系で古く、同じく不具合を起こすため、上記repositoryをcloneの上 &lt;code&gt;cargo install bindgen-cli&lt;/code&gt; して 0.71.1 (aarch64)を入れた。(PATHの更新に注意)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;CONFIG_MODVERSIONS&lt;ul&gt;
+&lt;li&gt;少なくとも6.14の時点では、Rustによるkernel moduleを使いたい場合はloadable kernelのバージョニングを無効にする必要がある&lt;/li&gt;
+&lt;li&gt;"Enable loadable module support" -&amp;gt; "Module versioning Support" のチェックをはずす&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;CONFIG_RUST&lt;ul&gt;
+&lt;li&gt;"General setup" -&amp;gt;  "Rust support" (6.14時点では一番下から２番目)をチェック&lt;/li&gt;
+&lt;li&gt;"Rust support"が出てこない場合、前述のツールチェーンが要件を満たしてない場合か、CONFIG_MODVERSIONS等の依存config設定に不整合がある場合がある。その他の条件を確認するには init/Kconfig の "config RUST" のところを参照のこと。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;CONFIG_SAMPLES_RUST&lt;ul&gt;
+&lt;li&gt;"General setup" -&amp;gt; "Kernel hacking" -&amp;gt; "Sample kernel code" -&amp;gt; "Rust samples" にチェックをつけると samples/rust 以下のサンプルがビルドされる。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2&gt;そのほか&lt;/h2&gt;
-&lt;p&gt;もっとあったような気がするので別途追記/更新予定。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] How to manage GRUB default kernel</title><link href="https://thatsdone.github.io/junkbox/manage_grub_default.html" rel="alternate"></link><published>2024-10-14T16:52:00+09:00</published><updated>2024-10-14T16:52:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-10-14:/junkbox/manage_grub_default.html</id><summary type="html">&lt;p&gt;GRUBのbootに使われるkernelを管理する&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、かなり久しぶりにvanilla kernelをビルドする機会があり、
+&lt;p&gt;もっとあったような気がするので別途追記/更新予定。&lt;/p&gt;
+&lt;p&gt;CONFIG_DEBUG_INFO_BTF も有効にしたのだが、SCXで求められるんだっけな...(To be updated)&lt;/p&gt;
+&lt;h2&gt;HISTORY&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;'24/11/20 初出&lt;/li&gt;
+&lt;li&gt;'25/04/06 Rust関連の記述を追記&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] How to manage GRUB default kernel</title><link href="https://thatsdone.github.io/junkbox/manage_grub_default.html" rel="alternate"></link><published>2024-10-14T16:52:00+09:00</published><updated>2024-10-14T16:52:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-10-14:/junkbox/manage_grub_default.html</id><summary type="html">&lt;p&gt;GRUBのbootに使われるkernelを管理する&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、かなり久しぶりにvanilla kernelをビルドする機会があり、
 kernelを切り替えて使いたい場合のGRUBの設定で気づいたことがあったのでメモ。&lt;/p&gt;
 &lt;p&gt;最近...といっても、20.04くらいからだろうか。submenu というものが導入され、昔のノウハウが効かなくなっている模様。&lt;/p&gt;
 &lt;p&gt;2024/10/14時点での情報。&lt;/p&gt;

@@ -66,15 +66,19 @@
       <p>ある意味、先月の<a href="https://thatsdone.github.io/junkbox/manage_grub_default.html">この記事</a>の続き。</p>
 <p>6.12がリリースされたので、PREEMPT_RTとsched_extを試そうとしていて、必要なCONFIGを有効にするのに
 少し見落としがあったのでメモ。</p>
+<p>※'25/04/06: この記事を書いた当時に6.12で遊び、その後6.13、6.14ときて、RUSTでも気づいたことがあったので追記。</p>
 <h2>前提</h2>
 <ul>
 <li>ビルド環境: Ubuntu 24.04.1(amd64)</li>
-<li>ツール類: 基本的にUbuntu bund版</li>
+<li>ツール類: 基本的にUbuntu bundle版<ul>
+<li>ただし、後述のRust関連だけ、upstreamから持ってきている</li>
+</ul>
+</li>
 </ul>
 <h2>PREEMPT_RTの有効化</h2>
 <p>長らく開発が続いてきて、とうとう<a href="https://www.managedserver.eu/preempt_rt-real-time-linux-and-finally-part-of-the-linux-kernel/">6.12でmerge</a>されて話題になっていたReal-Time機能のPREEMPT_RTを使ってみたいと思ったのが発端。</p>
-<p>ビルドにあたって、<code>make menuconfig</code>では、冒頭の"General Setup"の中で、私の条件では上から18番目、"BPF Subsystem"の次に出てくる
-"Preemption Model"が該当する。</p>
+<p>ビルドにあたって、<code>make menuconfig</code>では、冒頭の"General Setup"の中で、私の条件では上から18番目、
+"BPF Subsystem"の次に出てくる"Preemption Model"が該当する。</p>
 <p>"Fully Preemptive Kernel (Real-Time)" を選択すればよい。</p>
 <p>選べる詳細条件の確認は kernel/Kconfig.preempt を参照。</p>
 <h2>PREEMPT_RTで遊ぶには</h2>
@@ -82,7 +86,7 @@
 例えば<a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/rt-tests">rt-tests</a>に含まれる<a href="https://wiki.linuxfoundation.org/realtime/documentation/howto/tools/cyclictest/start">cyclictest</a>とかがよくつかわれるようだ。</p>
 <h2>sched_ext(CONFIG_SCHED_CLASS_EXT)の有効化</h2>
 <p>sched_extを使うと、eBPFでオレスケジューラを書いたりすることができる。</p>
-<p>ビルドにあたって、<code>make menuconfig</code>では、PREEMPT_RTと同じく "General Setup"の中で、"Preemption Model"の2つ下に出てくる"Extensible Scheduling Class"が該当する。</p>
+<p>ビルドにあたって、<code>make menuconfig</code>では、PREEMPT_RTと同じく "General setup"の中で、"Preemption Model"の2つ下に出てくる"Extensible Scheduling Class"が該当する。</p>
 <p><strong>ハマりポイント</strong>として、上記の項目がでてこないことがあるのだが、私の場合は<strong>paholeがインストールされていなかった</strong>のが原因だった。<code>sudo apt install pahole</code> した後で<code>make menuconfig</code>すると選べるようになる。</p>
 <p>同じく選べるための詳細条件の確認は kernel/Kconfig.preempt を参照。</p>
 <h2>sched_extで遊ぶには</h2>
@@ -109,8 +113,47 @@ $
 <li><a href="https://www.kernel.org/doc/html/next/scheduler/sched-ext.html">https://www.kernel.org/doc/html/next/scheduler/sched-ext.html</a></li>
 <li><a href="https://github.com/sched-ext/scx">https://github.com/sched-ext/scx</a></li>
 </ul>
+<h2>Rustで遊ぶには</h2>
+<p>私は仕事で機能安全が求められるような組み込みとセンタ側の両方に足を突っ込んでいるのだが、機能安全界隈でもRustが話題になっている関係もあって、遅ればせながら(kernelでも)Rustで遊んでみることにした。</p>
+<p>以下、.configに必要な設定を入れるまでの道のり。</p>
+<ul>
+<li>ツールチェーン関連</li>
+<li>rustコンパイラ/LLVM<ul>
+<li>もちろんツールチェーンが必要になる。以下で配っているstable用のものを使うのが安全だと思う。</li>
+<li>https://mirrors.edge.kernel.org/pub/tools/llvm/rust/</li>
+</ul>
+</li>
+<li>bindgen<ul>
+<li>x86_64では、当時利用していた llvm-19.1.7-rust-1.85.0-x86_64 付属の bindgenでは不具合があって必要な項目が出てこず選択できなかったため、下記のbindgenのreleaseから 0.71.1 を持ってきて入れ替えて使った<ul>
+<li>https://github.com/rust-lang/rust-bindgen/wreleases</li>
+</ul>
+</li>
+<li>arm64では、llvm-19.1.7-rust-1.86.0-aarch64 (rustのversionが0.01違うのに注意)にはそもそもbindgenが含まれていなかった。Ubuntu 24.04付属の bindgen は0.66系で古く、同じく不具合を起こすため、上記repositoryをcloneの上 <code>cargo install bindgen-cli</code> して 0.71.1 (aarch64)を入れた。(PATHの更新に注意)</li>
+</ul>
+</li>
+<li>CONFIG_MODVERSIONS<ul>
+<li>少なくとも6.14の時点では、Rustによるkernel moduleを使いたい場合はloadable kernelのバージョニングを無効にする必要がある</li>
+<li>"Enable loadable module support" -&gt; "Module versioning Support" のチェックをはずす</li>
+</ul>
+</li>
+<li>CONFIG_RUST<ul>
+<li>"General setup" -&gt;  "Rust support" (6.14時点では一番下から２番目)をチェック</li>
+<li>"Rust support"が出てこない場合、前述のツールチェーンが要件を満たしてない場合か、CONFIG_MODVERSIONS等の依存config設定に不整合がある場合がある。その他の条件を確認するには init/Kconfig の "config RUST" のところを参照のこと。</li>
+</ul>
+</li>
+<li>CONFIG_SAMPLES_RUST<ul>
+<li>"General setup" -&gt; "Kernel hacking" -&gt; "Sample kernel code" -&gt; "Rust samples" にチェックをつけると samples/rust 以下のサンプルがビルドされる。</li>
+</ul>
+</li>
+</ul>
 <h2>そのほか</h2>
 <p>もっとあったような気がするので別途追記/更新予定。</p>
+<p>CONFIG_DEBUG_INFO_BTF も有効にしたのだが、SCXで求められるんだっけな...(To be updated)</p>
+<h2>HISTORY</h2>
+<ul>
+<li>'24/11/20 初出</li>
+<li>'25/04/06 Rust関連の記述を追記</li>
+</ul>
     </div>
   </article>
     </div>
