@@ -13,9 +13,9 @@
 &lt;/ul&gt;
 &lt;h2&gt;PREEMPT_RTの有効化&lt;/h2&gt;
 &lt;p&gt;長らく開発が続いてきて、とうとう&lt;a href="https://www.managedserver.eu/preempt_rt-real-time-linux-and-finally-part-of-the-linux-kernel/"&gt;6.12でmerge&lt;/a&gt;されて話題になっていたReal-Time機能のPREEMPT_RTを使ってみたいと思ったのが発端。&lt;/p&gt;
-&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、冒頭の"General Setup"の中で、私の条件では上から18番目、
-"BPF Subsystem"の次に出てくる"Preemption Model"が該当する。&lt;/p&gt;
-&lt;p&gt;"Fully Preemptive Kernel (Real-Time)" を選択すればよい。&lt;/p&gt;
+&lt;p&gt;ビルドにあたって、&lt;code&gt;make menuconfig&lt;/code&gt;では、冒頭の"General Setup"の中で、
+"BPF Subsystem"の下に出てくる"Preemption Model"...ではなく、
+"Fully Preemptive Kernel (Real-Time)" を選択する。(6.14の場合)&lt;/p&gt;
 &lt;p&gt;選べる詳細条件の確認は kernel/Kconfig.preempt を参照。&lt;/p&gt;
 &lt;h2&gt;PREEMPT_RTで遊ぶには&lt;/h2&gt;
 &lt;p&gt;realtime taskを動かせばよいのだが、
@@ -82,13 +82,37 @@ $
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
+&lt;h2&gt;Ubuntuの /boot/config-* を流用する場合の注意&lt;/h2&gt;
+&lt;p&gt;私は普段はUbuntuの上で生活している。この関係で新しいkernelを試す時もUbuntuの上になる。&lt;/p&gt;
+&lt;p&gt;そうすると、.config もあまりベースと違うと動くはずのものが動かなくなったりするため、/boot/config-* を流用
+することが多い。&lt;/p&gt;
+&lt;p&gt;この場合の注意として、以下の２つのキーを無効にする(""を設定)必要がある。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;SYSTEM_TRUSTED_KEYS&lt;/li&gt;
+&lt;li&gt;CONFIG_SYSTEM_REVOCATION_KEYS&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a href="https://askubuntu.com/questions/1329538/compiling-kernel-5-11-11-and-later"&gt;参考記事&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;なお、上記の参考記事によると make menuconfig してできあがった .config を書き換えればよいようなコメントがついているのだが、少なくとも6.14の場合はもういちど make menuconfig する必要があった。(設定はなにもいじらないがとにかく保存して終了)&lt;/p&gt;
+&lt;h2&gt;kernelビルドに必要なパッケージ&lt;/h2&gt;
+&lt;p&gt;私は、開発環境用にUbuntuでサーバを作る場合、とりあえず build-essentialとdevscriptsを入れる。
+kernelをビルドする際にこれでも足りないものを列挙しておく。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;libncurses-dev&lt;/li&gt;
+&lt;li&gt;flex&lt;/li&gt;
+&lt;li&gt;bison&lt;/li&gt;
+&lt;li&gt;libelf-dev&lt;/li&gt;
+&lt;li&gt;libssl-dev&lt;/li&gt;
+&lt;li&gt;pahole (前述の通り)&lt;/li&gt;
+&lt;li&gt;Rust/LLVMのツールチェーン (前述の通り)&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2&gt;そのほか&lt;/h2&gt;
 &lt;p&gt;もっとあったような気がするので別途追記/更新予定。&lt;/p&gt;
-&lt;p&gt;CONFIG_DEBUG_INFO_BTF も有効にしたのだが、SCXで求められるんだっけな...(To be updated)&lt;/p&gt;
+&lt;p&gt;eBPFで気持ちよく遊ぶ都合でCONFIG_DEBUG_INFO_BTFも有効にしたのだが、これはSCXで求められるんだっけな...(To be updated)&lt;/p&gt;
 &lt;h2&gt;HISTORY&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;'24/11/20 初出&lt;/li&gt;
 &lt;li&gt;'25/04/06 Rust関連の記述を追記&lt;/li&gt;
+&lt;li&gt;'25/04/13 Ubuntuの config-* を流用する場合の注意と必要パッケージを追記&lt;/li&gt;
 &lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] How to manage GRUB default kernel</title><link href="https://thatsdone.github.io/junkbox/manage_grub_default.html" rel="alternate"></link><published>2024-10-14T16:52:00+09:00</published><updated>2024-10-14T16:52:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-10-14:/junkbox/manage_grub_default.html</id><summary type="html">&lt;p&gt;GRUBのbootに使われるkernelを管理する&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、かなり久しぶりにvanilla kernelをビルドする機会があり、
 kernelを切り替えて使いたい場合のGRUBの設定で気づいたことがあったのでメモ。&lt;/p&gt;
 &lt;p&gt;最近...といっても、20.04くらいからだろうか。submenu というものが導入され、昔のノウハウが効かなくなっている模様。&lt;/p&gt;

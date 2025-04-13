@@ -77,9 +77,9 @@
 </ul>
 <h2>PREEMPT_RTの有効化</h2>
 <p>長らく開発が続いてきて、とうとう<a href="https://www.managedserver.eu/preempt_rt-real-time-linux-and-finally-part-of-the-linux-kernel/">6.12でmerge</a>されて話題になっていたReal-Time機能のPREEMPT_RTを使ってみたいと思ったのが発端。</p>
-<p>ビルドにあたって、<code>make menuconfig</code>では、冒頭の"General Setup"の中で、私の条件では上から18番目、
-"BPF Subsystem"の次に出てくる"Preemption Model"が該当する。</p>
-<p>"Fully Preemptive Kernel (Real-Time)" を選択すればよい。</p>
+<p>ビルドにあたって、<code>make menuconfig</code>では、冒頭の"General Setup"の中で、
+"BPF Subsystem"の下に出てくる"Preemption Model"...ではなく、
+"Fully Preemptive Kernel (Real-Time)" を選択する。(6.14の場合)</p>
 <p>選べる詳細条件の確認は kernel/Kconfig.preempt を参照。</p>
 <h2>PREEMPT_RTで遊ぶには</h2>
 <p>realtime taskを動かせばよいのだが、
@@ -146,13 +146,37 @@ $
 </ul>
 </li>
 </ul>
+<h2>Ubuntuの /boot/config-* を流用する場合の注意</h2>
+<p>私は普段はUbuntuの上で生活している。この関係で新しいkernelを試す時もUbuntuの上になる。</p>
+<p>そうすると、.config もあまりベースと違うと動くはずのものが動かなくなったりするため、/boot/config-* を流用
+することが多い。</p>
+<p>この場合の注意として、以下の２つのキーを無効にする(""を設定)必要がある。</p>
+<ul>
+<li>SYSTEM_TRUSTED_KEYS</li>
+<li>CONFIG_SYSTEM_REVOCATION_KEYS</li>
+</ul>
+<p><a href="https://askubuntu.com/questions/1329538/compiling-kernel-5-11-11-and-later">参考記事</a></p>
+<p>なお、上記の参考記事によると make menuconfig してできあがった .config を書き換えればよいようなコメントがついているのだが、少なくとも6.14の場合はもういちど make menuconfig する必要があった。(設定はなにもいじらないがとにかく保存して終了)</p>
+<h2>kernelビルドに必要なパッケージ</h2>
+<p>私は、開発環境用にUbuntuでサーバを作る場合、とりあえず build-essentialとdevscriptsを入れる。
+kernelをビルドする際にこれでも足りないものを列挙しておく。</p>
+<ul>
+<li>libncurses-dev</li>
+<li>flex</li>
+<li>bison</li>
+<li>libelf-dev</li>
+<li>libssl-dev</li>
+<li>pahole (前述の通り)</li>
+<li>Rust/LLVMのツールチェーン (前述の通り)</li>
+</ul>
 <h2>そのほか</h2>
 <p>もっとあったような気がするので別途追記/更新予定。</p>
-<p>CONFIG_DEBUG_INFO_BTF も有効にしたのだが、SCXで求められるんだっけな...(To be updated)</p>
+<p>eBPFで気持ちよく遊ぶ都合でCONFIG_DEBUG_INFO_BTFも有効にしたのだが、これはSCXで求められるんだっけな...(To be updated)</p>
 <h2>HISTORY</h2>
 <ul>
 <li>'24/11/20 初出</li>
 <li>'25/04/06 Rust関連の記述を追記</li>
+<li>'25/04/13 Ubuntuの config-* を流用する場合の注意と必要パッケージを追記</li>
 </ul>
     </div>
   </article>
