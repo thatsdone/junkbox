@@ -196,16 +196,17 @@ if __name__ == "__main__":
 
     debug = args.debug
     dry_run = args.dry_run
-    target_reweight = args.target_reweight
+    interval = args.interval
     thr_high =args.high_threshold 
     thr_low = args.low_threshold 
+    target_reweight = args.target_reweight
 
     bind_address = args.bind_address
     port = args.port
 
     httpd = HTTPServer((bind_address, port), OSDMon)
 
-    interval = 60
+
     cv = threading.Condition()
     th1 = threading.Thread(target=monitor_thread,
                            args=(cv,
