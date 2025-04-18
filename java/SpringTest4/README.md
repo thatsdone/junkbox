@@ -46,10 +46,15 @@ Note that the BlockingQueue is shared between Kafka poller thread and
 Spring Boot controller thread.
 
 ## References
+* BlockingQueue
+  * https://docs.oracle.com/javase/jp/8/docs/api/java/util/concurrent/BlockingQueue.html
+  * https://docs.oracle.com/javase/jp/8/docs/api/java/util/concurrent/LinkedBlockingQueue.html
+
 * Spring Boot Logging
   * https://docs.spring.io/spring-boot/reference/features/logging.html
+* SLF4J
+  * https://www.slf4j.org/manual.html
 * SLF4J set loglevel
   * https://stackoverflow.com/questions/45997759/how-to-change-slf4j-logging-level
-
-
-
+* logback
+  * https://logback.qos.ch/manual/introduction.html
