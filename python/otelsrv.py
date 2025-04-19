@@ -35,10 +35,14 @@ class OtelSrv(BaseHTTPRequestHandler):
         self.protocol_version = 'HTTP/1.1'
         self.send_response(HTTPStatus.OK)
         self.send_header('Content-Type', 'text/plain')
+        self.send_header('Content-Length', 0)
+        self.end_headers()
+        self.wfile.write(''.encode('utf-8'))
 
         if args.print_headers:
             for elm in self.headers:
                 print(elm, self.headers[elm])
+        return
 
     def do_POST(self):
         global tracer
@@ -117,6 +121,7 @@ if __name__ == "__main__":
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
         from opentelemetry.sdk.trace.export import ConsoleSpanExporter
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        #from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
         from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
         resource = Resource(attributes={'service.name': sys.argv[0]})
         provider = TracerProvider(resource=resource)
