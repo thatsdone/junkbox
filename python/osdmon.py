@@ -156,7 +156,7 @@ def set_osd_reweight(osd_id, reweight):
                continue
            buf += l.decode('utf-8')
 
-        print(time.time(),  ': ceph osd reweight osd.%s %s result: ' % (osd_id), str(reweight))
+        print(time.time(), ': ceph osd reweight osd.%s %s result: ' % (osd_id, str(reweight)))
         print(buf)
 
     else:
