@@ -27,6 +27,7 @@ import subprocess
 import argparse
 import json
 import threading
+import logging
 
 from http.server import BaseHTTPRequestHandler
 from http.server import HTTPServer
@@ -41,7 +42,7 @@ global thr_low
 
 debug = False
 #debug = True
-
+logger = None
 #
 #
 #
@@ -82,13 +83,12 @@ class OSDMon(BaseHTTPRequestHandler):
 
         osds = sorted(data['nodes'], key=lambda x: x['utilization'], reverse=True)
         for osd in osds:
-            if debug:
-                print("%4d %5.2f %d %d %s %s" % (osd['id'],
-                                                 osd['utilization'],
-                                                 osd['kb'],
-                                                 osd['kb_used'],
-                                                 osd['var'],
-                                                 osd['status']))
+            logger.debug("%4d %5.2f %d %d %s %s" % (osd['id'],
+                                                    osd['utilization'],
+                                                    osd['kb'],
+                                                    osd['kb_used'],
+                                                    osd['var'],
+                                                    osd['status']))
 
             msg += "# TYPE ceph_osd_utilization gauge\n"
             msg += "# HELP ceph_osd_utilizationg\n"
@@ -100,8 +100,8 @@ class OSDMon(BaseHTTPRequestHandler):
 #
 #
 def get_osd_df():
-    if debug:
-        print('get_osd_df() called')
+
+    logger.debug('get_osd_df() called')
 
     buf = ''
     if not debug:
@@ -125,23 +125,23 @@ def get_osd_df():
     return data
 
 def check_threshold(data, thr_high, thr_low):
-    if debug:
-        print('check_threshold() called')
+
+    logger.debug('check_threshold() called')
 
     osds = sorted(data['nodes'], key=lambda x: x['utilization'], reverse=True)
     for osd in osds:
         #print("%4d %5.2f %d %d %s %s" % (osd['id'], osd['utilization'], osd['kb'], osd['kb_used'], osd['var'], osd['status']))
         if float(osd['utilization']) >= thr_high and osd['reweight'] == 1:
-            print('Over utilized osd detected: ', osd['id'], osd['utilization'], osd['reweight'], 'setting reweight to: %s' % (target_reweight))
+            logger.info('Over utilized osd detected: %s %s %s: setting reweight to: %s' % (osd['id'], osd['utilization'], osd['reweight'], target_reweight))
             set_osd_reweight(osd['id'], target_reweight)
 
         if float(osd['reweight']) < 1.0 and float(osd['utilization'] < thr_low):
-            print('resetting reweight of osd.%d to 1.0' % (osd['id']))
+            logger.info('resetting reweight of osd.%d to 1.0' % (osd['id']))
             set_osd_reweight(osd['id'], 1.0)
 
 def set_osd_reweight(osd_id, reweight):
-    if debug:
-        print('set_osd_reweight() called')
+
+    logger.debug('set_osd_reweight() called')
 
     buf = ''
     cmd = ['ceph', 'osd', 'reweight', 'osd.%s' % (osd_id), str(reweight)]
@@ -156,24 +156,23 @@ def set_osd_reweight(osd_id, reweight):
                continue
            buf += l.decode('utf-8')
 
-        print(time.time(), ': ceph osd reweight osd.%s %s result: ' % (osd_id, str(reweight)))
-        print(buf)
+        logger.info('ceph osd reweight osd.%s %s result: ' % (osd_id, str(reweight)))
+        logger.info(buf)
 
     else:
         print('set_osd_reweight(): dry_run mode: ', cmd)
 
 
 def monitor_thread(cv, thr_high, thr_low):
-    if debug:
-        print('monitor_thread: started', cv, thr_high, thr_low)
+
+    logger.debug('monitor_thread: started. %s %s %s' % (cv, thr_high, thr_low))
+
     last_log = time.time()
-    print('%s: monitor_thread(): calling get_osd_df() (hourly report)' %(last_log))
+    logger.info('monitor_thread(): calling get_osd_df() (hourly report)')
     while True:
-        if debug:
-            print('ts: ', time.time())
         now = time.time()
         if now - last_log > 3600:
-            print('%s: monitor_thread(): calling get_osd_df() (hourly report)' %(now))
+            logger.info('monitor_thread(): calling get_osd_df() (hourly report)')
             last_log = now
         data = get_osd_df()
         check_threshold(data, thr_high, thr_low)
@@ -192,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--high_threshold', type=float, default=94.0)
     parser.add_argument('-l', '--low_threshold', type=float, default=93.0)
     parser.add_argument('-r', '--target_reweight', type=float, default=0.8)
+    parser.add_argument('-L', '--logfile', default=None)
     args = parser.parse_args()
 
     debug = args.debug
@@ -204,8 +204,19 @@ if __name__ == "__main__":
     bind_address = args.bind_address
     port = args.port
 
-    httpd = HTTPServer((bind_address, port), OSDMon)
+    logger = logging.getLogger('osdmon')
+    log_level = "DEBUG" if args.debug else "INFO"
+    logger.setLevel(log_level)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+    streamHandler = logging.StreamHandler(sys.stdout)
+    streamHandler.setFormatter(formatter)
+    logger.addHandler(streamHandler)
+    if args.logfile:
+        fileHandler = logging.FileHandler(args.logfile)
+        fileHandler.setFormatter(formatter)
+        logger.addHandler(fileHandler)
 
+    httpd = HTTPServer((bind_address, port), OSDMon)
 
     cv = threading.Condition()
     th1 = threading.Thread(target=monitor_thread,
