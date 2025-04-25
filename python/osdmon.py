@@ -163,9 +163,9 @@ def set_osd_reweight(osd_id, reweight):
         print('set_osd_reweight(): dry_run mode: ', cmd)
 
 
-def monitor_thread(cv, thr_high, thr_low):
+def monitor_thread(thr_high, thr_low):
 
-    logger.debug('monitor_thread: started. %s %s %s' % (cv, thr_high, thr_low))
+    logger.debug('monitor_thread: started. %s %s' % (thr_high, thr_low))
 
     last_log = time.time()
     logger.info('monitor_thread(): calling get_osd_df() (hourly report)')
@@ -218,10 +218,8 @@ if __name__ == "__main__":
 
     httpd = HTTPServer((bind_address, port), OSDMon)
 
-    cv = threading.Condition()
     th1 = threading.Thread(target=monitor_thread,
-                           args=(cv,
-                                 args.high_threshold,
+                           args=(args.high_threshold,
                                  args.low_threshold))
     th1.start()
 
