@@ -190,6 +190,46 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 &lt;span class="mi"&gt;203&lt;/span&gt;&lt;span class="w"&gt;         &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;h2&gt;Xenを入れる場合&lt;/h2&gt;
+&lt;p&gt;(2025/04/26追記)&lt;/p&gt;
+&lt;p&gt;最近、事情でxen-system-(amd64|arm64)を使う必要が発生した。
+UbuntuでXenを使う場合、Ubuntu 24.04だとうまくdom0を起動できない…という話もあって、このメモはUbuntu 22.04が前提になるが、
+この件は24.04でXenが動くようにしたとしても構造上、共通だと思われる。&lt;/p&gt;
+&lt;p&gt;発生する問題は、xen-system-amd64(等)を入れると、grub-set-defaultやgrub-rebootでの切り替えが効かなくなる。&lt;/p&gt;
+&lt;p&gt;これは、xen-system-(amd64|arm64)を入れると &lt;code&gt;/etc/default/grub.d/xen.cfg&lt;/code&gt;　が追加され、こんな処理を追加しているためである。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;grep&lt;span class="w"&gt; &lt;/span&gt;-Ev&lt;span class="w"&gt; &lt;/span&gt;^&lt;span class="se"&gt;\(&lt;/span&gt;&lt;span class="c1"&gt;#\|$\)  /etc/default/grub.d/xen.cfg&lt;/span&gt;
+&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Including Xen overrides from /etc/default/grub.d/xen.cfg&amp;quot;&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$XEN_OVERRIDE_GRUB_DEFAULT&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;then&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;WARNING: GRUB_DEFAULT changed to boot into Xen by default!&amp;quot;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;         Edit /etc/default/grub.d/xen.cfg to avoid this warning.&amp;quot;&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nv"&gt;XEN_OVERRIDE_GRUB_DEFAULT&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;
+&lt;span class="k"&gt;fi&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$XEN_OVERRIDE_GRUB_DEFAULT&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;1&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;then&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="nv"&gt;GRUB_DEFAULT&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;$(&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="se"&gt;\&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="nb"&gt;printf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="k"&gt;$(&lt;/span&gt;gettext&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;%s, with Xen hypervisor&amp;quot;&lt;/span&gt;&lt;span class="k"&gt;)&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="se"&gt;\&lt;/span&gt;
+&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$GRUB_DISTRIBUTOR&lt;/span&gt;&lt;span class="s2"&gt; GNU/Linux&amp;quot;&lt;/span&gt;&lt;span class="k"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;私は /etc/default/grub に&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="gh"&gt;#&lt;/span&gt; view /etc/default/grub
+(snip)
+  6 XEN_OVERRIDE_GRUB_DEFAULT=0 　★これ
+  7 #GRUB_DEFAULT=0
+  8 GRUB_DEFAULT=saved
+(snip)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;という行を追加することで対応したが、上記の処理を見てわかる通り、"1" 以外なら何でもよい。&lt;/p&gt;
+&lt;p&gt;最初見落としていたのだが、update-grubする時に以下のようなWARNINGが出ていて、ちゃんとメッセージを読めよという話なのだった。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;(snip)
+Including Xen overrides from /etc/default/grub.d/xen.cfg
+WARNING: GRUB_DEFAULT changed to boot into Xen by default!
+         Edit /etc/default/grub.d/xen.cfg to avoid this warning.
+Generating grub configuration   file    ...
+(snip)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
 &lt;h2&gt;References&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Grubで前に起動したシステムを記憶する&lt;ul&gt;

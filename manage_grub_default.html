@@ -140,6 +140,46 @@ kernelを切り替えて使いたい場合のGRUBの設定で気づいたこと�
 <span class="mi">203</span><span class="w">         </span><span class="p">}</span>
 </code></pre></div>
 
+<h2>Xenを入れる場合</h2>
+<p>(2025/04/26追記)</p>
+<p>最近、事情でxen-system-(amd64|arm64)を使う必要が発生した。
+UbuntuでXenを使う場合、Ubuntu 24.04だとうまくdom0を起動できない…という話もあって、このメモはUbuntu 22.04が前提になるが、
+この件は24.04でXenが動くようにしたとしても構造上、共通だと思われる。</p>
+<p>発生する問題は、xen-system-amd64(等)を入れると、grub-set-defaultやgrub-rebootでの切り替えが効かなくなる。</p>
+<p>これは、xen-system-(amd64|arm64)を入れると <code>/etc/default/grub.d/xen.cfg</code>　が追加され、こんな処理を追加しているためである。</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>grep<span class="w"> </span>-Ev<span class="w"> </span>^<span class="se">\(</span><span class="c1">#\|$\)  /etc/default/grub.d/xen.cfg</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Including Xen overrides from /etc/default/grub.d/xen.cfg&quot;</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$XEN_OVERRIDE_GRUB_DEFAULT</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;WARNING: GRUB_DEFAULT changed to boot into Xen by default!&quot;</span>
+<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;         Edit /etc/default/grub.d/xen.cfg to avoid this warning.&quot;</span>
+<span class="w">        </span><span class="nv">XEN_OVERRIDE_GRUB_DEFAULT</span><span class="o">=</span><span class="m">1</span>
+<span class="k">fi</span>
+<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$XEN_OVERRIDE_GRUB_DEFAULT</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="nv">GRUB_DEFAULT</span><span class="o">=</span><span class="k">$(</span><span class="w"> </span><span class="se">\</span>
+<span class="w">                </span><span class="nb">printf</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>gettext<span class="w"> </span><span class="s2">&quot;%s, with Xen hypervisor&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">                </span><span class="s2">&quot;</span><span class="nv">$GRUB_DISTRIBUTOR</span><span class="s2"> GNU/Linux&quot;</span><span class="k">)</span>
+<span class="k">fi</span>
+</code></pre></div>
+
+<p>私は /etc/default/grub に</p>
+<div class="highlight"><pre><span></span><code><span class="gh">#</span> view /etc/default/grub
+(snip)
+  6 XEN_OVERRIDE_GRUB_DEFAULT=0 　★これ
+  7 #GRUB_DEFAULT=0
+  8 GRUB_DEFAULT=saved
+(snip)
+</code></pre></div>
+
+<p>という行を追加することで対応したが、上記の処理を見てわかる通り、"1" 以外なら何でもよい。</p>
+<p>最初見落としていたのだが、update-grubする時に以下のようなWARNINGが出ていて、ちゃんとメッセージを読めよという話なのだった。</p>
+<div class="highlight"><pre><span></span><code>(snip)
+Including Xen overrides from /etc/default/grub.d/xen.cfg
+WARNING: GRUB_DEFAULT changed to boot into Xen by default!
+         Edit /etc/default/grub.d/xen.cfg to avoid this warning.
+Generating grub configuration   file    ...
+(snip)
+</code></pre></div>
+
 <h2>References</h2>
 <ul>
 <li>Grubで前に起動したシステムを記憶する<ul>
