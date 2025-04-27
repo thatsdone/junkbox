@@ -80,6 +80,24 @@ class OSDMon(BaseHTTPRequestHandler):
     def parse_ceph_osd_df(self, data):
 
         msg = ''
+        logger.debug("summary: avg: %s min_var: %s max_var: %s dev: %s" % (
+            data['summary']['average_utilization'],
+            data['summary']['min_var'],
+            data['summary']['max_var'],
+            data['summary']['dev']))
+
+        msg += "# TYPE ceph_summary_utilization gauge\n"
+        msg += "# HELP ceph_summary_utilization\n"
+        msg += "ceph_summary_utilization %s\n" % (data['summary']['average_utilization'])
+        msg += "# TYPE ceph_summary_min_var gauge\n"
+        msg += "# HELP ceph_summary_min_var\n"
+        msg += "ceph_summary_min_var %s\n" % (data['summary']['min_var'])
+        msg += "# TYPE ceph_summary_max_var gauge\n"
+        msg += "# HELP ceph_summary_max_var\n"
+        msg += "ceph_summary_max_var %s\n" % (data['summary']['max_var'])
+        msg += "# TYPE ceph_summary_dev gauge\n"
+        msg += "# HELP ceph_summary_dev\n"
+        msg += "ceph_summary_dev %s\n" % (data['summary']['dev'])
 
         osds = sorted(data['nodes'], key=lambda x: x['utilization'], reverse=True)
         for osd in osds:
@@ -91,7 +109,7 @@ class OSDMon(BaseHTTPRequestHandler):
                                                     osd['status']))
 
             msg += "# TYPE ceph_osd_utilization gauge\n"
-            msg += "# HELP ceph_osd_utilizationg\n"
+            msg += "# HELP ceph_osd_utilization\n"
             msg += "ceph_osd_utilization{osd_id=\"%s\"} %s\n" % (osd['id'],
                                                                  osd['utilization'])
             # add more metrics if necessary
