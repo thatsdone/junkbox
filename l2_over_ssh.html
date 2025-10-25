@@ -89,7 +89,7 @@ port forwarding とは違い、今度はオプションに -L ではなく -w �
 <p>図の赤い線で結んだssh 接続の間には proxy があっても NATがあってもよい。とにかく、HOST1とHOST2の間でssh接続し、上で説明したオプションを指定して tap を接続してしまうことによって、仮想的に１枚のL2面を作れたことになる。（通信品質についてはいわずもがななので、そこはつっこまないように)</p>
 <p>さらに図のように、作成した tap をbridge で VMの仮想NICに接続してしまえば、踏み台の向こうの環境で動いているVMに対して、L2レベルで接続できるので、例えば HOST2 から HOST1 上のVMに対してDHCPでアドレスを払いだす…等といったことも可能である。
 (HOST2の構成が図とはちょっと違うのだが)実際やってみたら、問題なく動くし、やろうと思えば３ノード以上でフルメッシュ構成にするのも可能である。(ループが発生しないように若干注意が必要だが...)</p>
-<p><img src ="/images/ssh-l2-tunnel.png" alt="ssh-l2-tunnel.png" style="width:640px;"/></p>
+<p><img src ="images/ssh-l2-tunnel.png" alt="ssh-l2-tunnel.png" style="width:640px;"/></p>
 <p>世の中では、VXLAN だの STT だの NVGRE といった L2 over L3 技術や、SPB やら TRILL (やそれらの拡張)といった L2 over L2 技術で百花繚乱状態だが、こういう poor man's solution もあるよということで（笑)</p>
     </div>
   </article>

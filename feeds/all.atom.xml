@@ -307,7 +307,7 @@ port forwarding とは違い、今度はオプションに -L ではなく -w �
 &lt;p&gt;図の赤い線で結んだssh 接続の間には proxy があっても NATがあってもよい。とにかく、HOST1とHOST2の間でssh接続し、上で説明したオプションを指定して tap を接続してしまうことによって、仮想的に１枚のL2面を作れたことになる。（通信品質についてはいわずもがななので、そこはつっこまないように)&lt;/p&gt;
 &lt;p&gt;さらに図のように、作成した tap をbridge で VMの仮想NICに接続してしまえば、踏み台の向こうの環境で動いているVMに対して、L2レベルで接続できるので、例えば HOST2 から HOST1 上のVMに対してDHCPでアドレスを払いだす…等といったことも可能である。
 (HOST2の構成が図とはちょっと違うのだが)実際やってみたら、問題なく動くし、やろうと思えば３ノード以上でフルメッシュ構成にするのも可能である。(ループが発生しないように若干注意が必要だが...)&lt;/p&gt;
-&lt;p&gt;&lt;img src ="/images/ssh-l2-tunnel.png" alt="ssh-l2-tunnel.png" style="width:640px;"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src ="images/ssh-l2-tunnel.png" alt="ssh-l2-tunnel.png" style="width:640px;"/&gt;&lt;/p&gt;
 &lt;p&gt;世の中では、VXLAN だの STT だの NVGRE といった L2 over L3 技術や、SPB やら TRILL (やそれらの拡張)といった L2 over L2 技術で百花繚乱状態だが、こういう poor man's solution もあるよということで（笑)&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] pythonからetcdを使いたい</title><link href="https://thatsdone.github.io/junkbox/python_etcd3linux_hook_systemcall_again.html" rel="alternate"></link><published>2023-09-09T21:00:00+09:00</published><updated>2023-09-09T21:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2023-09-09:/junkbox/python_etcd3linux_hook_systemcall_again.html</id><summary type="html">&lt;p&gt;pythonからetcdを使いたい&lt;/p&gt;</summary><content type="html">&lt;p&gt;今回は、これまでqiitaやらblogspotに記事を書いてきた記事をここに集約するシリーズではなく今年になってから気づいた話。&lt;/p&gt;
 &lt;p&gt;Kubernetesの制御データを置くのにetcdを使っていることもあって、etcdをデータベースにして分散制御するというのはよくある話だと思います。&lt;/p&gt;
 &lt;p&gt;Pythonの場合、&lt;a href="https://pypi.org/"&gt;Pypi&lt;/a&gt;で探してみると、元々...というか、etcd 2.x時代くらいまではこれが&lt;/p&gt;
