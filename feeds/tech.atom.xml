@@ -368,7 +368,7 @@ port forwarding とは違い、今度はオプションに -L ではなく -w �
 &lt;p&gt;このような場合、後述するようなshared object (拡張子が .so なファイル。動的リンクライブラリと呼ばれることもある)を作っておいて、プログラム実行時に環境変数 LD_PRELOAD で指定してやると、やりたいことを実現できる。&lt;/p&gt;
 &lt;p&gt;文章で説明してもわかりにくいと思うので、絵を描いてみた。
 以下の図の左側のように動いていたプログラム(application1)の動きを、実行時に右側のように変えるということである。&lt;/p&gt;
-&lt;p&gt;&lt;img src ="/images/LD_PRELOAD1.png" alt="LD_PRELOAD1.png" style="width:640px;"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src ="images/LD_PRELOAD1.png" alt="LD_PRELOAD1.png" style="width:640px;"/&gt;&lt;/p&gt;
 &lt;p&gt;上図のapplication1 は見ての通り、libFOOBAR.so というライブラリ(shared object)の中の funcA()という関数を使う。(実際のところ、libc.so でもかまわない) やりたいのは、図の右のように、application1 のfuncA()呼び出しを HOOK.so の中の funcA()にすり替え、HOOK.so 版の funcA()の中から前後に必要な処理を行った上で元々の libFOOBAR.so 版の funcA()を呼び出すということである。&lt;/p&gt;
 &lt;h1&gt;hook用shared objectの実際の処理&lt;/h1&gt;
 &lt;p&gt;以下、shared object (上図では HOOK.so)でどんなことをするのか説明する。&lt;/p&gt;
