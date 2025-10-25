@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2024-11-20T18:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Linux Kernel Build TIPs</title><link href="https://thatsdone.github.io/junkbox/linux_kernel_build_tips.html" rel="alternate"></link><published>2024-11-20T18:10:00+09:00</published><updated>2024-11-20T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-11-20:/junkbox/linux_kernel_build_tips.html</id><summary type="html">&lt;p&gt;Linux Kernel Build時のハマリポイント&lt;/p&gt;</summary><content type="html">&lt;p&gt;ある意味、先月の&lt;a href="https://thatsdone.github.io/junkbox/manage_grub_default.html"&gt;この記事&lt;/a&gt;の続き。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-10-25T18:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Hello Zephyr</title><link href="https://thatsdone.github.io/junkbox/hello_zephyr.html" rel="alternate"></link><published>2025-10-25T18:10:00+09:00</published><updated>2025-10-25T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-10-25:/junkbox/hello_zephyr.html</id><summary type="html">&lt;p&gt;Zephyrはじめました&lt;/p&gt;</summary><content type="html">&lt;p&gt;今年('25)の5月くらいまでさかのぼりますが、RTOSの&lt;a href="https://www.zephyrproject.org/"&gt;Zephyr&lt;/a&gt;をさわりはじめました。&lt;/p&gt;
+&lt;p&gt;しばらく前から趣味で作っている&lt;a href="https://github.com/thatsdone/mpmt/"&gt;CPU負荷発生器&lt;/a&gt;で
+新言語のネタがなくなってきたのと、
+やんごとなき事情(?)で関わっている&lt;a href="https://www.automotivelinux.org/"&gt;AGL&lt;/a&gt;の議論の中で興味を持ったのがきっかけです。&lt;/p&gt;
+&lt;h2&gt;CPU負荷発生器(mpmt)のZephyr版を作ってみる&lt;/h2&gt;
+&lt;p&gt;まず、とりあえずはCPU負荷発生器のmpmtのZephyr版を作ってみました。&lt;/p&gt;
+&lt;p&gt;README.mdは&lt;a href="https://github.com/thatsdone/mpmt/tree/main/zephyr"&gt;こんな感じ&lt;/a&gt;です。
+x86_64とarm64のそれぞれやってみました。&lt;/p&gt;
+&lt;p&gt;kernel threadを使って、指定したcore数を使い切っているなというところまで確認できて、
+いったん満足してしまいました(苦笑)&lt;/p&gt;
+&lt;h2&gt;CAN通信してみる&lt;/h2&gt;
+&lt;p&gt;CPU負荷発生器を作ってみたあと、しばらく別件で忙しくなってお休みしていたのですが、
+AGL方面でZephyrが動くマイコンでCAN通信できることを確認しておこうという話があり、担当することにしました。&lt;/p&gt;
+&lt;p&gt;お題は、コロナがはじまったころに出来心で買ったまま放置していたEspressifのESP32を使っています。&lt;/p&gt;
+&lt;p&gt;中間成果を先日('25/10/20)大阪で開催されたZephyr Project Meetup: Japan, Osakaというイベントで話してきました。
+イベントが&lt;a href="https://connpass.com/event/368403/"&gt;これ&lt;/a&gt;で、
+話した小ネタが&lt;a href="https://speakerdeck.com/thatsdone/esp32-de-canwozephyrdeyatutemita"&gt;これ&lt;/a&gt;です。&lt;/p&gt;
+&lt;p&gt;ESP32とRaspberry Pi Zero W、
+および&lt;a href="https://www.renesas.com/en/support/partners/r-car-consortium/r-car-consortium-proactive-partner-list/rtx-sparrow-hawk"&gt;Renesas R-Car Sparrow Hawk&lt;/a&gt;の2種類のSBCと、
+対向でCAN通信できるところまで確認しています。&lt;/p&gt;
+&lt;h2&gt;今後&lt;/h2&gt;
+&lt;p&gt;上記の小ネタ発表資料にも書きましたが、以下のようなことを考えています。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;AGL付属のCAN負荷発生機の移植&lt;/li&gt;
+&lt;li&gt;Zephyr virtio-can driver (FE/BE)開発のお手伝い&lt;/li&gt;
+&lt;li&gt;UDSライブラリの開発&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;そのほか、ESP32はIoTマイコンとしては比較的ポピュラーな位置づけかなと思うのですが、
+クラウドというかデータセンタ用のサーバでの開発とくらべていろいろ違いがあるな…
+という気付きがあったのでぼちぼちまとめていきたいと思います。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Linux Kernel Build TIPs</title><link href="https://thatsdone.github.io/junkbox/linux_kernel_build_tips.html" rel="alternate"></link><published>2024-11-20T18:10:00+09:00</published><updated>2024-11-20T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2024-11-20:/junkbox/linux_kernel_build_tips.html</id><summary type="html">&lt;p&gt;Linux Kernel Build時のハマリポイント&lt;/p&gt;</summary><content type="html">&lt;p&gt;ある意味、先月の&lt;a href="https://thatsdone.github.io/junkbox/manage_grub_default.html"&gt;この記事&lt;/a&gt;の続き。&lt;/p&gt;
 &lt;p&gt;6.12がリリースされたので、PREEMPT_RTとsched_extを試そうとしていて、必要なCONFIGを有効にするのに
 少し見落としがあったのでメモ。&lt;/p&gt;
 &lt;p&gt;※'25/04/06: この記事を書いた当時に6.12で遊び、その後6.13、6.14ときて、RUSTでも気づいたことがあったので追記。&lt;/p&gt;
