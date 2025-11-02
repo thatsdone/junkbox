@@ -1,5 +1,153 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-02T13:25:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Zephyr generic notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html" rel="alternate"></link><published>2025-11-02T13:25:00+09:00</published><updated>2025-11-02T13:25:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-02:/junkbox/zephyr_generic_notes.html</id><summary type="html">&lt;p&gt;Zephyrの一般的な使い方メモ(ボード非依存)&lt;/p&gt;</summary><content type="html">&lt;p&gt;Zephyrをはじめてみて、有識者のみなさんにいろいろ教えを受けつつ気づいたこと、
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-03T00:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Zephyr ESP32 notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html" rel="alternate"></link><published>2025-11-03T00:10:00+09:00</published><updated>2025-11-03T00:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-03:/junkbox/zephyr_esp32_notes.html</id><summary type="html">&lt;p&gt;ZephyrのESP32固有のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;直近で書いた
+&lt;a href="https://thatsdone.github.io/junkbox/hello_zephyr.html"&gt;Zephyrをはじめました&lt;/a&gt;
+と
+&lt;a href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html"&gt;Zephyrの一般的な使い方メモ(ボード非依存)&lt;/a&gt;
+の記事の後、とりあえずESP32からいきます。&lt;/p&gt;
+&lt;h2&gt;前提&lt;/h2&gt;
+&lt;p&gt;私はEspressifのESP32-WROVER-E というボードを使っています。
+CPUはTensilica XtensaアーキテクチャのLX6というだいぶ古いものです。
+Zephyrのboardページだと&lt;a href="https://docs.zephyrproject.org/latest/boards/espressif/esp32_devkitc/doc/index.html"&gt;ここ&lt;/a&gt;にあるものに対応します。&lt;/p&gt;
+&lt;p&gt;以下、シリーズによってはあてはまらない情報があるかもしれませんが、御承知おきを。&lt;/p&gt;
+&lt;h2&gt;ESP32のCANコントローラ(TWAI)を使いたい&lt;/h2&gt;
+&lt;p&gt;可能です。&lt;/p&gt;
+&lt;p&gt;ただし、少なくとも v4.2.0-4096-g1c1598601b5c 時点では、disabledにされています。
+具体的に言うと以下のあたり。(2025/11/02時点)&lt;/p&gt;
+&lt;p&gt;https://github.com/zephyrproject-rtos/zephyr/blob/main/dts/xtensa/espressif/esp32/esp32_common.dtsi#L438&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="mi"&gt;431&lt;/span&gt;&lt;span class="w"&gt;                 &lt;/span&gt;&lt;span class="n"&gt;twai&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="err"&gt;@&lt;/span&gt;&lt;span class="mf"&gt;3f&lt;/span&gt;&lt;span class="n"&gt;f6b000&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="mi"&gt;432&lt;/span&gt;&lt;span class="w"&gt;                         &lt;/span&gt;&lt;span class="n"&gt;compatible&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;espressif,esp32-twai&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="mi"&gt;433&lt;/span&gt;&lt;span class="w"&gt;                         &lt;/span&gt;&lt;span class="n"&gt;reg&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="mh"&gt;0x3ff6b000&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DT_SIZE_K&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="mi"&gt;434&lt;/span&gt;&lt;span class="w"&gt;                         &lt;/span&gt;&lt;span class="n"&gt;interrupts&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;TWAI_INTR_SOURCE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;IRQ_DEFAULT_PRIORITY&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="mi"&gt;435&lt;/span&gt;&lt;span class="w"&gt;                         &lt;/span&gt;&lt;span class="n"&gt;interrupt&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;parent&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;intc&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="mi"&gt;436&lt;/span&gt;&lt;span class="w"&gt;                         &lt;/span&gt;&lt;span class="n"&gt;clocks&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;clock&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ESP32_TWAI_MODULE&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="mi"&gt;437&lt;/span&gt;&lt;span class="w"&gt;                         &lt;/span&gt;&lt;span class="n"&gt;status&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;quot;disabled&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;#&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;★&lt;/span&gt;&lt;span class="n"&gt;disabledになっている&lt;/span&gt;&lt;span class="err"&gt;★&lt;/span&gt;
+&lt;span class="mi"&gt;438&lt;/span&gt;&lt;span class="w"&gt;                 &lt;/span&gt;&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;このため、overlayファイルを作ってオーバーライドしてあげる必要があります。
+やり方は&lt;a href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html"&gt;前の記事&lt;/a&gt;を参照してください。&lt;/p&gt;
+&lt;h2&gt;ESP32でCAN通信をしたい&lt;/h2&gt;
+&lt;p&gt;可能です。&lt;/p&gt;
+&lt;p&gt;ただし、ESP32はCANのコントローラしか内蔵していないので、CANトランシーバーを接続してあげる必要があります。&lt;/p&gt;
+&lt;p&gt;私は、MicrochipのCAN-FD対応のトランシーバーのMCP2562FDを使い、
+&lt;a href="https://ameblo.jp/fc2miha/entry-12833773100.html"&gt;この記事&lt;/a&gt;で紹介されている回路を組み、対向側としてRaspberry Pi Zero W + DSP SH-C31AおよびRenesas R-Car V4Hを搭載したSBCの
+&lt;a href="https://www.renesas.com/en/support/partners/r-car-consortium/r-car-consortium-proactive-partner-list/rtx-sparrow-hawk"&gt;Sparrow Hawk&lt;/a&gt;
+で動作確認しました。
+MCP2562FDは&lt;a href="https://akizukidenshi.com/catalog/g/g114383/"&gt;秋月で200円(当時)&lt;/a&gt;でした。&lt;/p&gt;
+&lt;p&gt;2025/10/20に大阪で開催されたZephyr Project Meetup: Osaka, Japanで話した
+&lt;a href="https://speakerdeck.com/thatsdone/esp32-de-canwozephyrdeyatutemita"&gt;ネタ&lt;/a&gt;
+はこの話をしています。&lt;/p&gt;
+&lt;p&gt;会場で「普通はMicrochipのトランシーバを使うのか？」という質問を受けましたが、
+CANは枯れた規格なので、基本的には何でも動くのではないかと思います。NXPのチップとか。動作電圧とかは注意ですが...&lt;/p&gt;
+&lt;h2&gt;CANデバイスの状態を確認したい&lt;/h2&gt;
+&lt;p&gt;微妙です。(...だと思います(4.2.0時点))&lt;/p&gt;
+&lt;p&gt;prj.confでCONFIG_CAN_SHELLを有効化(&lt;code&gt;=y&lt;/code&gt;)すると使えるようになる
+shellのCANサポート機能を使い、&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;uart:~$ can show DEVICE_ID
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;等とやるとトランシーバーの状態まで表示できます。
+使えるDEVICE_IDは、省略して &lt;code&gt;can show&lt;/code&gt; とやると一覧表示されます。&lt;/p&gt;
+&lt;p&gt;以下は can show DEVICE_IDしてみた時のログの例になりますが、
+外付けのCAN transceiverの場合は、ESP32とは関係なく、もうひと手間加えてあげないと、
+Zephyr側で認識してくれないように思います。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;west&lt;span class="w"&gt; &lt;/span&gt;espressif&lt;span class="w"&gt; &lt;/span&gt;monitor
+&lt;span class="o"&gt;(&lt;/span&gt;snip&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="m"&gt;00&lt;/span&gt;:00:00.175,000&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;dbg&amp;gt;&lt;span class="w"&gt; &lt;/span&gt;can_sja1000:&lt;span class="w"&gt; &lt;/span&gt;can_sja1000_init:&lt;span class="w"&gt; &lt;/span&gt;initial&lt;span class="w"&gt; &lt;/span&gt;sample&lt;span class="w"&gt; &lt;/span&gt;point&lt;span class="w"&gt; &lt;/span&gt;error:&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;
+***&lt;span class="w"&gt; &lt;/span&gt;Booting&lt;span class="w"&gt; &lt;/span&gt;Zephyr&lt;span class="w"&gt; &lt;/span&gt;OS&lt;span class="w"&gt; &lt;/span&gt;build&lt;span class="w"&gt; &lt;/span&gt;v4.2.0-4096-g1c1598601b5c&lt;span class="w"&gt; &lt;/span&gt;***
+&lt;span class="o"&gt;(&lt;/span&gt;snip&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;いきなり余談ですが...&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;ESP32の場合は westの拡張が入っていて &lt;code&gt;west espressif monitor&lt;/code&gt; とかできるので便利です&lt;/li&gt;
+&lt;li&gt;上記をみるとESP32が内蔵するCANコントローラはNXPのSJA1000互換のIPを使っているものと想像できます。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;以下、状態表示してみた結果。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nl"&gt;uart&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="n"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;show&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="mf"&gt;@3ff&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="n"&gt;b000&lt;/span&gt;
+&lt;span class="n"&gt;core&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;clock&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="mi"&gt;40000000&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Hz&lt;/span&gt;
+&lt;span class="n"&gt;max&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bitrate&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="mi"&gt;1000000&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;bps&lt;/span&gt;
+&lt;span class="n"&gt;max&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;filters&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;
+&lt;span class="n"&gt;max&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ext&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;filters&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;5&lt;/span&gt;
+&lt;span class="nl"&gt;capabilities&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;normal&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;loopback&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;listen&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;only&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;one&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;shot&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;triple&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;sampling&lt;/span&gt;
+&lt;span class="nl"&gt;mode&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;            &lt;/span&gt;&lt;span class="n"&gt;normal&lt;/span&gt;
+&lt;span class="nl"&gt;state&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;           &lt;/span&gt;&lt;span class="n"&gt;error&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;active&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;ここのstate:はCANコントローラの状態です。&lt;code&gt;error-&lt;/code&gt;というprefixが気になるのですが、コードを眺める限りは、これで正常に初期化できているということのようです。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;rx errors:       0
+tx errors:       0
+timing:          sjw 1..4, prop_seg 0..0, phase_seg1 1..16, phase_seg2 1..8, prescaler 1..64
+transceiver:     passive/none
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;次にここ。transceiver: が &lt;code&gt;passive/none&lt;/code&gt; という状態になっていて、トランシーバの状態が取れない模様...うん？&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;statistics&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;bit&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;errors&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;bit0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;errors&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;bit1&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;errors&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;stuff&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;errors&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;crc&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;errors&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;form&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;errors&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;ack&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;errors&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;rx&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;overruns&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;&lt;span class="w"&gt;   &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;しかし、このまま送信処理をしてみると、以下のように無事に送信処理が終わっている!?&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nl"&gt;uart&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="n"&gt;$&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;send&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;can&lt;/span&gt;&lt;span class="mf"&gt;@3ff&lt;/span&gt;&lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="n"&gt;b000&lt;/span&gt;&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="mi"&gt;234&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;56&lt;/span&gt;
+&lt;span class="n"&gt;enqueuing&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CAN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;#&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;with&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;standard&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;11&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;bit&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CAN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ID&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mh"&gt;0x234&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;RTR&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CAN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;FD&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;BRS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;DLC&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;
+&lt;span class="n"&gt;CAN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;frame&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;#&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;successfully&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sent&lt;/span&gt;
+&lt;span class="nl"&gt;uart&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;~&lt;/span&gt;&lt;span class="n"&gt;$&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;このログを採取した際、CANバスの対向側にRaspberry Pi Zero W+DSD SH-C31Aをつないでおり、実際にデータが流れていることを確認しています。&lt;/p&gt;
+&lt;p&gt;それで、上記transceiverの表示のところは、ソースの該当部分を眺めると、deviceに対応する管理構造体がない(＝pointerがNULL)だとこういう表示になるようです。&lt;/p&gt;
+&lt;p&gt;と、いうことは...&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;dtsで何かtransceiver用の記述をしてあげないといけない？&lt;/li&gt;
+&lt;li&gt;後述のCAN Busの状態をGPIOで制御したい場合と同様に、GPIO用のpin定義のついでに)deviceも書かないといけない？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;...とか想像できますが、まだ裏がとれていません。&lt;/p&gt;
+&lt;p&gt;あとは、statistics: のところ、数字が入ってくれるのかどうか、まだ確認できていません。&lt;/p&gt;
+&lt;p&gt;うーん...&lt;/p&gt;
+&lt;h2&gt;CAN Busの状態を制御したい(BUS Stopさせたり戻したりとか)&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;can_transceiver_enable()&lt;/code&gt; というAPIを使って可能(...なはず)です。
+CANコントローラへの指示ではなく、トランシーバのSTBY(だったり、チップによってはSだったりしますが...)GPIOでピンの値を制御することになります。(はずです)&lt;/p&gt;
+&lt;p&gt;...とはいえ上記に書いたように、何かおまじないが必用...と思われます。&lt;/p&gt;
+&lt;p&gt;以下、参考。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CAN transceiverまわりの説明&lt;ul&gt;
+&lt;li&gt;https://docs.zephyrproject.org/latest/hardware/peripherals/can/transceiver.html&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;CAN transceiver APIの説明&lt;ul&gt;
+&lt;li&gt;https://docs.zephyrproject.org/latest/doxygen/html/group__can__transceiver.html&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;ESP32の複数コアを使いたい&lt;/h2&gt;
+&lt;p&gt;可能です。&lt;/p&gt;
+&lt;p&gt;ESP32の場合は、普通のSMPではなく、
+&lt;a href="https://docs.zephyrproject.org/latest/boards/espressif/common/soc-esp32-features.html#asymmetric-multiprocessing-amp"&gt;AMP(Asymmetric Multi-processing)&lt;/a&gt;
+と呼ばれる使い方になるようです。
+ビルドの際に、先頭のコア用のプログラムはprocpu、
+2番目(以降?)のコアがappcpuという名前でターゲット指定することになります。
+sysbuildでブートローダにmcubootを指定し、2番目のコア(前述のappcpu)用のプログラムは &lt;code&gt;remote&lt;/code&gt; というディレクトリにわけて作ることになるようですが、識者によると、ここでも「黒魔術」っぽさがある模様...gkbr&lt;/p&gt;
+&lt;p&gt;複数コアの間の通信や同期には
+&lt;a href="https://docs.zephyrproject.org/latest/hardware/peripherals/ipm.html"&gt;IPM: Inter-Processor Mailbox&lt;/a&gt;
+という仕組みが使えるようになっています。
+IPMを使ったプログラミングの具体例は、zephyr公式のサンプルにも含まれています。ESP32用のものは&lt;a href="https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/drivers/ipm/ipm_esp32"&gt;ここ&lt;/a&gt;にあります。&lt;/p&gt;
+&lt;p&gt;なお、threadを使うだけでは1コアしか使われないことに注意が必要です。(たぶん)&lt;/p&gt;
+&lt;h2&gt;TODO&lt;/h2&gt;
+&lt;p&gt;以下のような確認を行いながら更新してく予定。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;multi-threadを使いたい&lt;/li&gt;
+&lt;li&gt;ESP32のWiFiを使いたい&lt;/li&gt;
+&lt;li&gt;ESP32でhttp_serverを動かしたい&lt;/li&gt;
+&lt;li&gt;gdbでリモート(?)デバッグしたい&lt;/li&gt;
+&lt;li&gt;ESP32にセンサ(I2CとかSPIとか)をつなぎたい&lt;/li&gt;
+&lt;li&gt;...&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] Zephyr generic notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html" rel="alternate"></link><published>2025-11-02T13:25:00+09:00</published><updated>2025-11-02T13:25:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-02:/junkbox/zephyr_generic_notes.html</id><summary type="html">&lt;p&gt;Zephyrの一般的な使い方メモ(ボード非依存)&lt;/p&gt;</summary><content type="html">&lt;p&gt;Zephyrをはじめてみて、有識者のみなさんにいろいろ教えを受けつつ気づいたこと、
 特にボード非依存のメモをまとめる場所にします。(＝断続的に更新していきます)&lt;/p&gt;
 &lt;p&gt;ボード依存の話は別記事で。現状、以下の子たちくらいを予定しています。&lt;/p&gt;
 &lt;ul&gt;

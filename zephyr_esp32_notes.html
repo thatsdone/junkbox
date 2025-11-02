@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] Zephyr ESP32 notes | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="ZephyrのESP32固有のメモ">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] Zephyr ESP32 notes
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2025-11-03T00:10:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Mon 03 November 2025
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>直近で書いた
+<a href="https://thatsdone.github.io/junkbox/hello_zephyr.html">Zephyrをはじめました</a>
+と
+<a href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html">Zephyrの一般的な使い方メモ(ボード非依存)</a>
+の記事の後、とりあえずESP32からいきます。</p>
+<h2>前提</h2>
+<p>私はEspressifのESP32-WROVER-E というボードを使っています。
+CPUはTensilica XtensaアーキテクチャのLX6というだいぶ古いものです。
+Zephyrのboardページだと<a href="https://docs.zephyrproject.org/latest/boards/espressif/esp32_devkitc/doc/index.html">ここ</a>にあるものに対応します。</p>
+<p>以下、シリーズによってはあてはまらない情報があるかもしれませんが、御承知おきを。</p>
+<h2>ESP32のCANコントローラ(TWAI)を使いたい</h2>
+<p>可能です。</p>
+<p>ただし、少なくとも v4.2.0-4096-g1c1598601b5c 時点では、disabledにされています。
+具体的に言うと以下のあたり。(2025/11/02時点)</p>
+<p>https://github.com/zephyrproject-rtos/zephyr/blob/main/dts/xtensa/espressif/esp32/esp32_common.dtsi#L438</p>
+<div class="highlight"><pre><span></span><code><span class="mi">431</span><span class="w">                 </span><span class="n">twai</span><span class="o">:</span><span class="w"> </span><span class="n">can</span><span class="err">@</span><span class="mf">3f</span><span class="n">f6b000</span><span class="w"> </span><span class="p">{</span>
+<span class="mi">432</span><span class="w">                         </span><span class="n">compatible</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;espressif,esp32-twai&quot;</span><span class="p">;</span>
+<span class="mi">433</span><span class="w">                         </span><span class="n">reg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="mh">0x3ff6b000</span><span class="w"> </span><span class="n">DT_SIZE_K</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="mi">434</span><span class="w">                         </span><span class="n">interrupts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">TWAI_INTR_SOURCE</span><span class="w"> </span><span class="n">IRQ_DEFAULT_PRIORITY</span><span class="w"> </span><span class="mi">0</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="mi">435</span><span class="w">                         </span><span class="n">interrupt</span><span class="o">-</span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;&amp;</span><span class="n">intc</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="mi">436</span><span class="w">                         </span><span class="n">clocks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;&amp;</span><span class="n">clock</span><span class="w"> </span><span class="n">ESP32_TWAI_MODULE</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="mi">437</span><span class="w">                         </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;disabled&quot;</span><span class="p">;</span><span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="err">★</span><span class="n">disabledになっている</span><span class="err">★</span>
+<span class="mi">438</span><span class="w">                 </span><span class="p">};</span>
+</code></pre></div>
+
+<p>このため、overlayファイルを作ってオーバーライドしてあげる必要があります。
+やり方は<a href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html">前の記事</a>を参照してください。</p>
+<h2>ESP32でCAN通信をしたい</h2>
+<p>可能です。</p>
+<p>ただし、ESP32はCANのコントローラしか内蔵していないので、CANトランシーバーを接続してあげる必要があります。</p>
+<p>私は、MicrochipのCAN-FD対応のトランシーバーのMCP2562FDを使い、
+<a href="https://ameblo.jp/fc2miha/entry-12833773100.html">この記事</a>で紹介されている回路を組み、対向側としてRaspberry Pi Zero W + DSP SH-C31AおよびRenesas R-Car V4Hを搭載したSBCの
+<a href="https://www.renesas.com/en/support/partners/r-car-consortium/r-car-consortium-proactive-partner-list/rtx-sparrow-hawk">Sparrow Hawk</a>
+で動作確認しました。
+MCP2562FDは<a href="https://akizukidenshi.com/catalog/g/g114383/">秋月で200円(当時)</a>でした。</p>
+<p>2025/10/20に大阪で開催されたZephyr Project Meetup: Osaka, Japanで話した
+<a href="https://speakerdeck.com/thatsdone/esp32-de-canwozephyrdeyatutemita">ネタ</a>
+はこの話をしています。</p>
+<p>会場で「普通はMicrochipのトランシーバを使うのか？」という質問を受けましたが、
+CANは枯れた規格なので、基本的には何でも動くのではないかと思います。NXPのチップとか。動作電圧とかは注意ですが...</p>
+<h2>CANデバイスの状態を確認したい</h2>
+<p>微妙です。(...だと思います(4.2.0時点))</p>
+<p>prj.confでCONFIG_CAN_SHELLを有効化(<code>=y</code>)すると使えるようになる
+shellのCANサポート機能を使い、</p>
+<div class="highlight"><pre><span></span><code>uart:~$ can show DEVICE_ID
+</code></pre></div>
+
+<p>等とやるとトランシーバーの状態まで表示できます。
+使えるDEVICE_IDは、省略して <code>can show</code> とやると一覧表示されます。</p>
+<p>以下は can show DEVICE_IDしてみた時のログの例になりますが、
+外付けのCAN transceiverの場合は、ESP32とは関係なく、もうひと手間加えてあげないと、
+Zephyr側で認識してくれないように思います。</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>west<span class="w"> </span>espressif<span class="w"> </span>monitor
+<span class="o">(</span>snip<span class="o">)</span>
+<span class="o">[</span><span class="m">00</span>:00:00.175,000<span class="o">]</span><span class="w"> </span>&lt;dbg&gt;<span class="w"> </span>can_sja1000:<span class="w"> </span>can_sja1000_init:<span class="w"> </span>initial<span class="w"> </span>sample<span class="w"> </span>point<span class="w"> </span>error:<span class="w"> </span><span class="m">0</span>
+***<span class="w"> </span>Booting<span class="w"> </span>Zephyr<span class="w"> </span>OS<span class="w"> </span>build<span class="w"> </span>v4.2.0-4096-g1c1598601b5c<span class="w"> </span>***
+<span class="o">(</span>snip<span class="o">)</span>
+</code></pre></div>
+
+<p>いきなり余談ですが...</p>
+<ol>
+<li>ESP32の場合は westの拡張が入っていて <code>west espressif monitor</code> とかできるので便利です</li>
+<li>上記をみるとESP32が内蔵するCANコントローラはNXPのSJA1000互換のIPを使っているものと想像できます。</li>
+</ol>
+<p>以下、状態表示してみた結果。</p>
+<div class="highlight"><pre><span></span><code><span class="nl">uart</span><span class="p">:</span><span class="o">~</span><span class="n">$</span><span class="w"> </span><span class="n">can</span><span class="w"> </span><span class="n">show</span><span class="w"> </span><span class="n">can</span><span class="mf">@3ff</span><span class="mi">6</span><span class="n">b000</span>
+<span class="n">core</span><span class="w"> </span><span class="n">clock</span><span class="o">:</span><span class="w">      </span><span class="mi">40000000</span><span class="w"> </span><span class="n">Hz</span>
+<span class="n">max</span><span class="w"> </span><span class="n">bitrate</span><span class="o">:</span><span class="w">     </span><span class="mi">1000000</span><span class="w"> </span><span class="n">bps</span>
+<span class="n">max</span><span class="w"> </span><span class="n">std</span><span class="w"> </span><span class="n">filters</span><span class="o">:</span><span class="w"> </span><span class="mi">5</span>
+<span class="n">max</span><span class="w"> </span><span class="n">ext</span><span class="w"> </span><span class="n">filters</span><span class="o">:</span><span class="w"> </span><span class="mi">5</span>
+<span class="nl">capabilities</span><span class="p">:</span><span class="w">    </span><span class="n">normal</span><span class="w"> </span><span class="n">loopback</span><span class="w"> </span><span class="n">listen</span><span class="o">-</span><span class="n">only</span><span class="w"> </span><span class="n">one</span><span class="o">-</span><span class="n">shot</span><span class="w"> </span><span class="n">triple</span><span class="o">-</span><span class="n">sampling</span>
+<span class="nl">mode</span><span class="p">:</span><span class="w">            </span><span class="n">normal</span>
+<span class="nl">state</span><span class="p">:</span><span class="w">           </span><span class="n">error</span><span class="o">-</span><span class="n">active</span>
+</code></pre></div>
+
+<p>ここのstate:はCANコントローラの状態です。<code>error-</code>というprefixが気になるのですが、コードを眺める限りは、これで正常に初期化できているということのようです。</p>
+<div class="highlight"><pre><span></span><code>rx errors:       0
+tx errors:       0
+timing:          sjw 1..4, prop_seg 0..0, phase_seg1 1..16, phase_seg2 1..8, prescaler 1..64
+transceiver:     passive/none
+</code></pre></div>
+
+<p>次にここ。transceiver: が <code>passive/none</code> という状態になっていて、トランシーバの状態が取れない模様...うん？</p>
+<div class="highlight"><pre><span></span><code><span class="n">statistics</span><span class="o">:</span>
+<span class="w">  </span><span class="n">bit</span><span class="w"> </span><span class="n">errors</span><span class="o">:</span><span class="w">    </span><span class="mi">0</span>
+<span class="w">    </span><span class="n">bit0</span><span class="w"> </span><span class="n">errors</span><span class="o">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">    </span><span class="n">bit1</span><span class="w"> </span><span class="n">errors</span><span class="o">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">  </span><span class="n">stuff</span><span class="w"> </span><span class="n">errors</span><span class="o">:</span><span class="w">  </span><span class="mi">0</span>
+<span class="w">  </span><span class="n">crc</span><span class="w"> </span><span class="n">errors</span><span class="o">:</span><span class="w">    </span><span class="mi">0</span>
+<span class="w">  </span><span class="n">form</span><span class="w"> </span><span class="n">errors</span><span class="o">:</span><span class="w">   </span><span class="mi">0</span>
+<span class="w">  </span><span class="n">ack</span><span class="w"> </span><span class="n">errors</span><span class="o">:</span><span class="w">    </span><span class="mi">0</span>
+<span class="w">  </span><span class="n">rx</span><span class="w"> </span><span class="n">overruns</span><span class="o">:</span><span class="w">   </span><span class="mi">0</span>
+</code></pre></div>
+
+<p>しかし、このまま送信処理をしてみると、以下のように無事に送信処理が終わっている!?</p>
+<div class="highlight"><pre><span></span><code><span class="nl">uart</span><span class="p">:</span><span class="o">~</span><span class="n">$</span><span class="w"> </span><span class="n">can</span><span class="w"> </span><span class="n">send</span><span class="w"> </span><span class="n">can</span><span class="mf">@3ff</span><span class="mi">6</span><span class="n">b000</span><span class="w">  </span><span class="mi">234</span><span class="w"> </span><span class="mi">56</span>
+<span class="n">enqueuing</span><span class="w"> </span><span class="n">CAN</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="err">#</span><span class="mi">0</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">standard</span><span class="w"> </span><span class="p">(</span><span class="mi">11</span><span class="o">-</span><span class="n">bit</span><span class="p">)</span><span class="w"> </span><span class="n">CAN</span><span class="w"> </span><span class="n">ID</span><span class="w"> </span><span class="mh">0x234</span><span class="p">,</span><span class="w"> </span><span class="n">RTR</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">CAN</span><span class="w"> </span><span class="n">FD</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">BRS</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">DLC</span><span class="w"> </span><span class="mi">1</span>
+<span class="n">CAN</span><span class="w"> </span><span class="n">frame</span><span class="w"> </span><span class="err">#</span><span class="mi">0</span><span class="w"> </span><span class="n">successfully</span><span class="w"> </span><span class="n">sent</span>
+<span class="nl">uart</span><span class="p">:</span><span class="o">~</span><span class="n">$</span>
+</code></pre></div>
+
+<p>このログを採取した際、CANバスの対向側にRaspberry Pi Zero W+DSD SH-C31Aをつないでおり、実際にデータが流れていることを確認しています。</p>
+<p>それで、上記transceiverの表示のところは、ソースの該当部分を眺めると、deviceに対応する管理構造体がない(＝pointerがNULL)だとこういう表示になるようです。</p>
+<p>と、いうことは...</p>
+<ul>
+<li>dtsで何かtransceiver用の記述をしてあげないといけない？</li>
+<li>後述のCAN Busの状態をGPIOで制御したい場合と同様に、GPIO用のpin定義のついでに)deviceも書かないといけない？</li>
+</ul>
+<p>...とか想像できますが、まだ裏がとれていません。</p>
+<p>あとは、statistics: のところ、数字が入ってくれるのかどうか、まだ確認できていません。</p>
+<p>うーん...</p>
+<h2>CAN Busの状態を制御したい(BUS Stopさせたり戻したりとか)</h2>
+<p><code>can_transceiver_enable()</code> というAPIを使って可能(...なはず)です。
+CANコントローラへの指示ではなく、トランシーバのSTBY(だったり、チップによってはSだったりしますが...)GPIOでピンの値を制御することになります。(はずです)</p>
+<p>...とはいえ上記に書いたように、何かおまじないが必用...と思われます。</p>
+<p>以下、参考。</p>
+<ul>
+<li>CAN transceiverまわりの説明<ul>
+<li>https://docs.zephyrproject.org/latest/hardware/peripherals/can/transceiver.html</li>
+</ul>
+</li>
+<li>CAN transceiver APIの説明<ul>
+<li>https://docs.zephyrproject.org/latest/doxygen/html/group__can__transceiver.html</li>
+</ul>
+</li>
+</ul>
+<h2>ESP32の複数コアを使いたい</h2>
+<p>可能です。</p>
+<p>ESP32の場合は、普通のSMPではなく、
+<a href="https://docs.zephyrproject.org/latest/boards/espressif/common/soc-esp32-features.html#asymmetric-multiprocessing-amp">AMP(Asymmetric Multi-processing)</a>
+と呼ばれる使い方になるようです。
+ビルドの際に、先頭のコア用のプログラムはprocpu、
+2番目(以降?)のコアがappcpuという名前でターゲット指定することになります。
+sysbuildでブートローダにmcubootを指定し、2番目のコア(前述のappcpu)用のプログラムは <code>remote</code> というディレクトリにわけて作ることになるようですが、識者によると、ここでも「黒魔術」っぽさがある模様...gkbr</p>
+<p>複数コアの間の通信や同期には
+<a href="https://docs.zephyrproject.org/latest/hardware/peripherals/ipm.html">IPM: Inter-Processor Mailbox</a>
+という仕組みが使えるようになっています。
+IPMを使ったプログラミングの具体例は、zephyr公式のサンプルにも含まれています。ESP32用のものは<a href="https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/drivers/ipm/ipm_esp32">ここ</a>にあります。</p>
+<p>なお、threadを使うだけでは1コアしか使われないことに注意が必要です。(たぶん)</p>
+<h2>TODO</h2>
+<p>以下のような確認を行いながら更新してく予定。</p>
+<ul>
+<li>multi-threadを使いたい</li>
+<li>ESP32のWiFiを使いたい</li>
+<li>ESP32でhttp_serverを動かしたい</li>
+<li>gdbでリモート(?)デバッグしたい</li>
+<li>ESP32にセンサ(I2CとかSPIとか)をつなぎたい</li>
+<li>...</li>
+</ul>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
