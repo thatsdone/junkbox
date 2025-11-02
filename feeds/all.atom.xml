@@ -1,5 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-10-25T18:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Hello Zephyr</title><link href="https://thatsdone.github.io/junkbox/hello_zephyr.html" rel="alternate"></link><published>2025-10-25T18:10:00+09:00</published><updated>2025-10-25T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-10-25:/junkbox/hello_zephyr.html</id><summary type="html">&lt;p&gt;Zephyrはじめました&lt;/p&gt;</summary><content type="html">&lt;p&gt;今年('25)の5月くらいまでさかのぼりますが、RTOSの&lt;a href="https://www.zephyrproject.org/"&gt;Zephyr&lt;/a&gt;をさわりはじめました。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-02T13:25:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Zephyr generic notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html" rel="alternate"></link><published>2025-11-02T13:25:00+09:00</published><updated>2025-11-02T13:25:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-02:/junkbox/zephyr_generic_notes.html</id><summary type="html">&lt;p&gt;Zephyrの一般的な使い方メモ(ボード非依存)&lt;/p&gt;</summary><content type="html">&lt;p&gt;Zephyrをはじめてみて、有識者のみなさんにいろいろ教えを受けつつ気づいたこと、
+特にボード非依存のメモをまとめる場所にします。(＝断続的に更新していきます)&lt;/p&gt;
+&lt;p&gt;ボード依存の話は別記事で。現状、以下の子たちくらいを予定しています。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ESP32 (初代無印、Xtensa LX6のDevkitC)&lt;/li&gt;
+&lt;li&gt;Raspberry Pi (5とZero W)&lt;/li&gt;
+&lt;li&gt;qemu系 (x86_64とaarch64)&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://docs.zephyrproject.org/latest/boards/xen/xenvm/doc/index.html"&gt;xenvm&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;自分のアプリをどこにおけばいいのか？&lt;/h2&gt;
+&lt;p&gt;答：どこでもかまいません。&lt;/p&gt;
+&lt;p&gt;補足：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一次情報&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://zephyrproject.org/how-to-build-your-zephyr-app-in-a-standalone-folder/"&gt;How to build your Zephyr app in a standalone folder&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;特に SOME_WHEHERE/zephyrproject/zephyr の下に置く必要はありません。&lt;/li&gt;
+&lt;li&gt;SOMEWHERE/zephyrproject/zephyr/zephyr-env.sh という環境設定用のファイルがありますので、これをsourceしてください。&lt;/li&gt;
+&lt;li&gt;自分のアプリのディレクトリの中で &lt;code&gt;west build -p -b YOUR_TARGET_BOARD .&lt;/code&gt; とすればOKです。&lt;ul&gt;
+&lt;li&gt;最後の &lt;code&gt;.&lt;/code&gt; (ピリオド＝カレントディレクトリを指定)を忘れないでください&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ビルドされた生成物は、上記自分のアプリのディレクトリの中に build というディレクトリが作成されて格納されます。&lt;ul&gt;
+&lt;li&gt;未確認すが、自分のアプリのディレクトリとは違うところで west コマンドを起動すると、カレントに build ができるかもしれません&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;DTSをoverlayしたい場合のファイル名や配置場所は？&lt;/h2&gt;
+&lt;p&gt;答：自分のアプリのディレクトリの中に所定のファイル名で、所定の名前のディレクトリを作って格納してください。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/thatsdone/zephyr-canapp"&gt;私の事例&lt;/a&gt;では、ESP32のdevice treeはzephyr/boards/espressif以下にボードごとに格納されていました。ただ、CANコントローラのTWAIはdisableだったので、okにオーバーライドする必要がありました。こういう場合にどうするか？です&lt;/p&gt;
+&lt;p&gt;典型的には YOUR_APP_DIR/boards/BOARDNAME.overlay になります。&lt;/p&gt;
+&lt;p&gt;補足：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一次情報はこのへんにあります。&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://docs.zephyrproject.org/latest/develop/application/index.html"&gt;Application Development&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ディレクトリの名前は board か soc になりますが、ボードごとになるほうが多いように思います。また、アプリケーション固有であれば application.overlay でもかまいません。(...が、アプリ固有でDTSいじる必要ってどのくらいあるんですかねぇ？)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;sampleについている sample.yaml は要るのか？&lt;/h2&gt;
+&lt;p&gt;答：不要&lt;/p&gt;
+&lt;p&gt;自分のアプリを公開するだけなら上記の通り不要です。&lt;/p&gt;
+&lt;p&gt;ただし、zephyr公式distributionへのマージを目指すようであれば必要になります。&lt;/p&gt;
+&lt;h2&gt;WSL2で使いたい&lt;/h2&gt;
+&lt;p&gt;答：私はWSL2の Ubuntu 24.04環境で問題なく使えています。&lt;/p&gt;
+&lt;h2&gt;WSL2でUSBデバイスを使えるの？&lt;/h2&gt;
+&lt;p&gt;答：使えます。GUI操作でUSBデバイスの付け替えができる &lt;a href="https://github.com/dorssel/usbipd-win"&gt;usbipd-win&lt;/a&gt; がとても便利です。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Hello Zephyr</title><link href="https://thatsdone.github.io/junkbox/hello_zephyr.html" rel="alternate"></link><published>2025-10-25T18:10:00+09:00</published><updated>2025-10-25T18:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-10-25:/junkbox/hello_zephyr.html</id><summary type="html">&lt;p&gt;Zephyrはじめました&lt;/p&gt;</summary><content type="html">&lt;p&gt;今年('25)の5月くらいまでさかのぼりますが、RTOSの&lt;a href="https://www.zephyrproject.org/"&gt;Zephyr&lt;/a&gt;をさわりはじめました。&lt;/p&gt;
 &lt;p&gt;しばらく前から趣味で作っている&lt;a href="https://github.com/thatsdone/mpmt/"&gt;CPU負荷発生器&lt;/a&gt;で
 新言語のネタがなくなってきたのと、
 やんごとなき事情(?)で関わっている&lt;a href="https://www.automotivelinux.org/"&gt;AGL&lt;/a&gt;の議論の中で興味を持ったのがきっかけです。&lt;/p&gt;

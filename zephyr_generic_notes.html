@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] Zephyr generic notes | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Zephyrの一般的な使い方メモ(ボード非依存)">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] Zephyr generic notes
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2025-11-02T13:25:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Sun 02 November 2025
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>Zephyrをはじめてみて、有識者のみなさんにいろいろ教えを受けつつ気づいたこと、
+特にボード非依存のメモをまとめる場所にします。(＝断続的に更新していきます)</p>
+<p>ボード依存の話は別記事で。現状、以下の子たちくらいを予定しています。</p>
+<ul>
+<li>ESP32 (初代無印、Xtensa LX6のDevkitC)</li>
+<li>Raspberry Pi (5とZero W)</li>
+<li>qemu系 (x86_64とaarch64)</li>
+<li><a href="https://docs.zephyrproject.org/latest/boards/xen/xenvm/doc/index.html">xenvm</a></li>
+</ul>
+<h2>自分のアプリをどこにおけばいいのか？</h2>
+<p>答：どこでもかまいません。</p>
+<p>補足：</p>
+<ul>
+<li>一次情報<ul>
+<li><a href="https://zephyrproject.org/how-to-build-your-zephyr-app-in-a-standalone-folder/">How to build your Zephyr app in a standalone folder</a></li>
+</ul>
+</li>
+<li>特に SOME_WHEHERE/zephyrproject/zephyr の下に置く必要はありません。</li>
+<li>SOMEWHERE/zephyrproject/zephyr/zephyr-env.sh という環境設定用のファイルがありますので、これをsourceしてください。</li>
+<li>自分のアプリのディレクトリの中で <code>west build -p -b YOUR_TARGET_BOARD .</code> とすればOKです。<ul>
+<li>最後の <code>.</code> (ピリオド＝カレントディレクトリを指定)を忘れないでください</li>
+</ul>
+</li>
+<li>ビルドされた生成物は、上記自分のアプリのディレクトリの中に build というディレクトリが作成されて格納されます。<ul>
+<li>未確認すが、自分のアプリのディレクトリとは違うところで west コマンドを起動すると、カレントに build ができるかもしれません</li>
+</ul>
+</li>
+</ul>
+<h2>DTSをoverlayしたい場合のファイル名や配置場所は？</h2>
+<p>答：自分のアプリのディレクトリの中に所定のファイル名で、所定の名前のディレクトリを作って格納してください。</p>
+<p><a href="https://github.com/thatsdone/zephyr-canapp">私の事例</a>では、ESP32のdevice treeはzephyr/boards/espressif以下にボードごとに格納されていました。ただ、CANコントローラのTWAIはdisableだったので、okにオーバーライドする必要がありました。こういう場合にどうするか？です</p>
+<p>典型的には YOUR_APP_DIR/boards/BOARDNAME.overlay になります。</p>
+<p>補足：</p>
+<ul>
+<li>一次情報はこのへんにあります。<ul>
+<li><a href="https://docs.zephyrproject.org/latest/develop/application/index.html">Application Development</a></li>
+</ul>
+</li>
+<li>ディレクトリの名前は board か soc になりますが、ボードごとになるほうが多いように思います。また、アプリケーション固有であれば application.overlay でもかまいません。(...が、アプリ固有でDTSいじる必要ってどのくらいあるんですかねぇ？)</li>
+</ul>
+<h2>sampleについている sample.yaml は要るのか？</h2>
+<p>答：不要</p>
+<p>自分のアプリを公開するだけなら上記の通り不要です。</p>
+<p>ただし、zephyr公式distributionへのマージを目指すようであれば必要になります。</p>
+<h2>WSL2で使いたい</h2>
+<p>答：私はWSL2の Ubuntu 24.04環境で問題なく使えています。</p>
+<h2>WSL2でUSBデバイスを使えるの？</h2>
+<p>答：使えます。GUI操作でUSBデバイスの付け替えができる <a href="https://github.com/dorssel/usbipd-win">usbipd-win</a> がとても便利です。</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
