@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [ja] Zephyr qemu notes | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/zephyr_qemu_notes.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Zephyrのqemu固有のメモ">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [ja] Zephyr qemu notes
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2025-11-05T20:25:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Wed 05 November 2025
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p><a href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html">Zephyr ESP32 notes</a>を書いたので、次はqemuのメモをダンプしていきます。</p>
+<p>対象は以下の2つです。</p>
+<ul>
+<li>qemu-system-x86_64</li>
+<li>qemu-system-aarch64</li>
+</ul>
+<p>...が、そのうち増えるかもしれません(笑)</p>
+<h2>話の発端</h2>
+<p>まず、私は数年前から単純にCPUを使いまくるテスト用(というか教育用?)のプログラム(mpmt)を作っています。</p>
+<p>ここにおいてあります。</p>
+<p><a href="https://github.com/thatsdone/mpmt">https://github.com/thatsdone/mpmt</a></p>
+<p>取り扱う言語が30を超えたくらいからネタ切れ感がでてきていたのと、
+<a href="https://www.automotivelinux.org/">AGL</a>に絡みはじめてから
+同じLinux Foundation配下のRTOSにZephyrをAGLのSDV Reference PFで使おうよという話、
+つまり
+<a href="https://lf-automotivelinux.atlassian.net/wiki/x/A4BGFQ">SoDeV</a>
+プロジェクトに首をつっこみはじめてから、
+当時者としてZephyrに興味を持つようになりました。</p>
+<p>それで、言語やそのランタイムだけではなく、RTOSでもmpmtを動かしてみるか…と思い至ったというのが発端です。</p>
+<p>mpmtのZephyr版は
+<a href="https://github.com/thatsdone/mpmt/tree/main/zephyr">このあたり</a>
+を見てみてください。</p>
+<p>さて、以下気づきのメモを列挙していきますが。他の記事と同様に随時更新していきます。</p>
+<h2>ターゲット...というかボード指定？のやりかた</h2>
+<p><code>west build</code> する際に <code>-b</code> に何を指定するか？という話です。</p>
+<ul>
+<li>x86_64の場合</li>
+<li>qemu_x86_64</li>
+<li>ARM64の場合</li>
+<li>qemu_kvm_arm64</li>
+</ul>
+<p>以下、マニュアル。</p>
+<ul>
+<li>x86/x86_64 qemu target board<ul>
+<li>https://docs.zephyrproject.org/latest/boards/qemu/x86/doc/index.html</li>
+</ul>
+</li>
+<li>ARM64 qemu target board<ul>
+<li>https://docs.zephyrproject.org/latest/boards/qemu/kvm_arm64/doc/index.html</li>
+</ul>
+</li>
+</ul>
+<h2>できあがるバイナリ</h2>
+<p><code>west build -t run</code> ではなく、qemu-system-xxx から直接実行したい…とか、libvirtで制御できるようにしたいという場合には気にする必要があります。</p>
+<h3>x86_64の場合</h3>
+<p>x86_64の場合、buildディレクトリの中にバイナリが2つできあがります。</p>
+<p>一方はZephyrのメインプログラムでもう一方はloaderになります。
+mpmtのZephyr版のREADMEに書いておきましたがこういう感じです。</p>
+<ul>
+<li>kernel: zephyr-qemu-locore.elf</li>
+<li>loader: zephyr-qemu-main.elf</li>
+</ul>
+<h3>aarch64の場合</h3>
+<p>こちらは一般的な組み込み用のボードと同じで1つだけです。
+buildディレクトリの中にzephyr.binができあがります。</p>
+<h2>KVMの仮想化支援機能を使いたい</h2>
+<p>使えます。
+ただ、<code>west</code> からqemuに指定のパラメータを渡す方法があるのかもしれませんが、現状は未調査です。</p>
+<p>続きます。</p>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>

@@ -1,5 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-03T00:10:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Zephyr ESP32 notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html" rel="alternate"></link><published>2025-11-03T00:10:00+09:00</published><updated>2025-11-03T00:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-03:/junkbox/zephyr_esp32_notes.html</id><summary type="html">&lt;p&gt;ZephyrのESP32固有のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;直近で書いた
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-05T20:25:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Zephyr qemu notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_qemu_notes.html" rel="alternate"></link><published>2025-11-05T20:25:00+09:00</published><updated>2025-11-05T20:25:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-05:/junkbox/zephyr_qemu_notes.html</id><summary type="html">&lt;p&gt;Zephyrのqemu固有のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html"&gt;Zephyr ESP32 notes&lt;/a&gt;を書いたので、次はqemuのメモをダンプしていきます。&lt;/p&gt;
+&lt;p&gt;対象は以下の2つです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;qemu-system-x86_64&lt;/li&gt;
+&lt;li&gt;qemu-system-aarch64&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;...が、そのうち増えるかもしれません(笑)&lt;/p&gt;
+&lt;h2&gt;話の発端&lt;/h2&gt;
+&lt;p&gt;まず、私は数年前から単純にCPUを使いまくるテスト用(というか教育用?)のプログラム(mpmt)を作っています。&lt;/p&gt;
+&lt;p&gt;ここにおいてあります。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/thatsdone/mpmt"&gt;https://github.com/thatsdone/mpmt&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;取り扱う言語が30を超えたくらいからネタ切れ感がでてきていたのと、
+&lt;a href="https://www.automotivelinux.org/"&gt;AGL&lt;/a&gt;に絡みはじめてから
+同じLinux Foundation配下のRTOSにZephyrをAGLのSDV Reference PFで使おうよという話、
+つまり
+&lt;a href="https://lf-automotivelinux.atlassian.net/wiki/x/A4BGFQ"&gt;SoDeV&lt;/a&gt;
+プロジェクトに首をつっこみはじめてから、
+当時者としてZephyrに興味を持つようになりました。&lt;/p&gt;
+&lt;p&gt;それで、言語やそのランタイムだけではなく、RTOSでもmpmtを動かしてみるか…と思い至ったというのが発端です。&lt;/p&gt;
+&lt;p&gt;mpmtのZephyr版は
+&lt;a href="https://github.com/thatsdone/mpmt/tree/main/zephyr"&gt;このあたり&lt;/a&gt;
+を見てみてください。&lt;/p&gt;
+&lt;p&gt;さて、以下気づきのメモを列挙していきますが。他の記事と同様に随時更新していきます。&lt;/p&gt;
+&lt;h2&gt;ターゲット...というかボード指定？のやりかた&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;west build&lt;/code&gt; する際に &lt;code&gt;-b&lt;/code&gt; に何を指定するか？という話です。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;x86_64の場合&lt;/li&gt;
+&lt;li&gt;qemu_x86_64&lt;/li&gt;
+&lt;li&gt;ARM64の場合&lt;/li&gt;
+&lt;li&gt;qemu_kvm_arm64&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;以下、マニュアル。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;x86/x86_64 qemu target board&lt;ul&gt;
+&lt;li&gt;https://docs.zephyrproject.org/latest/boards/qemu/x86/doc/index.html&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ARM64 qemu target board&lt;ul&gt;
+&lt;li&gt;https://docs.zephyrproject.org/latest/boards/qemu/kvm_arm64/doc/index.html&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;できあがるバイナリ&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;west build -t run&lt;/code&gt; ではなく、qemu-system-xxx から直接実行したい…とか、libvirtで制御できるようにしたいという場合には気にする必要があります。&lt;/p&gt;
+&lt;h3&gt;x86_64の場合&lt;/h3&gt;
+&lt;p&gt;x86_64の場合、buildディレクトリの中にバイナリが2つできあがります。&lt;/p&gt;
+&lt;p&gt;一方はZephyrのメインプログラムでもう一方はloaderになります。
+mpmtのZephyr版のREADMEに書いておきましたがこういう感じです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;kernel: zephyr-qemu-locore.elf&lt;/li&gt;
+&lt;li&gt;loader: zephyr-qemu-main.elf&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;aarch64の場合&lt;/h3&gt;
+&lt;p&gt;こちらは一般的な組み込み用のボードと同じで1つだけです。
+buildディレクトリの中にzephyr.binができあがります。&lt;/p&gt;
+&lt;h2&gt;KVMの仮想化支援機能を使いたい&lt;/h2&gt;
+&lt;p&gt;使えます。
+ただ、&lt;code&gt;west&lt;/code&gt; からqemuに指定のパラメータを渡す方法があるのかもしれませんが、現状は未調査です。&lt;/p&gt;
+&lt;p&gt;続きます。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Zephyr ESP32 notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html" rel="alternate"></link><published>2025-11-03T00:10:00+09:00</published><updated>2025-11-03T00:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-03:/junkbox/zephyr_esp32_notes.html</id><summary type="html">&lt;p&gt;ZephyrのESP32固有のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;直近で書いた
 &lt;a href="https://thatsdone.github.io/junkbox/hello_zephyr.html"&gt;Zephyrをはじめました&lt;/a&gt;
 と
 &lt;a href="https://thatsdone.github.io/junkbox/zephyr_generic_notes.html"&gt;Zephyrの一般的な使い方メモ(ボード非依存)&lt;/a&gt;
