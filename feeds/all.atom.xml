@@ -25,10 +25,14 @@
 &lt;h2&gt;ターゲット...というかボード指定？のやりかた&lt;/h2&gt;
 &lt;p&gt;&lt;code&gt;west build&lt;/code&gt; する際に &lt;code&gt;-b&lt;/code&gt; に何を指定するか？という話です。&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;x86_64の場合&lt;/li&gt;
+&lt;li&gt;x86_64の場合&lt;ul&gt;
 &lt;li&gt;qemu_x86_64&lt;/li&gt;
-&lt;li&gt;ARM64の場合&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;ARM64の場合&lt;ul&gt;
 &lt;li&gt;qemu_kvm_arm64&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;以下、マニュアル。&lt;/p&gt;
 &lt;ul&gt;
