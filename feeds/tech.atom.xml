@@ -1,5 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-05T20:25:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Zephyr qemu notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_qemu_notes.html" rel="alternate"></link><published>2025-11-05T20:25:00+09:00</published><updated>2025-11-05T20:25:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-05:/junkbox/zephyr_qemu_notes.html</id><summary type="html">&lt;p&gt;Zephyrのqemu固有のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html"&gt;Zephyr ESP32 notes&lt;/a&gt;を書いたので、次はqemuのメモをダンプしていきます。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done! - tech</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/tech.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-15T16:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] 中国旅行時のTIPS('25/11版)</title><link href="https://thatsdone.github.io/junkbox/china_travel_tips_202511.html" rel="alternate"></link><published>2025-11-15T16:30:00+09:00</published><updated>2025-11-15T16:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-15:/junkbox/china_travel_tips_202511.html</id><summary type="html">&lt;p&gt;中国旅行時のTIPS('25/11版)&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、中国に出張する機会がありました。&lt;/p&gt;
+&lt;p&gt;いろいろ気づきがあったのでメモ。&lt;/p&gt;
+&lt;h2&gt;ネット接続&lt;/h2&gt;
+&lt;p&gt;中国国内からは、Google等のよく使うサービスが使えません。やりかたは各種あって、ざっくりローミングすればいいのですが、
+今回はティーガイア(T-Gaia)という会社の&lt;a href="https://voyageesim.com/"&gt;VOYAGEE eSIM&lt;/a&gt;からeSIMを購入しました。&lt;/p&gt;
+&lt;p&gt;現地ではChina Mobileの(たぶん、香港子会社の？)回線で、香港経由のローミングになるため、GoogleやFacebook等、普通にアクセスできました。&lt;/p&gt;
+&lt;p&gt;使い勝手は普通の海外用eSIMとほとんどかわりませんが、１点、ローミング中に「データサービスに接続する」設定にする必要があります。&lt;/p&gt;
+&lt;h2&gt;決済/支払い&lt;/h2&gt;
+&lt;p&gt;今回は現金を使う機会が一度もありませんでした。&lt;/p&gt;
+&lt;p&gt;クレジットカードすら使えないことも多いので、AliPayまたはWeChat Payは必須です。&lt;/p&gt;
+&lt;p&gt;私はAliPayを使いましたが、以下、いくつか気づきを箇条書きでまとめておきます。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;日本国内でもAliPay使えるマークが出ているところは多くありますが、あれは中国からの旅行者専用です。日本のクレジットカードを使ってAliPayのアカウントを作ってあっても、中国でしか使えません。&lt;/li&gt;
+&lt;li&gt;AliPayのアカウントを作るとき、本人確認のため、携帯の電話番号だけではなく、パスポートの情報を入力(スキャンでもOK)する必要があります。この際、パスポートの写真と照合のため自撮りするステップがあるので面食らわないようにしましょう。&lt;/li&gt;
+&lt;li&gt;中国国内ではデビットカード的に銀行口座に紐づけるのがスタンダードなようですが、外国人はクレジットカードを紐づけられます。決済の使い勝手としては、少額の買い物でも都度クレジットカードで決済する感覚になります。&lt;/li&gt;
+&lt;li&gt;クレジットカード情報を登録する時、支払用のパスワードを作成します。数字6桁です。現地で買い物をするたびに必要になりますので、忘れないようにしましょう。&lt;/li&gt;
+&lt;li&gt;AliPayの中から、Uber相当のDidi等、各種の別サービスを呼び出して使えるようになっています。「ミニアプリ」と呼ばれています。今回は Didi を使いましたが、別項目で。&lt;/li&gt;
+&lt;li&gt;アプリはAndroid版の場合で、中国語２種(簡体字と繁体字)のほか、日本語を含めて多数の言語が使えます。ただし、日本語は翻訳が微妙なので私は英語で使いました。&lt;ul&gt;
+&lt;li&gt;ホーム画面 -&amp;gt; 右下のAccount -&amp;gt; 右上のねじマークアイコン -&amp;gt; General と画面遷移すると言語設定するところがでてきます。&lt;/li&gt;
+&lt;li&gt;なお、AliPayの先に「ミニアプリ」については多言語対応状況はモノによります。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;買い物をするときは以下のどちらかになります。&lt;ol&gt;
+&lt;li&gt;「スキャン(Scan)」ボタンから提示されたQRコードをスキャンする&lt;/li&gt;
+&lt;li&gt;「支払い/受け取り(Pay/Receive)」のボタンから自分のQRコードを出して、お店の端末でスキャンする&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;タクシー/ライドシェア&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Uberは駆逐され(?)、Didiがデファクトのようです。&lt;/li&gt;
+&lt;li&gt;AliPayを入れると、前述の通りAliPayの「ミニアプリ」としてDidiが連携して使えるようになっています。ちなみに、前述のDidiのミニアプリは、中国語以外は英語だけでした。Didi専用のアプリだと違うのかもしれません。(未確認)&lt;/li&gt;
+&lt;li&gt;Didiの(ミニ)アプリの使い勝手は、Uberとほぼ同じです。Uberを使ったことのある人であれば悩まずに直観的に使えると思います。&lt;/li&gt;
+&lt;li&gt;AliPayのミニアプリの場合だけかもしれませんが、アプリからあがってくるポップアップが中国語のまま翻訳されていないケースがあるようです。私が見たのは、配車を確定する際に、「車両内の安全確認のためにカメラで(動画)撮影するが承諾するか？」という質問が中国語のままでした。(中国出身の同行者がいたので安心して承諾できましたが...)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;高速鉄道&lt;/h2&gt;
+&lt;p&gt;今回は上海から南京に移動したのですが、高速鉄道(≒日本で言う新幹線)を使いました。とても便利かつ、乗り心地もよかったです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;全席指定席のため、チケットを予約＆事前購入する必要があります。&lt;/li&gt;
+&lt;li&gt;AliPayの"TripAir-Train"からも予約・購入ができます。...が、今回使ったeSIMの回線のせいか、うごきがとても遅かったので、&lt;a href="https://trip.com/"&gt;trip.com&lt;/a&gt;を使いました。こちらは普通にクレジットカードが使えます。なお、後述の通り、予約・購入時にパスポート情報を入力する必要があります。&lt;/li&gt;
+&lt;li&gt;trip.comはスマホアプリもあって、Webからの予約情報と一体運用でき、現地で列車番号や座席、チケット番号を移動中に確認できるので便利です。&lt;/li&gt;
+&lt;li&gt;高速鉄道の改札では、紙のチケットは必要ありません。中国現地の人たちは、日本のマイナカード相当のカードで、外国人はパスポートをスキャンして本人確認＆予約照合が行われます。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;地下鉄とかバスとか&lt;/h2&gt;
+&lt;p&gt;...は、今回は結局乗らなかったのでわかりません。
+ただ、一般的な買い物のように券売機でQRコードスキャンで行けるのではないかと思われます。&lt;/p&gt;
+&lt;h2&gt;カジュアルな食事&lt;/h2&gt;
+&lt;p&gt;おいしいものが食べられる、カジュアルが食堂がたくさんあります。&lt;/p&gt;
+&lt;p&gt;支払いはAliPayかWeChat Payのみというところがけっこうあります。&lt;/p&gt;
+&lt;p&gt;ここまでは前述の通りですが、'25/11時点、電子化がまだ進行中らしく、
+メニューの類を置いておらず、QRコードからWebサイトにアクセスして、オーダー＆即時決済が必用というところがけっこうあります。ここで問題は、そのWebサイトが英語にすら対応していないこともけっこうあり、現時点では外国人にあまりやさしくない状況になってしまっているようです。&lt;/p&gt;
+&lt;p&gt;これは、例えばカフェの luckin coffee とかでも事情は同じようでした...
+が、マクドナルド等は最低限英語だけは対応していました。(が、支払はクレジットカードも受け付けていませんでした...orz)&lt;/p&gt;
+&lt;p&gt;続く..かもしれません。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Zephyr qemu notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_qemu_notes.html" rel="alternate"></link><published>2025-11-05T20:25:00+09:00</published><updated>2025-11-05T20:25:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-05:/junkbox/zephyr_qemu_notes.html</id><summary type="html">&lt;p&gt;Zephyrのqemu固有のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html"&gt;Zephyr ESP32 notes&lt;/a&gt;を書いたので、次はqemuのメモをダンプしていきます。&lt;/p&gt;
 &lt;p&gt;対象は以下の2つです。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;qemu-system-x86_64&lt;/li&gt;
