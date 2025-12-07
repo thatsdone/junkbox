@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-11-15T16:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] 中国旅行時のTIPS('25/11版)</title><link href="https://thatsdone.github.io/junkbox/china_travel_tips_202511.html" rel="alternate"></link><published>2025-11-15T16:30:00+09:00</published><updated>2025-11-15T16:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-15:/junkbox/china_travel_tips_202511.html</id><summary type="html">&lt;p&gt;中国旅行時のTIPS('25/11版)&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、中国に出張する機会があり、いろいろ気づきがあったのでメモ。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2025-12-07T21:40:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Generic qemu notes</title><link href="https://thatsdone.github.io/junkbox/generic_qemu_notes.html" rel="alternate"></link><published>2025-12-07T21:40:00+09:00</published><updated>2025-12-07T21:40:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-12-07:/junkbox/generic_qemu_notes.html</id><summary type="html">&lt;p&gt;qemu一般の&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/zephyr_qemu_notes.html"&gt;Zephyr qemu notes&lt;/a&gt;でZephyrでのqemu系targetの話を書きましたが、qemu側の話。&lt;/p&gt;
+&lt;h2&gt;virtio-can関連&lt;/h2&gt;
+&lt;p&gt;最近ポストしている記事でCANの話が多くあるように、仕事でCANを使っています。
+都合でハイパーバイザ上でvirtioベースでCANのトラフィックを流したいという事情があってあれこれ試したメモ。&lt;/p&gt;
+&lt;h3&gt;qemu virtio-can backend&lt;/h3&gt;
+&lt;p&gt;単純に考えると qemu の仮想デバイスとして作ってやることになります。
+OpenSynergyが公開していて、以下が最新だと思われます。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/OpenSynergy/qemu/tree/virtio-can-spec-rfc-v3"&gt;https://github.com/OpenSynergy/qemu/tree/virtio-can-spec-rfc-v3&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;上記は公開が2023/4で、ビルドはすなおに通りますが、残念ながらqemuのベースは6.0.1になります。&lt;/p&gt;
+&lt;p&gt;なので、qemuのmasterに使えるかなと思ってportしてみたものが以下です。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/thatsdone/qemu/tree/virtio-can-port]"&gt;https://github.com/thatsdone/qemu/tree/virtio-can-port&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;'25/12時点で、多少のずれはありますがそのまま適用でき、ビルドもすんなり通りました。&lt;/p&gt;
+&lt;p&gt;いずれも公式の既存のCANデバイスのページ&lt;/p&gt;
+&lt;p&gt;&lt;a href="[https://www.qemu.org/docs/master/system/devices/can.html]"&gt;https://www.qemu.org/docs/master/system/devices/can.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;の記述を参考に、以下のようにqemu-system-xxxにパラメータを渡してやると
+virtio-can deviceを有効化できます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;object&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;can&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;bus&lt;/span&gt;,&lt;span class="nv"&gt;id&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;canbus0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;\
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;device&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;virtio&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;can&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;pci&lt;/span&gt;,&lt;span class="nv"&gt;canbus&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;canbus0&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;\
+&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;object&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;can&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;host&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;socketcan&lt;/span&gt;,&lt;span class="nv"&gt;id&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;canhost0&lt;/span&gt;,&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;vcan0&lt;/span&gt;,&lt;span class="nv"&gt;canbus&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="nv"&gt;canbus0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;上記の例は、ホスト側で vcan を使って vcan0 というデバイスがあるものとし、
+これにゲスト側のvirtio-can deviceを接続する指定です。&lt;/p&gt;
+&lt;h3&gt;Yet Another virtio-can backend&lt;/h3&gt;
+&lt;p&gt;別解としてvhost-deviceを使う方法があります。&lt;/p&gt;
+&lt;p&gt;このへんにありますが、まだ試せていません。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;https://crates.io/crates/vhost-device-can&lt;/li&gt;
+&lt;li&gt;https://github.com/rust-vmm/vhost-device/tree/main/vhost-device-can&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] 中国旅行時のTIPS('25/11版)</title><link href="https://thatsdone.github.io/junkbox/china_travel_tips_202511.html" rel="alternate"></link><published>2025-11-15T16:30:00+09:00</published><updated>2025-11-15T16:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-15:/junkbox/china_travel_tips_202511.html</id><summary type="html">&lt;p&gt;中国旅行時のTIPS('25/11版)&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、中国に出張する機会があり、いろいろ気づきがあったのでメモ。&lt;/p&gt;
 &lt;h2&gt;ネット接続&lt;/h2&gt;
 &lt;p&gt;中国国内からは、Google等のよく使うサービスが使えません。やりかたは各種あって、ざっくりローミングすればいいのですが、
 今回はティーガイア(T-Gaia)という会社の&lt;a href="https://voyageesim.com/"&gt;VOYAGEE eSIM&lt;/a&gt;からeSIMを購入しました。&lt;/p&gt;
