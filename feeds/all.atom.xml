@@ -1313,6 +1313,13 @@ OpenStackでつくった基盤があって、その上にいろいろサービ�
 &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=GLCDOTcaASE"&gt;Julienne Taylor - Forbidden Colours (Sylvian / Sakamoto) with lyrics&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
+&lt;li&gt;ハンドベル＆パーカッション&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=405N61fzqQc"&gt;MERRY CHRISTMAS MR LAWRENCE (Handbells &amp;amp; Percussion)&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;これ、練習大変だろうなぁ...&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;/ul&gt;</content><category term="music"></category></entry><entry><title>[ja] Object Storageのベンチマークについて(COSBench編)</title><link href="https://thatsdone.github.io/junkbox/object_storage_benchmark_cosbench.html" rel="alternate"></link><published>2021-10-01T18:00:00+09:00</published><updated>2021-10-01T18:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2021-10-01:/junkbox/object_storage_benchmark_cosbench.html</id><summary type="html">&lt;p&gt;Object Storage Benchmark(COSBench)&lt;/p&gt;</summary><content type="html">&lt;p&gt;最近、AWS S3のようなObject Storageの性能評価をせねばならん…という事情があり、
 「そういえば、COSBenchってかなり昔からあるよなー」と思いつつ、最近あれこれ調べていました。&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://github.com/intel-cloud/cosbench/"&gt;COSBenchのリポジトリ&lt;/a&gt;
