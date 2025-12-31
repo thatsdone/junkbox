@@ -125,6 +125,24 @@ buildディレクトリの中にzephyr.binができあがります。</p>
 <h2>KVMの仮想化支援機能を使いたい</h2>
 <p>使えます。
 ただ、<code>west</code> からqemuに指定のパラメータを渡す方法があるのかもしれませんが、現状は未調査です。</p>
+<h2>Zephyrのqemu_x86_64 boardでvirtioを使いたい</h2>
+<p>使えます。
+…が、2点ほどハマったのでメモ。(2025/12/31追記)</p>
+<h3>virtio関連デバイスのdts定義がない</h3>
+<p>...というか、実はzephyrのツリーに含まれているのですが、<code>ZEPHYR_ROOT/boards/qemu/qemu_cortex_a53.dts</code>
+に記述がある程度で、qemu_x86_64 や qemu_kvm_arm64 で使おうとすると overlay ファイルを作ってやる
+必要があります。</p>
+<p>これに何を参考にすればよいのか悩ましいのですが、 <code>ZEPHYR_ROOT/tests/drivers/build_all/virtio/boards/qemu_x86_64.overlay</code> がテストに使われているもので、virtio-pci/virtio-net-pci/virtio-console-pci/virtio-entropy まではこれで使えるようです。</p>
+<p>私は自分のアプリの boards ディレクトリの下に上記をコピーして持ってきてビルドできました。
+(ただし、後述のprj.confの定義にも落とし穴がある)</p>
+<h3>CONFIG_UART_VIRTIO_CONSOLEが有効にならない？</h3>
+<p>prj.confで、以下の3つすべてを <code>n</code> に指定してやる必要があります。</p>
+<ul>
+<li>CONFIG_EARLY_CONSOLE</li>
+<li>CONFIG_X86_VERY_EARLY_CONSOLE</li>
+<li>CONFIG_BOOT_BANNER</li>
+</ul>
+<p>特に3つめは気づかなかったっすorz</p>
 <p>続きます。</p>
     </div>
   </article>
