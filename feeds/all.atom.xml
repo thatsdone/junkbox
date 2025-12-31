@@ -173,8 +173,8 @@ mpmtのZephyr版のREADMEに書いておきましたがこういう感じです�
 &lt;p&gt;こちらは一般的な組み込み用のボードと同じで1つだけです。
 buildディレクトリの中にzephyr.binができあがります。&lt;/p&gt;
 &lt;h2&gt;KVMの仮想化支援機能を使いたい&lt;/h2&gt;
-&lt;p&gt;使えます。
-ただ、&lt;code&gt;west&lt;/code&gt; からqemuに指定のパラメータを渡す方法があるのかもしれませんが、現状は未調査です。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;west&lt;/code&gt; からqemuに指定のパラメータを渡す方法があるのかもしれませんが、現状は未調査です。
+ただ、qemu-system-x86_64等から直接起動する場合は普通に使えます。&lt;/p&gt;
 &lt;h2&gt;Zephyrのqemu_x86_64 boardでvirtioを使いたい&lt;/h2&gt;
 &lt;p&gt;使えます。
 …が、2点ほどハマったのでメモ。(2025/12/31追記)&lt;/p&gt;
@@ -193,6 +193,48 @@ buildディレクトリの中にzephyr.binができあがります。&lt;/p&gt;
 &lt;li&gt;CONFIG_BOOT_BANNER&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;特に3つめは気づかなかったっすorz&lt;/p&gt;
+&lt;p&gt;今回は、比較的最近mergeされたらしい virtio-net のドライバを使い、qemu環境で動かそうとしていました。
+参考までに prj.conf の差分を付けておきます。VIRTIO関連以外には、qemu環境なので、GPIOやLEDは無効にする必要がありました。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;(venv) zephyr:~/zephyrproject/zephyr/samples/net/sockets/http_server$ git diff prj.conf
+diff --git a/samples/net/sockets/http_server/prj.conf b/samples/net/sockets/http_server/prj.conf
+index 5cfe2a04ad2..8b13bb6e150 100644
+--- a/samples/net/sockets/http_server/prj.conf
++++ b/samples/net/sockets/http_server/prj.conf
+@@ -26,6 +26,21 @@ CONFIG_NET_STATISTICS=y
+ CONFIG_NET_STATISTICS_USER_API=y
+ CONFIG_NET_LOG=y
+
++# for virtio_net
++CONFIG_PCIE=y
++CONFIG_ETH_DRIVER=y
++CONFIG_VIRTIO=y
++CONFIG_VIRTIO_PCI=y
++CONFIG_ETH_VIRTIO_NET=y
++
++CONFIG_PRINTK=y
++CONFIG_EARLY_CONSOLE=n
++CONFIG_BOOT_BANNER=n
++CONFIG_X86_VERY_EARLY_CONSOLE=n
++CONFIG_UART_VIRTIO_CONSOLE=y
++CONFIG_UART_VIRTIO_CONSOLE_F_MULTIPORT=y
++
++
+ # JSON
+ CONFIG_JSON_LIBRARY=y
+
+@@ -64,8 +79,8 @@ CONFIG_NET_CONFIG_PEER_IPV6_ADDR=&amp;quot;2001:db8::2&amp;quot;
+ CONFIG_NET_TCP_TIME_WAIT_DELAY=0
+
+ # Device drivers
+-CONFIG_GPIO=y
+-CONFIG_LED=y
++#CONFIG_GPIO=y
++#CONFIG_LED=y
+
+ # Network debug config
+ CONFIG_NET_SOCKETS_LOG_LEVEL_DBG=n
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
 &lt;p&gt;続きます。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Zephyr ESP32 notes</title><link href="https://thatsdone.github.io/junkbox/zephyr_esp32_notes.html" rel="alternate"></link><published>2025-11-03T00:10:00+09:00</published><updated>2025-11-03T00:10:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-11-03:/junkbox/zephyr_esp32_notes.html</id><summary type="html">&lt;p&gt;ZephyrのESP32固有のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;直近で書いた
 &lt;a href="https://thatsdone.github.io/junkbox/hello_zephyr.html"&gt;Zephyrをはじめました&lt;/a&gt;
 と
