@@ -63,16 +63,18 @@
       </ul>
     </header>
     <div class="content">
-      <p><a href="https://thatsdone.github.io/junkbox/generic_qemu_notes.html">Generic qemu qemu notes</a>でvirtio-canの話を書きましたが、qemu-system-ARCHを直叩きするのではなく、libvirtを使い、かつあまり一般的ではないdeviceを使いたいという話です。</p>
+      <h2>話の発端と何が書いてあるか</h2>
+<p><a href="https://thatsdone.github.io/junkbox/generic_qemu_notes.html">Generic qemu qemu notes</a>でvirtio-canの話を書きましたが、qemu-system-ARCHを直叩きするのではなく、libvirtを使い、かつあまり一般的ではないdeviceを使いたいという話です。</p>
 <p>/usr/bin 以下のシステム標準品を入れ替えてしまってもよいのですが、切り替えて使えるようにしたい場合、
-libvirtでVM(というかlibvirt用語ではdomain)を定義するにはどうするか？</p>
+またlibvirt標準でサポートされていないdeviceを使いたい場合、
+VM(というかlibvirt用語ではdomain)を定義するにはどうするか？</p>
 <h2>2通りのやりかた</h2>
 <p>ざっくり、以下の2通りのやりかたがあります。</p>
 <ol>
 <li>標準品libvirtでdomain定義した後、virsh edit や virt-xml で書き換える</li>
 <li>virt-installのオプションでがんばる</li>
 </ol>
-<p>1.はちょっとうざいので2.の方法を模索していましたが、なんとか最低限やりたいことはできました。</p>
+<p>1.はちょっとうざいので2.の方法を模索していました。なんとか最低限やりたいことはできたのでまとめておきます。</p>
 <h2>emulatorの変更</h2>
 <p>上記の記事に書いたように、qemuのmainlineにマージされていないデバイスを使いたいことがあります。
 この場合、システム標準の qemu-system-aarch64 や qemu-system-x86_64 とは違うバイナリを使うことになります。</p>
@@ -89,11 +91,11 @@ libvirtでVM(というかlibvirt用語ではdomain)を定義するにはどう�
 </code></pre></div>
 
 <p>これをlibvirtのdomain定義するのは現状無理な模様です。</p>
-<p>ではどうするか？なのですが、domain定義時に qemu-system-XXX の command line を指定することができるので、
-これを使いました。</p>
+<p>ではどうするか？なのですが、libvirtのdomain定義に qemu-system-XXX の command line パラメータを
+指定することができるので、これを使いました。</p>
 <p>virt-install の場合は <code>--qemu-commandline</code> というパラメータに渡します。</p>
 <h2>PCI IDが衝突することがある</h2>
-<p>当初、<code>virt-install</code> に以下のようなオプションを付けて試行したのですが、virt-instaellはPCI bridgeをたくさん接続してくれるので、これらとぶつかってしまいました。</p>
+<p>当初、<code>virt-install</code> に以下のようなオプションを付けて試行したのですが、virt-instaellはPCI bridgeをたくさん接続してくれる関係で、IDぶつかってエラーになってしまいました。</p>
 <div class="highlight"><pre><span></span><code><span class="o">--</span><span class="nv">qemu</span><span class="o">-</span><span class="nv">commandline</span><span class="o">=</span><span class="s2">&quot;-object can-bus,id=canbus2 -device virtio-can-pci,canbus=canbus2 -object can-host-socketcan,id=canhost2,if=vcan2,canbus=canbus2&quot;</span>
 </code></pre></div>
 
@@ -102,16 +104,23 @@ libvirtでVM(というかlibvirt用語ではdomain)を定義するにはどう�
 <div class="highlight"><pre><span></span><code><span class="o">--</span><span class="nx">qemu</span><span class="o">-</span><span class="nx">commandline</span><span class="p">=</span><span class="s">&quot;-object can-bus,id=canbus2 -device virtio-can-pci,canbus=canbus2,addr=07.00 -object can-host-socketcan,id=canhost2,if=vcan2,canbus=canbus2&quot;</span>
 </code></pre></div>
 
-<p>なお、Bus 0は PCI Bridgeなので避けたいと思ったのですが、同じく virtio-can-pci で使えることになっている <code>busnr</code> を使ったところ、「writableではない」という趣旨のエラーが出てしまいました。コードは未調査ですが、
-最低限やりたいことはできたのでここまででヨシとすることにしました。</p>
+<p>なお、Bus 0は PCI Bridgeなので避けたいと思ったのですが、上記を <code>07:00.0</code> と書いたところこれもエラー。
+(空きのBus IDとdevice IDが両方7なので紛らわしいですね)
+そこで、同じく virtio-can-pci で使えることになっている <code>busnr</code> が使えるかなと思ったのですが、
+指定してみたところ「writableではない」という趣旨のエラーが出てしまいました。
+コードは未調査ですが、最低限やりたいことはできたのでここまででヨシとすることにしました。</p>
 <p>なお、qemuのdriverごとのoptionは以下で調べられるようです。
 以下のvirtio-can-pciを目的のdriverに置き換えてください。</p>
 <div class="highlight"><pre><span></span><code>$<span class="w"> </span>qemu-system-aarch64<span class="w"> </span>-device<span class="w"> </span>virtio-can-pci,help
 </code></pre></div>
 
+<p>また、組み込まれているdriverの一覧は以下で見られます。</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>qemu-system-aarch64<span class="w"> </span>-device<span class="w"> </span><span class="nb">help</span>
+</code></pre></div>
+
 <h2>気づき(未解決)</h2>
-<p>virt-install の場合、VMを定義するとpower onまでしてくれるのですが、emulatorの変更と <code>--qemu-commandline</code> の指定を入れたところ、power onしてくれなくなりました。<code>virsh start DOMAIN_NAME(等)</code> すればよいのですが、
-いったん置いてあります。</p>
+<p>virt-install の場合、VMを定義するとpower onまでしてくれるのですが、emulatorの変更と <code>--qemu-commandline</code> の指定を入れたところ、power onしてくれなくなりました。<code>virsh start DOMAIN_NAME</code>(等)すればよいのですが、
+いったん置いてあります。    </p>
 <p>続くかもしれません。</p>
     </div>
   </article>

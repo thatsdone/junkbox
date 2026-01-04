@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2026-01-03T13:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] libvirt notes</title><link href="https://thatsdone.github.io/junkbox/libvirt_notes.html" rel="alternate"></link><published>2026-01-03T13:00:00+09:00</published><updated>2026-01-03T13:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-01-03:/junkbox/libvirt_notes.html</id><summary type="html">&lt;p&gt;libvirt関連(特にvirt-install)のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/generic_qemu_notes.html"&gt;Generic qemu qemu notes&lt;/a&gt;でvirtio-canの話を書きましたが、qemu-system-ARCHを直叩きするのではなく、libvirtを使い、かつあまり一般的ではないdeviceを使いたいという話です。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2026-01-03T13:00:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] libvirt notes</title><link href="https://thatsdone.github.io/junkbox/libvirt_notes.html" rel="alternate"></link><published>2026-01-03T13:00:00+09:00</published><updated>2026-01-03T13:00:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-01-03:/junkbox/libvirt_notes.html</id><summary type="html">&lt;p&gt;libvirt関連(特にvirt-install)のメモ&lt;/p&gt;</summary><content type="html">&lt;h2&gt;話の発端と何が書いてあるか&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/generic_qemu_notes.html"&gt;Generic qemu qemu notes&lt;/a&gt;でvirtio-canの話を書きましたが、qemu-system-ARCHを直叩きするのではなく、libvirtを使い、かつあまり一般的ではないdeviceを使いたいという話です。&lt;/p&gt;
 &lt;p&gt;/usr/bin 以下のシステム標準品を入れ替えてしまってもよいのですが、切り替えて使えるようにしたい場合、
-libvirtでVM(というかlibvirt用語ではdomain)を定義するにはどうするか？&lt;/p&gt;
+またlibvirt標準でサポートされていないdeviceを使いたい場合、
+VM(というかlibvirt用語ではdomain)を定義するにはどうするか？&lt;/p&gt;
 &lt;h2&gt;2通りのやりかた&lt;/h2&gt;
 &lt;p&gt;ざっくり、以下の2通りのやりかたがあります。&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;標準品libvirtでdomain定義した後、virsh edit や virt-xml で書き換える&lt;/li&gt;
 &lt;li&gt;virt-installのオプションでがんばる&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;1.はちょっとうざいので2.の方法を模索していましたが、なんとか最低限やりたいことはできました。&lt;/p&gt;
+&lt;p&gt;1.はちょっとうざいので2.の方法を模索していました。なんとか最低限やりたいことはできたのでまとめておきます。&lt;/p&gt;
 &lt;h2&gt;emulatorの変更&lt;/h2&gt;
 &lt;p&gt;上記の記事に書いたように、qemuのmainlineにマージされていないデバイスを使いたいことがあります。
 この場合、システム標準の qemu-system-aarch64 や qemu-system-x86_64 とは違うバイナリを使うことになります。&lt;/p&gt;
@@ -25,11 +27,11 @@ libvirtでVM(というかlibvirt用語ではdomain)を定義するにはどう�
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;これをlibvirtのdomain定義するのは現状無理な模様です。&lt;/p&gt;
-&lt;p&gt;ではどうするか？なのですが、domain定義時に qemu-system-XXX の command line を指定することができるので、
-これを使いました。&lt;/p&gt;
+&lt;p&gt;ではどうするか？なのですが、libvirtのdomain定義に qemu-system-XXX の command line パラメータを
+指定することができるので、これを使いました。&lt;/p&gt;
 &lt;p&gt;virt-install の場合は &lt;code&gt;--qemu-commandline&lt;/code&gt; というパラメータに渡します。&lt;/p&gt;
 &lt;h2&gt;PCI IDが衝突することがある&lt;/h2&gt;
-&lt;p&gt;当初、&lt;code&gt;virt-install&lt;/code&gt; に以下のようなオプションを付けて試行したのですが、virt-instaellはPCI bridgeをたくさん接続してくれるので、これらとぶつかってしまいました。&lt;/p&gt;
+&lt;p&gt;当初、&lt;code&gt;virt-install&lt;/code&gt; に以下のようなオプションを付けて試行したのですが、virt-instaellはPCI bridgeをたくさん接続してくれる関係で、IDぶつかってエラーになってしまいました。&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nv"&gt;qemu&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nv"&gt;commandline&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;-object can-bus,id=canbus2 -device virtio-can-pci,canbus=canbus2 -object can-host-socketcan,id=canhost2,if=vcan2,canbus=canbus2&amp;quot;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
@@ -38,16 +40,23 @@ libvirtでVM(というかlibvirt用語ではdomain)を定義するにはどう�
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="nx"&gt;qemu&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="nx"&gt;commandline&lt;/span&gt;&lt;span class="p"&gt;=&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;-object can-bus,id=canbus2 -device virtio-can-pci,canbus=canbus2,addr=07.00 -object can-host-socketcan,id=canhost2,if=vcan2,canbus=canbus2&amp;quot;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;なお、Bus 0は PCI Bridgeなので避けたいと思ったのですが、同じく virtio-can-pci で使えることになっている &lt;code&gt;busnr&lt;/code&gt; を使ったところ、「writableではない」という趣旨のエラーが出てしまいました。コードは未調査ですが、
-最低限やりたいことはできたのでここまででヨシとすることにしました。&lt;/p&gt;
+&lt;p&gt;なお、Bus 0は PCI Bridgeなので避けたいと思ったのですが、上記を &lt;code&gt;07:00.0&lt;/code&gt; と書いたところこれもエラー。
+(空きのBus IDとdevice IDが両方7なので紛らわしいですね)
+そこで、同じく virtio-can-pci で使えることになっている &lt;code&gt;busnr&lt;/code&gt; が使えるかなと思ったのですが、
+指定してみたところ「writableではない」という趣旨のエラーが出てしまいました。
+コードは未調査ですが、最低限やりたいことはできたのでここまででヨシとすることにしました。&lt;/p&gt;
 &lt;p&gt;なお、qemuのdriverごとのoptionは以下で調べられるようです。
 以下のvirtio-can-pciを目的のdriverに置き換えてください。&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;qemu-system-aarch64&lt;span class="w"&gt; &lt;/span&gt;-device&lt;span class="w"&gt; &lt;/span&gt;virtio-can-pci,help
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;p&gt;また、組み込まれているdriverの一覧は以下で見られます。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;qemu-system-aarch64&lt;span class="w"&gt; &lt;/span&gt;-device&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;help&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
 &lt;h2&gt;気づき(未解決)&lt;/h2&gt;
-&lt;p&gt;virt-install の場合、VMを定義するとpower onまでしてくれるのですが、emulatorの変更と &lt;code&gt;--qemu-commandline&lt;/code&gt; の指定を入れたところ、power onしてくれなくなりました。&lt;code&gt;virsh start DOMAIN_NAME(等)&lt;/code&gt; すればよいのですが、
-いったん置いてあります。&lt;/p&gt;
+&lt;p&gt;virt-install の場合、VMを定義するとpower onまでしてくれるのですが、emulatorの変更と &lt;code&gt;--qemu-commandline&lt;/code&gt; の指定を入れたところ、power onしてくれなくなりました。&lt;code&gt;virsh start DOMAIN_NAME&lt;/code&gt;(等)すればよいのですが、
+いったん置いてあります。    &lt;/p&gt;
 &lt;p&gt;続くかもしれません。&lt;/p&gt;</content><category term="tech"></category></entry><entry><title>[ja] Generic qemu notes</title><link href="https://thatsdone.github.io/junkbox/generic_qemu_notes.html" rel="alternate"></link><published>2025-12-07T21:40:00+09:00</published><updated>2025-12-07T21:40:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2025-12-07:/junkbox/generic_qemu_notes.html</id><summary type="html">&lt;p&gt;qemu一般のメモ&lt;/p&gt;</summary><content type="html">&lt;p&gt;&lt;a href="https://thatsdone.github.io/junkbox/zephyr_qemu_notes.html"&gt;Zephyr qemu notes&lt;/a&gt;でZephyrでのqemu系targetの話を書きましたが、qemu側の話。&lt;/p&gt;
 &lt;h2&gt;virtio-can関連&lt;/h2&gt;
 &lt;p&gt;最近ポストしている記事でCANの話が多くあるように、仕事でCANを使っています。
