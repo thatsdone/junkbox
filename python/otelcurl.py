@@ -60,7 +60,10 @@ if __name__ == "__main__":
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
         from opentelemetry.sdk.trace.export import ConsoleSpanExporter
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-        from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
+        # Note that opentelemetry-exporter-jaegeris EOL as of 1.21.0
+        # https://pypi.org/project/opentelemetry-exporter-jaeger/
+        if args.jaeger:
+            from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
         #from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
         if args.service_name:
