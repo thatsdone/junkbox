@@ -6,48 +6,108 @@
 # License:
 #   Apache License, Version 2.0
 #
+# Dependency
+#   * hexdump
+#   * cbor2
+#   * bson
+#   * msgpack
 # History:
 #   * 2026/02/06 v0.1 Initial version
 #
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
-data = dict()
-data['key1'] = 'value1'
-data['key2'] = {'subkey2': 'subvalue2'}
-data['key3'] = [
-    {'subkey3': 'subvalue31'},
-    {'subkey3': 'subvalue32'},
-    {'subkey3': 'subvalue33'},
-    {'subkey3': 'subvalue34'},
-    {'subkey3': 'subvalue35'}
+# References
+#  * ...
+import sys
+import argparse
+import pickle
+from hexdump import hexdump
+
+args = None
+
+def process_json(data):
+    import json
+    json_data = json.dumps(data)
+    if args.debug:
+        print('encoded: len: ', len(json_data))
+    return json_data
+
+def process_cbor(data):
+    import cbor2
+    encoded_data = cbor2.dumps(data)
+    if args.debug:
+        print('encoded: len: ', len(encoded_data))
+        print('encoded: data: ', encoded_data)
+        decoded_data = cbor2.loads(encoded_data)
+        print('decoded: data: ', decoded_data)
+    return encoded_data
+
+def process_bson(data):
+    import bson
+    encoded_data = bson.dumps(data)
+    if args.debug:
+        print('encoded: len: ', len(encoded_data))
+        print('encoded: data: ', encoded_data)
+        decoded_data = bson.loads(encoded_data)
+        print('decoded: data: ', decoded_data)
+    return encoded_data
+
+def process_msgpack(data):
+    import msgpack
+    encoded_data = msgpack.packb(data, use_bin_type=True)
+    if args.debug:
+        print('msgpack: ', encoded_data)
+        decoded_data = msgpack.loads(encoded_data, raw=False)
+        print('msgpack: decoded: ', decoded_data)
+    return encoded_data
+
+def generate_data():
+    data = dict()
+    data['key1'] = 'value1'
+    data['key2'] = {'subkey2': 'subvalue2'}
+    data['key3'] = [
+        {'subkey3': 'subvalue31'},
+        {'subkey3': 'subvalue32'},
+        {'subkey3': 'subvalue33'},
+        {'subkey3': 'subvalue34'},
+        {'subkey3': 'subvalue35'}
     ]
+    return data
 
-import json
-print('JSON')
-print('len: ', len(json.dumps(data)))
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='otelsrv.py')
+    parser.add_argument('--input_file', '-i', default=None)
+    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--dump', action='store_true')
+    parser.add_argument('--decode_check', action='store_true')
+    args = parser.parse_args()
 
-import cbor2
-print('CBOR')
-encoded_data = cbor2.dumps(data)
-print('len: ', len(encoded_data))
-print('CBOR: ', encoded_data)
-decoded_data = cbor2.loads(encoded_data)
-print('CBOR: decoded: ', decoded_data)
+    # data is 'dict'
+    print('input data, pickled dict')
+    data = generate_data()
+    print('dict: size: ', sys.getsizeof(data))
+    hexdump(pickle.dumps(data))
 
-import bson
-print('BSON')
-encoded_data = bson.dumps(data)
-print('len: ', len(encoded_data))
-print('BSON: ', encoded_data)
-decoded_data = bson.loads(encoded_data)
-print('BSON: decoded: ', decoded_data)
+    # JSON
+    print('JSON')
+    json_data = process_json(data)
+    print('len: ', len(json_data))
+    hexdump(json_data.encode('utf-8'))
 
+    # COBR
+    print('CBOR')
+    cbor_data = process_cbor(data)
+    print('len: ', len(cbor_data))
+    hexdump(cbor_data)
 
-import msgpack
-print('msgpack')
-encoded_data = msgpack.packb(data, use_bin_type=True)
-print('len: ', len(encoded_data))
-print('msgpack: ', encoded_data)
-decoded_data = msgpack.loads(encoded_data, raw=False)
-print('msgpack: decoded: ', decoded_data)
+    # BSON
+    print('BSON')
+    bson_data = process_bson(data)
+    print('len: ', len(bson_data))
+    hexdump(bson_data)
 
+    # msgpack
+    print('msgpack')
+    msgpack_data = process_msgpack(data)
+    print('len: ', len(msgpack_data))
+    hexdump(msgpack_data)
