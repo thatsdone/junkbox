@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2026-03-08T15:15:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[ja] Cat's Eye Nebulaにまつわる研究進展</title><link href="https://thatsdone.github.io/junkbox/cats_eye_nebula.html" rel="alternate"></link><published>2026-03-08T15:15:00+09:00</published><updated>2026-03-08T15:15:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-03-08:/junkbox/cats_eye_nebula.html</id><summary type="html">&lt;p&gt;Cat's Eye星雲にまつわる研究進展&lt;/p&gt;</summary><content type="html">&lt;p&gt;この&lt;a href="https://www.msn.com/ja-jp/news/future/%E3%83%8F%E3%83%83%E3%83%96%E3%83%AB%E3%81%A8%E3%83%A6%E3%83%BC%E3%82%AF%E3%83%AA%E3%83%83%E3%83%89%E3%81%8C%E8%A6%B3%E6%B8%AC%E3%81%97%E3%81%9F-%E3%82%AD%E3%83%A3%E3%83%83%E3%83%84%E3%82%A2%E3%82%A4%E6%98%9F%E9%9B%B2-%E3%81%AE%E3%82%AF%E3%83%AD%E3%83%BC%E3%82%BA%E3%82%A2%E3%83%83%E3%83%97-%E3%83%AF%E3%82%A4%E3%83%89%E3%83%93%E3%83%A5%E3%83%BC/ar-AA1XAusS?ocid=msedgntp&amp;amp;pc=LCTS&amp;amp;cvid=69acab0a15e04ba5bb431c08fe8bb7cf&amp;amp;ei=16"&gt;MSNの記事&lt;/a&gt;が目について、ちょっとぐぐってみて、へー…と思ったのでメモ。&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2026-05-06T15:45:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[en] Linux virtio_can driver</title><link href="https://thatsdone.github.io/junkbox/linux_virtio_can.html" rel="alternate"></link><published>2026-05-06T15:45:00+09:00</published><updated>2026-05-06T15:45:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-05-06:/junkbox/linux_virtio_can.html</id><summary type="html">&lt;p&gt;Linux virtio_can driver&lt;/p&gt;</summary><content type="html">&lt;p&gt;I'm working on AGL (Automotive Grade Linux), and now there is a collaboratieve efffort to
+establish a reference platform for SDV on top of AGL, so called SoDeV.&lt;/p&gt;
+&lt;p&gt;You can find information regarding AGL SoDeV below.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.linuxfoundation.org/press/agl_sodev"&gt;SoDeV announcement from the AGL/Linux Foundation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://github.com/automotive-grade-linux/sodev-demo-workspace"&gt;AGL Team Workspace&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;You can find working code of SoDeV integration there.&lt;/li&gt;
+&lt;li&gt;The main target is &lt;a href="https://www.renesas.com/en/support/partners/r-car-consortium/r-car-consortium-proactive-partner-list/rtx-sparrow-hawk"&gt;Renesas R-Car V4H Sparrow Hawk SBC&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=2mudbDBmffU"&gt;Accelerating Software-Defined Vehicles: SDV-EG Updates &amp;amp; New AGL SDV Reference&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;A great talk given by Jerry Jiancong Zhao from Panasonic Automotives at the ALS 2025.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;SoDeV uses Xen Hypervisor and &lt;a href="https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=virtio"&gt;virtio&lt;/a&gt; mechanism for inter domain communication.&lt;/p&gt;
+&lt;p&gt;So far, I was using guest operating system side virtio frontend driver by OpenSynergy team for AGL (based on Yocto 5.x/Scarthgap until 21.0(Unagi release)). Linux kernel version is 6.6.x for Scarthgap.
+Recently, I noticed that virtio_can driver build fails for Yocto 6.x which is(/would be) based on
+linux 6.12.x.&lt;/p&gt;
+&lt;p&gt;After looking into the error logs that I got, I figured out that this comes from a small interface
+change of a virtio subsystem utility method, &lt;code&gt;virtio_find_vqs()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;You can find the patch below, and I hope this makes sense for the community. :)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://https://thatsdone.github.io/junkbox/files/virtio-can-v5.patch"&gt;The original patch (v5) by OpenSynergy team&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://lkml.org/lkml/2024/1/8/375"&gt;LKML post&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://https://thatsdone.github.io/junkbox/files/virtio-can-v5.1.patch"&gt;My port of virtio_can(v5) to 6.12.x&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;My work is just porting the Opensynergy teams' great work to Linux kernel 6.18.x. I truely honor OpenSynergy teams' work!&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[ja] Cat's Eye Nebulaにまつわる研究進展</title><link href="https://thatsdone.github.io/junkbox/cats_eye_nebula.html" rel="alternate"></link><published>2026-03-08T15:15:00+09:00</published><updated>2026-03-08T15:15:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-03-08:/junkbox/cats_eye_nebula.html</id><summary type="html">&lt;p&gt;Cat's Eye星雲にまつわる研究進展&lt;/p&gt;</summary><content type="html">&lt;p&gt;この&lt;a href="https://www.msn.com/ja-jp/news/future/%E3%83%8F%E3%83%83%E3%83%96%E3%83%AB%E3%81%A8%E3%83%A6%E3%83%BC%E3%82%AF%E3%83%AA%E3%83%83%E3%83%89%E3%81%8C%E8%A6%B3%E6%B8%AC%E3%81%97%E3%81%9F-%E3%82%AD%E3%83%A3%E3%83%83%E3%83%84%E3%82%A2%E3%82%A4%E6%98%9F%E9%9B%B2-%E3%81%AE%E3%82%AF%E3%83%AD%E3%83%BC%E3%82%BA%E3%82%A2%E3%83%83%E3%83%97-%E3%83%AF%E3%82%A4%E3%83%89%E3%83%93%E3%83%A5%E3%83%BC/ar-AA1XAusS?ocid=msedgntp&amp;amp;pc=LCTS&amp;amp;cvid=69acab0a15e04ba5bb431c08fe8bb7cf&amp;amp;ei=16"&gt;MSNの記事&lt;/a&gt;が目について、ちょっとぐぐってみて、へー…と思ったのでメモ。&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://ja.wikipedia.org/wiki/%E3%82%AD%E3%83%A3%E3%83%83%E3%83%84%E3%82%A2%E3%82%A4%E6%98%9F%E9%9B%B2"&gt;キャッツアイ星雲&lt;/a&gt;、
 画像自体は昔からよく知られていて、学生の頃にも見た記憶があった。
 しかし星雲とはいえ、恒星の爆発に伴って形成された構造で、複雑に絡み合ったガスの構造が

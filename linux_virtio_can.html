@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>  [en] Linux virtio_can driver | That's Done!
+</title>
+  <link rel="canonical" href="https://thatsdone.github.io/junkbox/linux_virtio_can.html">
+
+
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/pygments/default.min.css">
+  <link rel="stylesheet" href="https://thatsdone.github.io/junkbox/theme/css/theme.css">
+
+  <link rel="alternate" type="application/atom+xml" title="Full Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml">
+  <link rel="alternate" type="application/atom+xml" title="Categories Atom Feed"
+        href="https://thatsdone.github.io/junkbox/feeds/{slug}.atom.xml">  
+  <meta name="description" content="Linux virtio_can driver">
+
+
+</head>
+
+<body>
+  <header class="header">
+    <div class="container">
+<div class="row">
+  <div class="col-sm-12">
+    <h1 class="title"><a href="https://thatsdone.github.io/junkbox/">That's Done!</a></h1>
+      <p class="text-muted">thatsdone's (mostly technical) memorandum</p>
+      <ul class="list-inline">
+          <li class="list-inline-item"><a href="about.html" target="_blank">about</a></li>
+          <li class="list-inline-item"><a href="https://github.com/thatsdone" target="_blank">github</a></li>
+          <li class="list-inline-item"><a href="https://qiita.com/thatsdone" target="_blank">qiita</a></li>
+      </ul>
+  </div>
+</div>    </div>
+  </header>
+
+  <div class="main">
+    <div class="container">
+      <h1>  [en] Linux virtio_can driver
+</h1>
+      <hr>
+  <article class="article">
+    <header>
+      <ul class="list-inline">
+        <li class="list-inline-item text-muted" title="2026-05-06T15:45:00+09:00">
+          <i class="fa fa-clock-o"></i>
+          Wed 06 May 2026
+        </li>
+        <li class="list-inline-item">
+          <i class="fa fa-folder-open-o"></i>
+          <a href="https://thatsdone.github.io/junkbox/category/tech.html">tech</a>
+        </li>
+          <li class="list-inline-item">
+            <i class="fa fa-user-o"></i>
+              <a href="https://thatsdone.github.io/junkbox/author/thatsdone.html">thatsdone</a>          </li>
+      </ul>
+    </header>
+    <div class="content">
+      <p>I'm working on AGL (Automotive Grade Linux), and now there is a collaboratieve efffort to
+establish a reference platform for SDV on top of AGL, so called SoDeV.</p>
+<p>You can find information regarding AGL SoDeV below.</p>
+<ul>
+<li><a href="https://www.linuxfoundation.org/press/agl_sodev">SoDeV announcement from the AGL/Linux Foundation</a></li>
+<li><a href="https://github.com/automotive-grade-linux/sodev-demo-workspace">AGL Team Workspace</a><ul>
+<li>You can find working code of SoDeV integration there.</li>
+<li>The main target is <a href="https://www.renesas.com/en/support/partners/r-car-consortium/r-car-consortium-proactive-partner-list/rtx-sparrow-hawk">Renesas R-Car V4H Sparrow Hawk SBC</a></li>
+</ul>
+</li>
+<li><a href="https://www.youtube.com/watch?v=2mudbDBmffU">Accelerating Software-Defined Vehicles: SDV-EG Updates &amp; New AGL SDV Reference</a><ul>
+<li>A great talk given by Jerry Jiancong Zhao from Panasonic Automotives at the ALS 2025.</li>
+</ul>
+</li>
+</ul>
+<p>SoDeV uses Xen Hypervisor and <a href="https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=virtio">virtio</a> mechanism for inter domain communication.</p>
+<p>So far, I was using guest operating system side virtio frontend driver by OpenSynergy team for AGL (based on Yocto 5.x/Scarthgap until 21.0(Unagi release)). Linux kernel version is 6.6.x for Scarthgap.
+Recently, I noticed that virtio_can driver build fails for Yocto 6.x which is(/would be) based on
+linux 6.12.x.</p>
+<p>After looking into the error logs that I got, I figured out that this comes from a small interface
+change of a virtio subsystem utility method, <code>virtio_find_vqs()</code>.</p>
+<p>You can find the patch below, and I hope this makes sense for the community. :)</p>
+<ul>
+<li><a href="https://https://thatsdone.github.io/junkbox/files/virtio-can-v5.patch">The original patch (v5) by OpenSynergy team</a><ul>
+<li><a href="https://lkml.org/lkml/2024/1/8/375">LKML post</a></li>
+</ul>
+</li>
+<li><a href="https://https://thatsdone.github.io/junkbox/files/virtio-can-v5.1.patch">My port of virtio_can(v5) to 6.12.x</a><ul>
+<li>My work is just porting the Opensynergy teams' great work to Linux kernel 6.18.x. I truely honor OpenSynergy teams' work!</li>
+</ul>
+</li>
+</ul>
+    </div>
+  </article>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+<div class="row">
+  <ul class="col-sm-6 list-inline">
+      <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/authors.html">Authors</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/archives.html">Archives</a></li>
+    <li class="list-inline-item"><a href="https://thatsdone.github.io/junkbox/categories.html">Categories</a></li>
+  </ul>
+  <p class="col-sm-6 text-sm-right text-muted">
+    Generated by <a href="https://github.com/getpelican/pelican" target="_blank">Pelican</a>
+    / <a href="https://github.com/nairobilug/pelican-alchemy" target="_blank">&#x2728;</a>
+  </p>
+</div>    </div>
+  </footer>
+</body>
+
+</html>
