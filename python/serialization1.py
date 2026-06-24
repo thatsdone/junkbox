@@ -17,7 +17,11 @@
 # Author:
 #   Masanori Itoh <masanori.itoh@gmail.com>
 # References
-#  * ...
+#  * https://cbor2.readthedocs.io/en/latest/index.html
+#  * https://github.com/py-bson/bson
+#  * https://github.com/msgpack/msgpack-python/
+# TODO
+#  * Try protobuf
 import sys
 import argparse
 import pickle
@@ -63,9 +67,9 @@ def process_msgpack(data):
 
 def generate_data():
     data = dict()
-    data['key1'] = 'value1'
-    data['key2'] = {'subkey2': 'subvalue2'}
-    data['key3'] = [
+#    data[''] = 'value1'
+#    data['key2'] = {'subkey2': 'subvalue2'}
+    data['item'] = [
         {'subkey3': 'subvalue31'},
         {'subkey3': 'subvalue32'},
         {'subkey3': 'subvalue33'},
@@ -73,6 +77,34 @@ def generate_data():
         {'subkey3': 'subvalue35'}
     ]
     return data
+
+#
+# test for reducing iterated keys
+#
+def process_msgspec(data):
+    import msgspec
+
+    class Subkey(msgspec.Struct, array_like=True, omit_defaults=True):
+        subkey3: str
+        is_active: bool = True
+
+    class Data(msgspec.Struct, array_like=True, omit_defaults=True):
+        item: [Subkey]
+
+    data = [Subkey(subkey3=f"subvalue3{i}") for i in range(3)]
+    encoded_data = msgspec.msgpack.encode(data)
+
+    if args.debug:
+        print('msgspec:')
+        # cascaded class definition does not work?
+        data1 = [Subkey(subkey3=f"subvalue3{i}") for i in range(3)]
+        data = Data(item=data1)
+        encoded_data = msgspec.msgpack.encode(data)
+        decoded_data = msgspec.msgpack.decode(encoded_data)
+        print(decoded_data)
+
+    return encoded_data
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='otelsrv.py')
@@ -111,3 +143,9 @@ if __name__ == "__main__":
     msgpack_data = process_msgpack(data)
     print('len: ', len(msgpack_data))
     hexdump(msgpack_data)
+
+    # msgspec
+    print('msgspec')
+    msgspec_data = process_msgspec(data)
+    print('len: ', len(msgspec_data))
+    hexdump(msgspec_data)
