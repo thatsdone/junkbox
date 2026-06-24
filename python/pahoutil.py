@@ -31,11 +31,12 @@ from paho.mqtt.packettypes import PacketTypes
 def on_log(mqttc, userdata, level, string):
     print('on_log(): %s : %s %s' % (userdata, level, string))
 
+# NOTE(thatsdone): the last argument 'props' is ignored in case of MQTTv3.1
 def on_connect(client, userdata, flags, rc, props):
     print('on_connect(): %s : %s %s %s' % (userdata, flags, rc, props))
 
-def on_disconnect(client, userdata, rc, foo):
-    print('on_disconnect(): %s : %s %s' % (userdata, rc, foo))
+def on_disconnect(client, userdata, flags, rc, props):
+    print('on_disconnect(): %s : %s %s %s' % (userdata, flags, rc, props))
 
 def on_publish(mqttc, userdata, mid):
     print('on_publish(): %s : %s' % (userdata, mid))
@@ -83,7 +84,12 @@ if __name__ == "__main__":
 
     if args.operation == 'server':
         userdata = 'server'
-        mqttc = mqtt.Client(protocol=mqtt.MQTTv5, userdata=userdata)
+        if args.mqtt_version == 3:
+            mqttv = mqtt.MQTTv31
+        else:
+            mqttv = mqtt.MQTTv5
+        mqttc = mqtt.Client(protocol=mqttv, userdata=userdata,
+                            callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
         mqttc.on_message = on_message
         mqttc.on_connect = on_connect
         mqttc.on_disconnect = on_disconnect
@@ -110,8 +116,13 @@ if __name__ == "__main__":
     elif args.operation == 'client':
 
         client_id = 'client'
+        if args.mqtt_version == 3:
+            mqttv = mqtt.MQTTv31
+        else:
+            mqttv = mqtt.MQTTv5
         mqttc = mqtt.Client(client_id=client_id,
-                            protocol=mqtt.MQTTv5, userdata='client')
+                            protocol=mqttv, userdata='client',
+                            callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
         mqttc.on_message = on_message
         mqttc.on_connect = on_connect
         mqttc.on_disconnect = on_disconnect
