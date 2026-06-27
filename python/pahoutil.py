@@ -38,18 +38,19 @@ def on_connect(client, userdata, flags, rc, props):
 def on_disconnect(client, userdata, flags, rc, props):
     print('on_disconnect(): %s : %s %s %s' % (userdata, flags, rc, props))
 
-def on_publish(mqttc, userdata, mid):
-    print('on_publish(): %s : %s' % (userdata, mid))
+def on_publish(client, userdata, mid, rc, props):
+    print('on_publish(): %s : %s %s %s' % (userdata, mid, rc, props))
 
-def on_subscribe(mqttc, userdata, mid, rc, granted_qos):
-    print('on_subscribe(): %s : %s %s' % (userdata, rc, granted_qos))
+def on_subscribe(client, userdata, mid, rc, props):
+    print('on_subscribe(): %s : %s %s' % (userdata, rc, props))
 
-def on_message(client, userdata, msg):
+def on_message(client, userdata, msg, props):
     print('on_message(): %s : %s %s %s %s / %s' % (userdata, msg.topic,
                                                    msg.mid, msg.timestamp,
                                                    msg.retain,
                                                    msg.payload.decode()))
 
+# FIXME(thatsdone): Callback API VERSION2 should have 4th argument.
 def message(client, userdata, msg):
     print('message(): %s : %s %s %s %s / %s' % (userdata, msg.topic,
                                                 msg.mid, msg.timestamp,
@@ -96,6 +97,7 @@ if __name__ == "__main__":
         mqttc.on_publish = on_publish
         mqttc.on_subscribe = on_subscribe
         mqttc.on_log = on_log
+        mqttc.message_callback_add(args.topic, message)
 
         if args.tls:
             if not args.cacert:
@@ -107,7 +109,6 @@ if __name__ == "__main__":
                 mqttc.tls_insecure_set(True)
 
         mqttc.connect(args.host, args.port, args.timeout)
-        mqttc.message_callback_add(args.topic, message)
 
         mqttc.subscribe(args.topic, args.qos)
 
@@ -129,6 +130,7 @@ if __name__ == "__main__":
         mqttc.on_publish = on_publish
         mqttc.on_subscribe = on_subscribe
         mqttc.on_log = on_log
+        mqttc.message_callback_add(args.topic, message)
 
         if args.tls:
             if not args.cacert:
@@ -148,7 +150,6 @@ if __name__ == "__main__":
                       #,properties=properties
                       )
 
-        mqttc.message_callback_add(args.topic, message)
 
         print('publish(): publishing a message to: %s payload: %s' % (args.topic, args.message))
 
