@@ -1,5 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2026-05-06T15:45:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[en] Linux virtio_can driver</title><link href="https://thatsdone.github.io/junkbox/linux_virtio_can.html" rel="alternate"></link><published>2026-05-06T15:45:00+09:00</published><updated>2026-05-06T15:45:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-05-06:/junkbox/linux_virtio_can.html</id><summary type="html">&lt;p&gt;Linux virtio_can driver&lt;/p&gt;</summary><content type="html">&lt;p&gt;I'm working on AGL (Automotive Grade Linux), and now there is a collaboratieve efffort to
+<feed xmlns="http://www.w3.org/2005/Atom"><title>That's Done!</title><link href="https://thatsdone.github.io/junkbox/" rel="alternate"></link><link href="https://thatsdone.github.io/junkbox/feeds/all.atom.xml" rel="self"></link><id>https://thatsdone.github.io/junkbox/</id><updated>2026-08-11T19:30:00+09:00</updated><subtitle>thatsdone's (mostly technical) memorandum</subtitle><entry><title>[en] Linux virtio_can driver</title><link href="https://thatsdone.github.io/junkbox/uds_handling_in_python.html" rel="alternate"></link><published>2026-08-11T19:30:00+09:00</published><updated>2026-08-11T19:30:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-08-11:/junkbox/uds_handling_in_python.html</id><summary type="html">&lt;p&gt;UDS handling in Python&lt;/p&gt;</summary><content type="html">&lt;p&gt;私は自動車関連の仕事をしています。
+昔は車両の外側のネットワークやセンタが仕事だったのですが、
+ここしばらく車両の中身、特に診断機能（いわゆるダイアグ）にもかかわっています。&lt;/p&gt;
+&lt;p&gt;ダイアグといえば普通はUDS(Unified Diagnostics Service, ISO 14229)を
+CAN(ISO 14229-3)やらEthernet(ISO 14229-5)やらの上で使います。
+昨今は、SOVD(Service Oriented Vehicle Diagnositcs, ISO 17978)というのも
+ありますが、本記事はレガシーなUDSの話です。&lt;/p&gt;
+&lt;p&gt;さて、UDS&lt;/p&gt;
+&lt;p&gt;CANの場合&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;ISOTP
+| UDS            |
+|      | DoIP    |
+|ISOTP |
+| CAN  | Ethernet|&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;scapy&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;udsoncan&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;pyuds&lt;/li&gt;
+&lt;li&gt;doip-client&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;udsip&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;can-isotp&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;aioisotp  -&amp;gt; メンテが止まっている&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;uds -&amp;gt; これはUDSとは関係ない。UrbanDictionary CLI Searcher&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</content><category term="tech"></category></entry><entry><title>[en] Linux virtio_can driver</title><link href="https://thatsdone.github.io/junkbox/linux_virtio_can.html" rel="alternate"></link><published>2026-05-06T15:45:00+09:00</published><updated>2026-05-06T15:45:00+09:00</updated><author><name>thatsdone</name></author><id>tag:thatsdone.github.io,2026-05-06:/junkbox/linux_virtio_can.html</id><summary type="html">&lt;p&gt;Linux virtio_can driver&lt;/p&gt;</summary><content type="html">&lt;p&gt;I'm working on AGL (Automotive Grade Linux), and now there is a collaboratieve efffort to
 establish a reference platform for SDV on top of AGL, so called SoDeV.&lt;/p&gt;
 &lt;p&gt;You can find information regarding AGL SoDeV below.&lt;/p&gt;
 &lt;ul&gt;
@@ -1527,6 +1564,13 @@ OpenStackでつくった基盤があって、その上にいろいろサービ�
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
+&lt;li&gt;アルトサックス(+ピアノ)&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=8xbEz_8EQOI"&gt;［アルト・サックス］戦場のメリー・クリスマス/坂本龍一 Merry Christmas,Mr.Lawrence/Ryuichi Sakamoto [Alto Sax]&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;アドリブの部分、おさえた歌い方なのがなかなかよい&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
 &lt;li&gt;ハンドベル＆パーカッション&lt;ul&gt;
 &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=405N61fzqQc"&gt;MERRY CHRISTMAS MR LAWRENCE (Handbells &amp;amp; Percussion)&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;これ、練習大変だろうなぁ...&lt;/li&gt;
@@ -1617,6 +1661,14 @@ OpenStackでつくった基盤があって、その上にいろいろサービ�
 &lt;/li&gt;
 &lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=jGRoMo9flQY"&gt;Merry Christmas, Mr. Lawrence Ft. Frankie Yip (Keyboard and Bamboo Flute)&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;中国の伝統楽器の「笛子(Dizi)」とピアノによる演奏。独特な音色な笛と思ったら「吹き口の隣にある穴に「笛膜（てきまく）」という竹の薄い膜を貼り付けている」ためらしい。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=57mC1YKljbM"&gt;Marina bay sands fountain show - Merry Christmas Mr. Lawrence&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;シンガポールのリゾートのマリーナベイ・サンズでのレーザーアート。後半のヴォカリーズがすばらしい。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.youtube.com/watch?v=FqUdxkWoLS"&gt;YIN YIN - Merry Christmas Mr. Lawrence (Fuji Rock Festival ‘24)&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;オランダのマーストリヒト出身のバンドらしい。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
